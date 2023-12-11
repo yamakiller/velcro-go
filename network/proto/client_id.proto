@@ -1,0 +1,9 @@
+syntax = "proto3";
+option go_package=".;network";
+package network;
+
+
+message ClientId {
+    string Id = 1;       // 唯一标记
+    int32  Vaild = 2;    // 是否有效
+}

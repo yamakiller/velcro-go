@@ -16,7 +16,7 @@ import (
 // logName log write file base name
 func SpawnFileLogrus(level logrus.Level,
 	logPath string,
-	logName string) (*logrus.Logger, error) {
+	logName string) *logrus.Logger {
 	hlog := logrus.New()
 	formatter := new(prefixed.TextFormatter)
 	formatter.FullTimestamp = true
@@ -29,7 +29,7 @@ func SpawnFileLogrus(level logrus.Level,
 	hlog.SetLevel(level)
 
 	if logPath == "" {
-		return hlog, nil
+		return hlog
 	}
 
 	if logName == "" {
@@ -45,7 +45,7 @@ func SpawnFileLogrus(level logrus.Level,
 	)
 
 	if err != nil {
-		return nil, err
+		return hlog
 	}
 
 	fileformatter := new(prefixed.TextFormatter)
@@ -63,5 +63,5 @@ func SpawnFileLogrus(level logrus.Level,
 	}, fileformatter)
 	hlog.AddHook(lfHook)
 
-	return hlog, nil
+	return hlog
 }
