@@ -1,0 +1,19 @@
+syntax = "proto3";
+option go_package=".;parallel";
+package parallel;
+
+message ResumeMailbox {}
+
+message SuspendMailbox {}
+
+message ReceiveTimeout {}
+
+message Restarting {}
+
+message Stopping {}
+
+message Stopped {}
+
+message Started{}
+
+message Restart{}

@@ -1,0 +1,40 @@
+syntax = "proto3";
+option go_package=".;parallel";
+package parallel;
+
+// key == address + tag
+message PID {
+    string Address = 1;  // local/ip:port
+    string Id = 2;       // 唯一标记
+}
+
+// 用户消息
+message PoisonPill {}
+
+message DeadLetterResponse {PID Target = 1;}
+
+//system messages
+message Watch {PID Watcher = 1;}
+  
+message Unwatch { PID Watcher = 1;}
+  
+message Terminated {
+    PID who = 1;
+    TerminatedReason Why = 2;
+  }
+  
+  enum TerminatedReason {
+    Stopped = 0;
+    AddressTerminated = 1;
+    NotFound = 2;
+  }
+  
+  message Stop {
+  }
+  
+  message Touch {
+  }
+  
+  message Touched {
+    PID who = 1;
+  }
