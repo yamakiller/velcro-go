@@ -41,3 +41,9 @@ func WithLoggerFactory(factory func(system *NetworkSystem) logs.LogAgent) Config
 		config.LoggerFactory = factory
 	}
 }
+
+func WithProducer(producer ProducerWidthClientSystem) ConfigOption {
+	return func(config *Config) {
+		config.Producer = producer
+	}
+}

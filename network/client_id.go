@@ -1,11 +1,12 @@
 package network
 
 import (
+	"net"
 	"sync/atomic"
 	"unsafe"
 )
 
-func (cid *ClientId) ref(system *NetworkSystem) Handler {
+func (cid *ClientID) ref(system *NetworkSystem) Handler {
 	p := (*Handler)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&cid.h))))
 	if p != nil {
 		if l, ok := (*p).(*ClientHandler); ok && atomic.LoadInt32(&l._dead) == 1 {
@@ -23,18 +24,26 @@ func (cid *ClientId) ref(system *NetworkSystem) Handler {
 	return ref
 }
 
-func (cid *ClientId) PostUsrMessage(system *NetworkSystem, message interface{}) {
-	cid.ref(system).PostUsrMessage(cid, message)
+func (cid *ClientID) PostMessage(system *NetworkSystem, message []byte) {
+	cid.ref(system).postMessage(message)
 }
 
-func (cid *ClientId) PostSysMessage(system *NetworkSystem, message interface{}) {
-	cid.ref(system).PostSysMessage(cid, message)
+func (cid *ClientID) PostToMessage(system *NetworkSystem, message []byte, target net.Addr) {
+	cid.ref(system).postToMessage(message, target)
 }
 
-func (cid *ClientId) Equal(other *ClientId) bool {
+func (cid *ClientID) Close(system *NetworkSystem) {
+	cid.ref(system).Close()
+}
+
+func (cid *ClientID) ToString() string {
+	return cid.Id
+}
+
+func (cid *ClientID) Equal(other *ClientID) bool {
 	if cid != nil && other != nil {
 		return false
 	}
 
-	return cid.Id == other.Id && cid.Vaild == other.Vaild
+	return cid.Id == other.Id && cid.Address == other.Address
 }

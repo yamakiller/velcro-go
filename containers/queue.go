@@ -1,8 +1,6 @@
 package containers
 
 import (
-	"sync"
-
 	"github.com/yamakiller/velcro-go/utils"
 )
 
@@ -24,14 +22,24 @@ type Queue struct {
 	_overloadThreshold int
 
 	_buffer []interface{}
-	_sync   sync.Mutex
+	//_sync   sync.Mutex
+}
+
+func (qe *Queue) Destory() {
+	//qe._sync.Lock()
+	//defer qe._sync.Unlock()
+
+	qe._head = 0
+	qe._tail = 0
+
+	qe._buffer = make([]interface{}, 0)
 }
 
 // Push Insert an object
 // @Param (interface{}) item
 func (qe *Queue) Push(item interface{}) {
-	qe._sync.Lock()
-	defer qe._sync.Unlock()
+	//qe._sync.Lock()
+	//defer qe._sync.Unlock()
 	qe.unpush(item)
 }
 
@@ -40,8 +48,8 @@ func (qe *Queue) Push(item interface{}) {
 // @Return (interface{}) return object
 // @Return (bool)
 func (qe *Queue) Pop() (interface{}, bool) {
-	qe._sync.Lock()
-	defer qe._sync.Unlock()
+	//qe._sync.Lock()
+	//defer qe._sync.Unlock()
 	return qe.unpop()
 }
 
@@ -64,11 +72,11 @@ func (qe *Queue) Length() int {
 		tail int
 		cap  int
 	)
-	qe._sync.Lock()
+	//qe._sync.Lock()
 	head = qe._head
 	tail = qe._tail
 	cap = qe._cap
-	qe._sync.Unlock()
+	//qe._sync.Unlock()
 
 	if head <= tail {
 		return tail - head

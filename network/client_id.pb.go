@@ -20,19 +20,19 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ClientId struct {
+type ClientID struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id    string `protobuf:"bytes,1,opt,name=Id,proto3" json:"Id,omitempty"`        // 唯一标记
-	Vaild int32  `protobuf:"varint,2,opt,name=Vaild,proto3" json:"Vaild,omitempty"` // 是否有效
+	Address string `protobuf:"bytes,1,opt,name=Address,proto3" json:"Address,omitempty"` // 地址
+	Id      string `protobuf:"bytes,2,opt,name=Id,proto3" json:"Id,omitempty"`           // 唯一标记
 
 	h *Handler
 }
 
-func (x *ClientId) Reset() {
-	*x = ClientId{}
+func (x *ClientID) Reset() {
+	*x = ClientID{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_network_proto_client_id_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -40,13 +40,13 @@ func (x *ClientId) Reset() {
 	}
 }
 
-func (x *ClientId) String() string {
+func (x *ClientID) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClientId) ProtoMessage() {}
+func (*ClientID) ProtoMessage() {}
 
-func (x *ClientId) ProtoReflect() protoreflect.Message {
+func (x *ClientID) ProtoReflect() protoreflect.Message {
 	mi := &file_network_proto_client_id_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -58,23 +58,23 @@ func (x *ClientId) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClientId.ProtoReflect.Descriptor instead.
-func (*ClientId) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClientID.ProtoReflect.Descriptor instead.
+func (*ClientID) Descriptor() ([]byte, []int) {
 	return file_network_proto_client_id_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ClientId) GetId() string {
+func (x *ClientID) GetAddress() string {
 	if x != nil {
-		return x.Id
+		return x.Address
 	}
 	return ""
 }
 
-func (x *ClientId) GetVaild() int32 {
+func (x *ClientID) GetId() string {
 	if x != nil {
-		return x.Vaild
+		return x.Id
 	}
-	return 0
+	return ""
 }
 
 var File_network_proto_client_id_proto protoreflect.FileDescriptor
@@ -82,11 +82,12 @@ var File_network_proto_client_id_proto protoreflect.FileDescriptor
 var file_network_proto_client_id_proto_rawDesc = []byte{
 	0x0a, 0x1d, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
 	0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
-	0x07, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x22, 0x30, 0x0a, 0x08, 0x43, 0x6c, 0x69, 0x65,
-	0x6e, 0x74, 0x49, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x02, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x56, 0x61, 0x69, 0x6c, 0x64, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x05, 0x52, 0x05, 0x56, 0x61, 0x69, 0x6c, 0x64, 0x42, 0x0b, 0x5a, 0x09, 0x2e, 0x3b,
-	0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x07, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x22, 0x34, 0x0a, 0x08, 0x43, 0x6c, 0x69, 0x65,
+	0x6e, 0x74, 0x49, 0x44, 0x12, 0x18, 0x0a, 0x07, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x0e,
+	0x0a, 0x02, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x49, 0x64, 0x42, 0x0b,
+	0x5a, 0x09, 0x2e, 0x3b, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -103,7 +104,7 @@ func file_network_proto_client_id_proto_rawDescGZIP() []byte {
 
 var file_network_proto_client_id_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_network_proto_client_id_proto_goTypes = []interface{}{
-	(*ClientId)(nil), // 0: network.ClientId
+	(*ClientID)(nil), // 0: network.ClientID
 }
 var file_network_proto_client_id_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -120,7 +121,7 @@ func file_network_proto_client_id_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_network_proto_client_id_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientId); i {
+			switch v := v.(*ClientID); i {
 			case 0:
 				return &v.state
 			case 1:

@@ -16,16 +16,18 @@ import (
 type Config struct {
 	MetricsProvider metric.MeterProvider
 	LoggerFactory   func(system *NetworkSystem) logs.LogAgent // 日志仓库
+	Producer        ProducerWidthClientSystem
 }
 
 func defaultConfig() *Config {
-	return &Config{MetricsProvider: nil, LoggerFactory: func(system *NetworkSystem) logs.LogAgent {
-		pLogHandle := logs.SpawnFileLogrus(logrus.TraceLevel, "", "proto."+system.Name)
+	return &Config{
+		MetricsProvider: nil, LoggerFactory: func(system *NetworkSystem) logs.LogAgent {
+			pLogHandle := logs.SpawnFileLogrus(logrus.TraceLevel, "", "Proto.Network."+system.NetType+"."+system.ID+"."+system.Address())
 
-		logAgent := &logs.DefaultAgent{}
-		logAgent.WithHandle(pLogHandle)
-		return logAgent
-	}}
+			logAgent := &logs.DefaultAgent{}
+			logAgent.WithHandle(pLogHandle)
+			return logAgent
+		}}
 }
 
 func defaultPrometheusProvider(port int) metric.MeterProvider {

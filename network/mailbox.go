@@ -1,13 +1,6 @@
 package network
 
-import (
-	"runtime"
-	"sync/atomic"
-
-	"github.com/yamakiller/velcro-go/containers"
-)
-
-const (
+/*const (
 	idle int32 = iota
 	running
 )
@@ -86,3 +79,4 @@ func (m *mailbox) run() {
 		}
 	}
 }
+*/

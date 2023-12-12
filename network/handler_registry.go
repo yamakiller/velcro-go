@@ -1,11 +1,30 @@
 package network
 
 import (
-	"sync/atomic"
+	"time"
 
+	"github.com/bwmarrin/snowflake"
 	cmap "github.com/orcaman/concurrent-map"
 	murmur32 "github.com/twmb/murmur3"
 )
+
+const (
+	localAddress = "nonhost"
+)
+
+func NewHandlerRegistry(system *NetworkSystem) *HandleRegistryValue {
+	snowflake.Epoch = time.Now().UnixNano() / 1e6
+	node, _ := snowflake.NewNode(25768)
+
+	hrv := &HandleRegistryValue{
+		Address:    localAddress,
+		_node:      node,
+		_system:    system,
+		_localCIDs: newSliceMap(),
+	}
+
+	return hrv
+}
 
 func newSliceMap() *sliceMap {
 	sm := &sliceMap{}
@@ -33,7 +52,7 @@ const (
 	digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~+"
 )
 
-func uint64ToId(u uint64) string {
+func int64ToId(u int64) string {
 	var buf [13]byte
 	i := 13
 	// base is power of 2: use shifts and masks instead of / and %
@@ -52,32 +71,34 @@ func uint64ToId(u uint64) string {
 }
 
 type HandleRegistryValue struct {
-	_sequenceId uint64
-	_system     *NetworkSystem
-	_localCIDs  *sliceMap
+	Address    string
+	_node      *snowflake.Node
+	_system    *NetworkSystem
+	_localCIDs *sliceMap
 }
 
 func (hr *HandleRegistryValue) NextId() string {
-	counter := atomic.AddUint64(&hr._sequenceId, 1)
+	counter := hr._node.Generate().Int64()
 
-	return uint64ToId(counter)
+	return int64ToId(counter)
 }
 
-func (hr *HandleRegistryValue) Push(handler Handler, id string) (*ClientId, bool) {
+func (hr *HandleRegistryValue) Push(handler Handler, id string) (*ClientID, bool) {
 	bucket := hr._localCIDs.getBucket(id)
 
-	return &ClientId{
-		Id: id,
+	return &ClientID{
+		Address: hr.Address,
+		Id:      id,
 	}, bucket.SetIfAbsent(id, handler)
 }
 
-func (hr *HandleRegistryValue) Remove(cid *ClientId) {
+func (hr *HandleRegistryValue) Remove(cid *ClientID) {
 	bucket := hr._localCIDs.getBucket(cid.Id)
 
 	_, _ = bucket.Pop(cid.Id)
 }
 
-func (hr *HandleRegistryValue) Get(cid *ClientId) (Handler, bool) {
+func (hr *HandleRegistryValue) Get(cid *ClientID) (Handler, bool) {
 	if cid == nil {
 		return nil, false
 	}

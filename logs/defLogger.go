@@ -15,7 +15,7 @@ import (
 // logPath log write file path [path]
 // logName log write file base name
 func SpawnFileLogrus(level logrus.Level,
-	logPath string,
+	logPath,
 	logName string) *logrus.Logger {
 	hlog := logrus.New()
 	formatter := new(prefixed.TextFormatter)

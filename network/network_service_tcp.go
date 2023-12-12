@@ -2,10 +2,15 @@ package network
 
 import (
 	"net"
+	"strings"
 	sync "sync"
+	"time"
+
+	"github.com/pkg/errors"
+	"github.com/yamakiller/velcro-go/containers"
 )
 
-func NewTcpNetworkServerModule(system *NetworkSystem) *tcpNetworkServerModule {
+func newTcpNetworkServerModule(system *NetworkSystem) *tcpNetworkServerModule {
 	return &tcpNetworkServerModule{
 		_system:    system,
 		_waitGroup: sync.WaitGroup{},
@@ -46,7 +51,6 @@ func (tns *tcpNetworkServerModule) Open(addr string) error {
 			case <-tns._stoped:
 				goto exit_label
 			default:
-				break
 			}
 			conn, err = tns._listen.Accept()
 			if err != nil {
@@ -54,12 +58,16 @@ func (tns *tcpNetworkServerModule) Open(addr string) error {
 					continue
 				}
 
-				tns._system.Logger().Debug("[NETWORK-SERVER-TCP]", "%s accept error %s", address, err.Error())
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					continue
+				}
+
+				tns._system.Logger().Debug("[NETWORK-SERVER-TCP]", "%s accept error %v", address, err)
 				goto exit_label
 			}
 
 			//新建客户端
-			if err = tns._system._props._producer(tns._system, conn); err != nil {
+			if err = tns.spawn(conn); err != nil {
 				conn.Close()
 				continue
 			}
@@ -82,4 +90,100 @@ func (tns *tcpNetworkServerModule) Stop() {
 	tns._waitGroup.Wait()
 	tns._stoped = nil
 	tns._listen = nil
+}
+
+func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
+	id := tns._system._handlers.NextId()
+
+	ctx := clientContext{_system: tns._system, _state: stateAccept}
+	handler := &tcpClientHandler{
+		_c:         conn,
+		_wmail:     containers.NewQueue(4),
+		_wmailcond: *sync.NewCond(&sync.Mutex{}),
+		_keepalive: 2000,
+		_invoker:   &ctx,
+		_closed:    0,
+	}
+
+	cid, ok := tns._system._handlers.Push(handler, id)
+	if !ok {
+		return errors.Errorf("client-id %s existed", id)
+	}
+
+	ctx._self = cid
+	ctx.incarnateClient()
+
+	tns._waitGroup.Add(2)
+	go func() {
+		defer tns._waitGroup.Done()
+
+		for {
+			handler._wmailcond.L.Lock()
+			msg, ok := handler._wmail.Pop()
+			if !ok || (handler._started == 0 && msg != nil) {
+				handler._wmailcond.Wait()
+			}
+			handler._wmailcond.L.Unlock()
+
+			if msg == nil {
+				break
+			} else {
+				if _, err := handler._c.Write(msg.([]byte)); err != nil {
+					break
+				}
+			}
+
+		}
+
+		handler._wmailcond.L.Lock()
+		handler._closed = 1
+		handler._wmailcond.L.Unlock()
+
+		handler._c.Close()
+		handler._wmail.Destory()
+		handler._wmail = nil
+	}()
+
+	go func() {
+		defer tns._waitGroup.Done()
+
+		for {
+			handler._wmailcond.L.Lock()
+			if handler._started != 1 {
+				handler._wmailcond.Wait()
+			}
+			handler._wmailcond.L.Unlock()
+
+			if handler._started == 1 {
+				break
+			}
+		}
+
+		handler._invoker.invokerAccept()
+
+		var tmp [512]byte
+		remoteAddr := handler._c.RemoteAddr()
+		for {
+
+			if handler._keepalive > 0 {
+				handler._c.SetReadDeadline(time.Now().Add(time.Duration(handler._keepalive) * time.Millisecond * 2.0))
+			}
+
+			n, err := handler._c.Read(tmp[:])
+			if err != nil {
+				break
+			}
+
+			handler._invoker.invokerRecvice(tmp[:n], &remoteAddr)
+		}
+
+		//调用已关闭
+		if handler._invoker != nil {
+			handler._invoker.invokerClosed()
+		}
+
+	}()
+
+	handler.start()
+	return nil
 }

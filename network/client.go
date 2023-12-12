@@ -1,8 +1,9 @@
 package network
 
+type ProducerWidthClientSystem func(*NetworkSystem) Client
+
 type Client interface {
+	Accept(Context)
 	Recvice(Context)
-	Send(Context, interface{})
-	Closing(cid *ClientId)
-	Closed(cid *ClientId)
+	Closed(Context)
 }
