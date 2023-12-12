@@ -14,6 +14,17 @@
                 "-t",
                 "true"
             ],
+        },
+        {
+            "name": "example_screen",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/example/screenrefresh/main.go",
+            "args": [
+                "-t",
+                "true"
+            ],
         }
     ]
 }

@@ -31,11 +31,11 @@ func defaultConfig() *Config {
 }
 
 func defaultPrometheusProvider(port int) metric.MeterProvider {
-	exporter, err := prometheus.New()
-	if err != nil {
+	exporter, _ := prometheus.New()
+	/*if err != nil {
 		err = fmt.Errorf("failed to initialize prometheus exporter: %w", err)
 		return nil
-	}
+	}*/
 
 	provider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter.Reader))
 	otel.SetMeterProvider(provider)
