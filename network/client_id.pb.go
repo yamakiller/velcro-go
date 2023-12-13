@@ -29,6 +29,7 @@ type ClientID struct {
 	Id      string `protobuf:"bytes,2,opt,name=Id,proto3" json:"Id,omitempty"`           // 唯一标记
 
 	// 手动添加
+	vaild    int32 
 	h 		*Handler
 }
 

@@ -44,11 +44,11 @@ func (ctx *clientContext) MessageFrom() *net.Addr {
 }
 
 func (ctx *clientContext) PostMessage(cid *ClientID, message []byte) {
-	cid.PostMessage(ctx._system, message)
+	cid.postMessage(ctx._system, message)
 }
 
 func (ctx *clientContext) PostToMessage(cid *ClientID, message []byte, target *net.Addr) {
-	cid.PostToMessage(ctx._system, message, *target)
+	cid.postToMessage(ctx._system, message, *target)
 }
 
 // Close 关闭当前 Client
@@ -63,7 +63,7 @@ func (ctx *clientContext) Close(cid *ClientID) {
 		}
 	}
 
-	cid.Close(ctx._system)
+	cid.close(ctx._system)
 }
 
 func (ctx *clientContext) incarnateClient() {
@@ -179,6 +179,7 @@ func (ctx *clientContext) invokerClosed() {
 	}
 
 	atomic.StoreInt32(&ctx._state, stateClosed)
+	atomic.StoreInt32(&ctx._self.vaild, 1)
 	ctx._system._handlers.Remove(ctx._self)
 	ctx._client.Closed(ctx)
 	// TODO: 释放Client
