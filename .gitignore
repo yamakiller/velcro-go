@@ -8,6 +8,8 @@
 *.so
 *.dylib
 
+example/tcpserver/test-logs/
+
 # Test binary, built with `go test -c`
 *.test
 

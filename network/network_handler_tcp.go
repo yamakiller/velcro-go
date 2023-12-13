@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"net"
 	sync "sync"
 
@@ -61,6 +62,8 @@ func (c *tcpClientHandler) Close() {
 		c._wmailcond.L.Unlock()
 		return
 	}
+
+	fmt.Printf("send close\n")
 	c._wmail.Push(nil)
 	c._wmailcond.L.Unlock()
 
@@ -73,10 +76,8 @@ func (c *tcpClientHandler) postMessage(b []byte) {
 		c._wmailcond.L.Unlock()
 		return
 	}
-
 	c._wmail.Push(b)
 	c._wmailcond.L.Unlock()
-
 	c._wmailcond.Signal()
 }
 

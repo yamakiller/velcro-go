@@ -148,9 +148,9 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 			}
 			handler._wmailcond.L.Unlock()
 
-			if msg == nil {
+			if msg == nil && ok {
 				break
-			} else {
+			} else if msg != nil {
 				if _, err := handler._c.Write(msg.([]byte)); err != nil {
 					break
 				}
