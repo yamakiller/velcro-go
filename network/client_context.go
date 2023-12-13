@@ -175,6 +175,15 @@ func (ctx *clientContext) invokerRecvice(b []byte, addr *net.Addr) {
 
 }
 
+func (ctx *clientContext) invokerPing() {
+	if atomic.LoadInt32(&ctx._state) == stateClosed {
+		// 已关闭
+		return
+	}
+
+	ctx._client.Ping(ctx)
+}
+
 func (ctx *clientContext) invokerClosed() {
 	if atomic.LoadInt32(&ctx._state) == stateClosed {
 		// 已关闭

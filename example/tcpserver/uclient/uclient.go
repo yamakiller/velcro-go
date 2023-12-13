@@ -13,6 +13,10 @@ func (tc *TestClient) Accept(ctx network.Context) {
 	ctx.Info("一个连接接入")
 }
 
+func (tc *TestClient) Ping(ctx network.Context) {
+	ctx.Info("请求心跳")
+}
+
 func (tc *TestClient) Recvice(ctx network.Context) {
 	ctx.Info("接收到数据:%d", len(ctx.Message()))
 	ctx.PostMessage(ctx.Self(), []byte("1212323"))

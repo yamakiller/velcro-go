@@ -200,7 +200,8 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					handler._keepaliveError++
-					if handler._keepaliveError < 3 {
+					if handler._keepaliveError <= 3 {
+						handler._invoker.invokerPing()
 						continue
 					}
 				}
