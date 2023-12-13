@@ -31,13 +31,14 @@ func (c *ClientHandler) postToMessage(b []byte, target net.Addr) {
 
 // ClientHandler 客户端处理程序
 type tcpClientHandler struct {
-	_c         net.Conn
-	_wmail     *containers.Queue
-	_wmailcond sync.Cond
-	_keepalive uint32
-	_invoker   MessageInvoker
-	_started   int32
-	_closed    int32
+	_c             net.Conn
+	_wmail         *containers.Queue
+	_wmailcond     sync.Cond
+	_keepalive     uint32
+	_invoker       MessageInvoker
+	_senderStopped chan struct{}
+	_started       int32
+	_closed        int32
 	ClientHandler
 }
 

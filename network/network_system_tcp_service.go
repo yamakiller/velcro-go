@@ -14,6 +14,7 @@ func NewTCPNetworkSystem(options ...ConfigOption) *NetworkSystem {
 func NewTCPNetworkSystemConfig(config *Config) *NetworkSystem {
 	ns := &NetworkSystem{NetType: "TCPServer"}
 	ns.ID = shortuuid.New()
+	ns.Config = config
 	ns._producer = config.Producer
 	ns._handlers = NewHandlerRegistry(ns)
 	ns._extensions = extensions.NewExtensions()

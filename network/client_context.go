@@ -43,6 +43,34 @@ func (ctx *clientContext) MessageFrom() *net.Addr {
 	return ctx._messageFrom
 }
 
+func (ctx *clientContext) PostMessage(cid *ClientID, message []byte) {
+
+	systemMetrics, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
+	if ok && systemMetrics._enabled {
+		t := time.Now()
+		cid.postMessage(ctx._system, message)
+
+		delta := time.Since(t)
+		_ctx := context.Background()
+
+		if instruments := systemMetrics._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+			histogram := instruments.ClientBytesSendHistogram
+
+			labels := append(
+				systemMetrics.CommonLabels(ctx),
+				attribute.String("message bytes", fmt.Sprintf("%d", len(message))),
+			)
+			histogram.Record(_ctx, delta.Seconds(), metric.WithAttributes(labels...))
+		}
+	} else {
+		cid.postMessage(ctx._system, message)
+	}
+}
+
+func (ctx *clientContext) PostToMessage(cid *ClientID, message []byte, target *net.Addr) {
+	cid.postToMessage(ctx._system, message, *target)
+}
+
 // Close 关闭当前 Client
 func (ctx *clientContext) Close() {
 	if atomic.LoadInt32(&ctx._state) >= stateClosing {
@@ -81,7 +109,6 @@ func (ctx *clientContext) incarnateClient() {
 }
 
 // 日志接口
-
 // Info ...
 func (ctx *clientContext) Info(sfmt string, args ...interface{}) {
 	ctx._system._logger.Info(fmt.Sprintf("[%s]", ctx._self.ToString()), sfmt, args...)
@@ -163,117 +190,5 @@ func (ctx *clientContext) invokerClosed() {
 	atomic.StoreInt32(&ctx._state, stateClosed)
 	// 调用客户端逻辑
 	ctx._client.Closed(ctx)
+	// TODO: 释放Client
 }
-
-/*type clientContext struct {
-	_client Client
-	_system *NetworkSystem
-	_closer io.Closer
-	_reader *bufio.Reader
-	_writer *bufio.Writer
-	_self   *ClientID
-	_state  int32
-}
-
-func (ctx *clientContext) NetworkSystem() *NetworkSystem {
-	return ctx._system
-}
-
-func (ctx *clientContext) Logger() logs.LogAgent {
-	return ctx._system.Logger()
-}
-
-func (ctx *clientContext) Self() *ClientID {
-	return ctx._self
-}
-
-func (ctx *clientContext) Client() Client {
-	return ctx._client
-}
-
-func (ctx *clientContext) Reader() *bufio.Reader {
-	return ctx._reader
-}
-
-func (ctx *clientContext) Writer() *bufio.Writer {
-	return ctx._writer
-}
-
-func (ctx *clientContext) postUsrMessage(cid *ClientID, message interface{}) {
-	cid.PostUsrMessage(ctx._system, message)
-}
-
-// Interface: MessageInvoker
-func (ctx *clientContext) invokeSysMessage(message interface{}) {
-	switch msg := message.(type) {
-	case *Activation:
-		ctx.onActivation()
-	case *Close:
-		ctx.onClose(msg)
-	default:
-		ctx._system.Logger().Error("CONTEXT", "System message unfound:%+v", msg)
-	}
-}
-
-func (ctx *clientContext) invokeUsrMessage(md interface{}) {
-	if atomic.LoadInt32(&ctx._state) == stateClosed {
-		// already closed
-		return
-	}
-
-	ctx.processMessage(md)
-}
-
-func (ctx *clientContext) onClose(message interface{}) {
-	if atomic.LoadInt32(&ctx._state) >= stateClosing {
-		// already closing
-		return
-	}
-
-	atomic.StoreInt32(&ctx._state, stateClosing)
-
-	ctx._closer.Close()
-	ctx.invokeUsrMessage(closingMessage)
-	ctx.finalizeStop()
-}
-
-func (ctx *clientContext) onActivation() {
-	if atomic.LoadInt32(&ctx._state) != stateAccept {
-		return
-	}
-
-	atomic.StoreInt32(&ctx._state, stateAlive)
-}
-
-func (ctx *clientContext) finalizeStop() {
-	ctx._system._handlers.Remove(ctx._self)
-	ctx.invokeUsrMessage(closedMessage)
-
-	atomic.StoreInt32(&ctx._state, stateClosed)
-}
-
-func (ctx *clientContext) processMessage(m interface{}) {
-
-	switch msg := m.(type) {
-	case *Closing:
-		ctx.Client().Closing(ctx._self)
-	case *Closed:
-		ctx.Client().Closed(ctx._self)
-	default:
-		ctx.Client().Send(ctx, msg)
-	}
-}
-
-func (ctx *clientContext) incarnateClient() {
-	atomic.StoreInt32(&ctx._state, stateAccept)
-
-	ctx.actor = ctx.props.producer(ctx.actorSystem)
-
-	metricsSystem, ok := ctx.actorSystem.Extensions.Get(extensionId).(*Metrics)
-	if ok && metricsSystem.enabled {
-		_ctx := context.Background()
-		if instruments := metricsSystem.metrics.Get(metrics.InternalActorMetrics); instruments != nil {
-			instruments.ActorSpawnCount.Add(_ctx, 1, metric.WithAttributes(metricsSystem.CommonLabels(ctx)...))
-		}
-	}
-}*/

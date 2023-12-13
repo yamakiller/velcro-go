@@ -27,6 +27,8 @@ func NewProtoMetrics(logger logs.LogAgent) *ProtoMetrics {
 	return &protoMetrics
 }
 
+func (pm *ProtoMetrics) Instruments() *ClientMetrics { return pm._clientMetrics }
+
 func (pm *ProtoMetrics) Register(key string, instance *ClientMetrics) {
 	pm._mutex.Lock()
 	defer pm._mutex.Unlock()

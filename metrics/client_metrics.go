@@ -17,6 +17,8 @@ type ClientMetrics struct {
 	// MetricsID
 	ID string
 
+	// 客户端发送队列监控
+	ClientSendQueueLength metric.Int64ObservableGauge
 	//
 	ClientBytesRecviceHistogram   metric.Float64Histogram
 	ClientBytesSendHistogram      metric.Float64Histogram
@@ -27,7 +29,7 @@ type ClientMetrics struct {
 	ClientCloseCount metric.Int64Counter
 
 	// Threadpool
-	//ThreadPoolLatency metric.Int64Histogram
+	ThreadPoolLatency metric.Int64Histogram
 }
 
 func NewClientMetrics(logger logs.LogAgent) *ClientMetrics {
@@ -92,5 +94,23 @@ func newInstruments(logger logs.LogAgent) *ClientMetrics {
 		logger.Error("[METRICS]", err.Error())
 	}
 
+	if instruments.ThreadPoolLatency, err = meter.Int64Histogram(
+		"protoclient_thread_pool_latency_duration_seconds",
+		metric.WithDescription("History of latency in second"),
+		metric.WithUnit("ms"),
+	); err != nil {
+		err = fmt.Errorf("failed to create ThreadPoolLatency instrument, %w", err)
+		logger.Error("[METRICS]", "[error:%s]", err.Error())
+	}
+
 	return &instruments
+}
+
+// SetClientSendQueueLengthGauge makes sure access to ClientSendQueueLength is sequenced
+func (cm *ClientMetrics) SetClientSendQueueLengthGauge(gauge metric.Int64ObservableGauge) {
+	// lock our mutex
+	cm._mutex.Lock()
+	defer cm._mutex.Unlock()
+
+	cm.ClientSendQueueLength = gauge
 }

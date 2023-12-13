@@ -30,15 +30,31 @@ func (ns *NetworkSystem) Shutdown() {
 	ns._module.Stop()
 }
 
-func (ns *NetworkSystem) Logger() logs.LogAgent {
+func (ns *NetworkSystem) logger() logs.LogAgent {
 	return ns._logger
 }
 
-/*func (ns *NetworkSystem) IsStopped() bool {
-	select {
-	case <-ns._stopper:
-		return true
-	default:
-		return false
-	}
-}*/
+// 日志
+func (ns *NetworkSystem) Info(sfmt string, args ...interface{}) {
+	ns._logger.Info("[NETWORKSYSTEM]", sfmt, args...)
+}
+
+func (ns *NetworkSystem) Debug(sfmt string, args ...interface{}) {
+	ns._logger.Debug("[NETWORKSYSTEM]", sfmt, args...)
+}
+
+func (ns *NetworkSystem) Error(sfmt string, args ...interface{}) {
+	ns._logger.Error("[NETWORKSYSTEM]", sfmt, args...)
+}
+
+func (ns *NetworkSystem) Warning(sfmt string, args ...interface{}) {
+	ns._logger.Warning("[NETWORKSYSTEM]", sfmt, args...)
+}
+
+func (ns *NetworkSystem) Fatal(sfmt string, args ...interface{}) {
+	ns._logger.Fatal("[NETWORKSYSTEM]", sfmt, args...)
+}
+
+func (ns *NetworkSystem) Panic(sfmt string, args ...interface{}) {
+	ns._logger.Panic("[NETWORKSYSTEM]", sfmt, args...)
+}

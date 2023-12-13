@@ -1,6 +1,8 @@
 package network
 
 import (
+	"context"
+	"fmt"
 	"net"
 	"strings"
 	sync "sync"
@@ -8,6 +10,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
+	"github.com/yamakiller/velcro-go/metrics"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 )
 
 func newTcpNetworkServerModule(system *NetworkSystem) *tcpNetworkServerModule {
@@ -62,7 +67,7 @@ func (tns *tcpNetworkServerModule) Open(addr string) error {
 					continue
 				}
 
-				tns._system.Logger().Debug("[NETWORK-SERVER-TCP]", "%s accept error %v", address, err)
+				tns._system.Debug("%s accept error %v", address, err)
 				goto exit_label
 			}
 
@@ -97,12 +102,30 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 
 	ctx := clientContext{_system: tns._system, _state: stateAccept}
 	handler := &tcpClientHandler{
-		_c:         conn,
-		_wmail:     containers.NewQueue(4),
-		_wmailcond: *sync.NewCond(&sync.Mutex{}),
-		_keepalive: 2000,
-		_invoker:   &ctx,
-		_closed:    0,
+		_c:             conn,
+		_wmail:         containers.NewQueue(4),
+		_wmailcond:     *sync.NewCond(&sync.Mutex{}),
+		_keepalive:     2000,
+		_invoker:       &ctx,
+		_senderStopped: make(chan struct{}),
+		_closed:        0,
+	}
+
+	if tns._system.Config.MetricsProvider != nil {
+		sysMetrics, ok := tns._system._extensions.Get(extensionId).(*Metrics)
+		if ok && sysMetrics._enabled {
+			if instruments := sysMetrics._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+				sysMetrics.PrepareSendQueueLengthGauge()
+				meter := otel.Meter(metrics.LibName)
+				if _, err := meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
+					o.ObserveInt64(instruments.ClientSendQueueLength, int64(handler._wmail.Length()), metric.WithAttributes(sysMetrics.CommonLabels(&ctx)...))
+					return nil
+				}); err != nil {
+					err = fmt.Errorf("failed to instrument Client SendQueue, %w", err)
+					tns._system.Error(err.Error())
+				}
+			}
+		}
 	}
 
 	cid, ok := tns._system._handlers.Push(handler, id)
@@ -132,7 +155,6 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 					break
 				}
 			}
-
 		}
 
 		handler._wmailcond.L.Lock()
@@ -142,6 +164,7 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 		handler._c.Close()
 		handler._wmail.Destory()
 		handler._wmail = nil
+		close(handler._senderStopped)
 	}()
 
 	go func() {
@@ -176,6 +199,17 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 
 			handler._invoker.invokerRecvice(tmp[:n], &remoteAddr)
 		}
+
+		handler._wmailcond.L.Lock()
+		if handler._closed == 0 {
+			handler._closed = 1
+			handler._c.Close()
+		}
+		handler._wmailcond.L.Unlock()
+		handler._wmailcond.Signal()
+
+		// 等待发送端结束
+		_ = <-handler._senderStopped
 
 		//调用已关闭
 		if handler._invoker != nil {

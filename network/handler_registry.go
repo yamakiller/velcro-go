@@ -1,11 +1,9 @@
 package network
 
 import (
-	"time"
-
-	"github.com/bwmarrin/snowflake"
 	cmap "github.com/orcaman/concurrent-map"
 	murmur32 "github.com/twmb/murmur3"
+	"github.com/yamakiller/velcro-go/utils/snowflakealien"
 )
 
 const (
@@ -13,12 +11,9 @@ const (
 )
 
 func NewHandlerRegistry(system *NetworkSystem) *HandleRegistryValue {
-	snowflake.Epoch = time.Now().UnixNano() / 1e6
-	node, _ := snowflake.NewNode(25768)
 
 	hrv := &HandleRegistryValue{
 		Address:    localAddress,
-		_node:      node,
 		_system:    system,
 		_localCIDs: newSliceMap(),
 	}
@@ -43,8 +38,7 @@ type sliceMap struct {
 
 func (s *sliceMap) getBucket(key string) cmap.ConcurrentMap {
 	hash := murmur32.Sum32([]byte(key))
-	index := uint32(hash)&uint32(len(s.LocalCIDs)) - 1
-
+	index := uint32(hash) & (uint32(len(s.LocalCIDs)) - 1)
 	return s.LocalCIDs[index]
 }
 
@@ -72,13 +66,12 @@ func int64ToId(u int64) string {
 
 type HandleRegistryValue struct {
 	Address    string
-	_node      *snowflake.Node
 	_system    *NetworkSystem
 	_localCIDs *sliceMap
 }
 
 func (hr *HandleRegistryValue) NextId() string {
-	counter := hr._node.Generate().Int64()
+	counter := int64(snowflakealien.Generate())
 
 	return int64ToId(counter)
 }

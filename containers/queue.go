@@ -1,9 +1,5 @@
 package containers
 
-import (
-	"github.com/yamakiller/velcro-go/utils"
-)
-
 func NewQueue(cap int) *Queue {
 	return &Queue{
 		_cap:               cap,
@@ -85,7 +81,7 @@ func (qe *Queue) Length() int {
 }
 
 func (qe *Queue) unpush(item interface{}) {
-	utils.AssertEmpty(item, "error push is nil")
+	//utils.AssertEmpty(item, "error push is nil")
 	qe._buffer[qe._tail] = item
 	qe._tail++
 	if qe._tail >= qe._cap {

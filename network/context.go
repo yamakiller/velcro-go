@@ -19,6 +19,8 @@ type Context interface {
 	// Message 返回当前数据
 	Message() []byte
 	MessageFrom() *net.Addr
+	PostMessage(*ClientID, []byte)
+	PostToMessage(*ClientID, []byte, *net.Addr)
 	// Close 关闭当前连接
 	Close()
 	// 日志

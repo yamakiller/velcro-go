@@ -36,18 +36,18 @@ func (p *Program) Start(s service.Service) error {
 		network.WithProducer(uclient.NewTestClient))
 
 	if err := p.System.Open("127.0.0.1:9860"); err != nil {
-		p.System.Logger().Error("[SYSTEM]", "Listening 127.0.0.1:9860 fail[error:%s]", err.Error())
+		p.System.Error("Listening 127.0.0.1:9860 fail[error:%s]", err.Error())
 		return err
 	}
 
-	p.System.Logger().Info("[SYSTEM]", "Listening 127.0.0.1:9860")
+	p.System.Info("Listening 127.0.0.1:9860")
 
 	return nil
 }
 
 func (p *Program) Stop(s service.Service) error {
 	if p.System != nil {
-		p.System.Logger().Info("[SYSTEM]", "Service Shutdown")
+		p.System.Info("Service Shutdown")
 		p.System.Shutdown()
 		p.System = nil
 	}

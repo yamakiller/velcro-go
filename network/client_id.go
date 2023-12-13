@@ -24,11 +24,11 @@ func (cid *ClientID) ref(system *NetworkSystem) Handler {
 	return ref
 }
 
-func (cid *ClientID) PostMessage(system *NetworkSystem, message []byte) {
+func (cid *ClientID) postMessage(system *NetworkSystem, message []byte) {
 	cid.ref(system).postMessage(message)
 }
 
-func (cid *ClientID) PostToMessage(system *NetworkSystem, message []byte, target net.Addr) {
+func (cid *ClientID) postToMessage(system *NetworkSystem, message []byte, target net.Addr) {
 	cid.ref(system).postToMessage(message, target)
 }
 
@@ -37,7 +37,7 @@ func (cid *ClientID) Close(system *NetworkSystem) {
 }
 
 func (cid *ClientID) ToString() string {
-	return cid.Id
+	return cid.Address + cid.Id
 }
 
 func (cid *ClientID) Equal(other *ClientID) bool {
