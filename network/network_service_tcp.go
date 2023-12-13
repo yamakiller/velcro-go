@@ -139,12 +139,16 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	tns._waitGroup.Add(2)
 	go func() {
 		defer tns._waitGroup.Done()
-
 		for {
 			handler._wmailcond.L.Lock()
 			msg, ok := handler._wmail.Pop()
 			if !ok || (handler._started == 0 && msg != nil) {
 				handler._wmailcond.Wait()
+			}
+
+			if handler._closed != 0 {
+				handler._wmailcond.L.Unlock()
+				break
 			}
 			handler._wmailcond.L.Unlock()
 
@@ -194,9 +198,16 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 
 			n, err := handler._c.Read(tmp[:])
 			if err != nil {
+				if e, ok := err.(net.Error); ok && e.Timeout() {
+					handler._keepaliveError++
+					if handler._keepaliveError < 3 {
+						continue
+					}
+				}
 				break
 			}
 
+			handler._keepaliveError = 0
 			handler._invoker.invokerRecvice(tmp[:n], &remoteAddr)
 		}
 

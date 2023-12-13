@@ -5,7 +5,7 @@ import "net"
 const (
 	stateAccept int32 = iota
 	stateAlive
-	stateClosing
+	//stateClosing
 	stateClosed
 )
 
@@ -22,7 +22,7 @@ type Context interface {
 	PostMessage(*ClientID, []byte)
 	PostToMessage(*ClientID, []byte, *net.Addr)
 	// Close 关闭当前连接
-	Close()
+	Close(*ClientID)
 	// 日志
 	Info(sfmt string, args ...interface{})
 	Debug(sfmt string, args ...interface{})

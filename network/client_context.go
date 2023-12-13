@@ -72,12 +72,7 @@ func (ctx *clientContext) PostToMessage(cid *ClientID, message []byte, target *n
 }
 
 // Close 关闭当前 Client
-func (ctx *clientContext) Close() {
-	if atomic.LoadInt32(&ctx._state) >= stateClosing {
-		// 已经关闭
-		return
-	}
-
+func (ctx *clientContext) Close(cid *ClientID) {
 	if ctx._system.Config.MetricsProvider != nil {
 		metricsSystem, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
 		if ok && metricsSystem._enabled {
@@ -88,8 +83,7 @@ func (ctx *clientContext) Close() {
 		}
 	}
 
-	atomic.StoreInt32(&ctx._state, stateClosing)
-	ctx._self.Close(ctx._system)
+	cid.ref(ctx._system).Close()
 }
 
 func (ctx *clientContext) incarnateClient() {
