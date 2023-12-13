@@ -1,27 +1,27 @@
 package network
 
-type cidKey struct {
+type CIDKEY struct {
 	_address string
 	_id      string
 }
 
 type ClientIDSet struct {
 	_cids   []*ClientID
-	_lookup map[cidKey]int
+	_lookup map[CIDKEY]int
 }
 
-func (cis *ClientIDSet) key(cid *ClientID) cidKey {
-	return cidKey{_address: cid.Address, _id: cid.Id}
+func (cis *ClientIDSet) Key(cid *ClientID) CIDKEY {
+	return CIDKEY{_address: cid.Address, _id: cid.Id}
 }
 
 func (cis *ClientIDSet) ensureInit() {
 	if cis._lookup == nil {
-		cis._lookup = make(map[cidKey]int)
+		cis._lookup = make(map[CIDKEY]int)
 	}
 }
 
 func (cis *ClientIDSet) indexOf(v *ClientID) int {
-	if idx, ok := cis._lookup[cis.key(v)]; ok {
+	if idx, ok := cis._lookup[cis.Key(v)]; ok {
 		return idx
 	}
 
@@ -29,7 +29,7 @@ func (cis *ClientIDSet) indexOf(v *ClientID) int {
 }
 
 func (cis *ClientIDSet) Contains(v *ClientID) bool {
-	_, ok := cis._lookup[cis.key(v)]
+	_, ok := cis._lookup[cis.Key(v)]
 	return ok
 }
 
@@ -41,7 +41,7 @@ func (cis *ClientIDSet) Push(v *ClientID) {
 	}
 
 	cis._cids = append(cis._cids, v)
-	cis._lookup[cis.key(v)] = len(cis._cids) - 1
+	cis._lookup[cis.Key(v)] = len(cis._cids) - 1
 }
 
 func (cis *ClientIDSet) Erase(v *ClientID) bool {
@@ -52,12 +52,12 @@ func (cis *ClientIDSet) Erase(v *ClientID) bool {
 		return false
 	}
 
-	delete(cis._lookup, cis.key(v))
+	delete(cis._lookup, cis.Key(v))
 	if i < len(cis._cids)-1 {
 		lastPID := cis._cids[len(cis._cids)-1]
 
 		cis._cids[i] = lastPID
-		cis._lookup[cis.key(lastPID)] = i
+		cis._lookup[cis.Key(lastPID)] = i
 	}
 
 	cis._cids = cis._cids[:len(cis._cids)-1]
@@ -73,7 +73,7 @@ func (cis *ClientIDSet) Len() int {
 // Clear removes all the elements in the set.
 func (cis *ClientIDSet) Clear() {
 	cis._cids = cis._cids[:0]
-	cis._lookup = make(map[cidKey]int)
+	cis._lookup = make(map[CIDKEY]int)
 }
 
 // Empty reports whether the set is empty.
