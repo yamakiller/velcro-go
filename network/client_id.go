@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"net"
 	"sync/atomic"
 	"unsafe"
@@ -9,7 +8,6 @@ import (
 
 func (cid *ClientID) ref(system *NetworkSystem) Handler {
 	p := (*Handler)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&cid.h))))
-	fmt.Printf("%+v\n", p)
 	if p != nil {
 		if l, ok := (*p).(*ClientHandler); ok && atomic.LoadInt32(&l._dead) == 1 {
 			atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&cid.h)), nil)
