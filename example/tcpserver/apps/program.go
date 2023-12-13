@@ -42,6 +42,14 @@ func (p *Program) Start(s service.Service) error {
 
 	p.System.Info("Listening 127.0.0.1:9860")
 
+	/*go func() {
+
+		time.Sleep(time.Second * 6)
+		fmt.Println("stop")
+		p.testStop()
+		fmt.Println("stop complate")
+	}()*/
+
 	return nil
 }
 
@@ -52,6 +60,14 @@ func (p *Program) Stop(s service.Service) error {
 		p.System = nil
 	}
 	return nil
+}
+
+func (p *Program) testStop() {
+	if p.System != nil {
+		p.System.Info("Service Shutdown")
+		p.System.Shutdown()
+		p.System = nil
+	}
 }
 
 func (p *Program) getDirLog() string {

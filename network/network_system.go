@@ -36,25 +36,25 @@ func (ns *NetworkSystem) logger() logs.LogAgent {
 
 // 日志
 func (ns *NetworkSystem) Info(sfmt string, args ...interface{}) {
-	ns._logger.Info("[NETWORKSYSTEM]", sfmt, args...)
+	ns._logger.Info("[NETWORKSYSTEM$"+ns.ID+"]", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Debug(sfmt string, args ...interface{}) {
-	ns._logger.Debug("[NETWORKSYSTEM]", sfmt, args...)
+	ns._logger.Debug("[NETWORKSYSTEM$"+ns.ID+"]", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Error(sfmt string, args ...interface{}) {
-	ns._logger.Error("[NETWORKSYSTEM]", sfmt, args...)
+	ns._logger.Error("[NETWORKSYSTEM$"+ns.ID+"]", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Warning(sfmt string, args ...interface{}) {
-	ns._logger.Warning("[NETWORKSYSTEM]", sfmt, args...)
+	ns._logger.Warning("[NETWORKSYSTEM$"+ns.ID+"]", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Fatal(sfmt string, args ...interface{}) {
-	ns._logger.Fatal("[NETWORKSYSTEM]", sfmt, args...)
+	ns._logger.Fatal("[NETWORKSYSTEM$"+ns.ID+"]", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Panic(sfmt string, args ...interface{}) {
-	ns._logger.Panic("[NETWORKSYSTEM]", sfmt, args...)
+	ns._logger.Panic("[NETWORKSYSTEM$"+ns.ID+"]", sfmt, args...)
 }

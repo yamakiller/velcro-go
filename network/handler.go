@@ -4,7 +4,7 @@ import "net"
 
 type Handler interface {
 	start()
-	postMessage([]byte)
-	postToMessage([]byte, net.Addr)
+	PostMessage([]byte)
+	PostToMessage([]byte, net.Addr)
 	Close()
 }

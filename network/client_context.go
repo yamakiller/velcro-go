@@ -44,31 +44,11 @@ func (ctx *clientContext) MessageFrom() *net.Addr {
 }
 
 func (ctx *clientContext) PostMessage(cid *ClientID, message []byte) {
-
-	systemMetrics, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
-	if ok && systemMetrics._enabled {
-		t := time.Now()
-		cid.postMessage(ctx._system, message)
-
-		delta := time.Since(t)
-		_ctx := context.Background()
-
-		if instruments := systemMetrics._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
-			histogram := instruments.ClientBytesSendHistogram
-
-			labels := append(
-				systemMetrics.CommonLabels(ctx),
-				attribute.String("message bytes", fmt.Sprintf("%d", len(message))),
-			)
-			histogram.Record(_ctx, delta.Seconds(), metric.WithAttributes(labels...))
-		}
-	} else {
-		cid.postMessage(ctx._system, message)
-	}
+	cid.PostMessage(ctx._system, message)
 }
 
 func (ctx *clientContext) PostToMessage(cid *ClientID, message []byte, target *net.Addr) {
-	cid.postToMessage(ctx._system, message, *target)
+	cid.PostToMessage(ctx._system, message, *target)
 }
 
 // Close 关闭当前 Client
@@ -83,7 +63,7 @@ func (ctx *clientContext) Close(cid *ClientID) {
 		}
 	}
 
-	cid.ref(ctx._system).Close()
+	cid.Close(ctx._system)
 }
 
 func (ctx *clientContext) incarnateClient() {
@@ -134,11 +114,19 @@ func (ctx *clientContext) Panic(sfmt string, args ...interface{}) {
 }
 
 func (ctx *clientContext) invokerAccept() {
+	ctx._self.ref(ctx._system)
 	ctx._client.Accept(ctx)
 }
 
 // MessageInvoker 接口实现
 func (ctx *clientContext) invokerRecvice(b []byte, addr *net.Addr) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.EscalateFailure(r, b)
+		}
+	}()
+
 	if atomic.LoadInt32(&ctx._state) == stateClosed {
 		// 已经关闭
 		return
@@ -189,9 +177,12 @@ func (ctx *clientContext) invokerClosed() {
 		// 已关闭
 		return
 	}
-	ctx._system._handlers.Remove(ctx._self)
+
 	atomic.StoreInt32(&ctx._state, stateClosed)
-	// 调用客户端逻辑
+	ctx._system._handlers.Remove(ctx._self)
 	ctx._client.Closed(ctx)
 	// TODO: 释放Client
+}
+
+func (ctx *clientContext) EscalateFailure(reason interface{}, message interface{}) {
 }

@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"net"
 	"sync/atomic"
 	"unsafe"
@@ -8,6 +9,7 @@ import (
 
 func (cid *ClientID) ref(system *NetworkSystem) Handler {
 	p := (*Handler)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&cid.h))))
+	fmt.Printf("%+v\n", p)
 	if p != nil {
 		if l, ok := (*p).(*ClientHandler); ok && atomic.LoadInt32(&l._dead) == 1 {
 			atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&cid.h)), nil)
@@ -24,12 +26,12 @@ func (cid *ClientID) ref(system *NetworkSystem) Handler {
 	return ref
 }
 
-func (cid *ClientID) postMessage(system *NetworkSystem, message []byte) {
-	cid.ref(system).postMessage(message)
+func (cid *ClientID) PostMessage(system *NetworkSystem, message []byte) {
+	cid.ref(system).PostMessage(message)
 }
 
-func (cid *ClientID) postToMessage(system *NetworkSystem, message []byte, target net.Addr) {
-	cid.ref(system).postToMessage(message, target)
+func (cid *ClientID) PostToMessage(system *NetworkSystem, message []byte, target net.Addr) {
+	cid.ref(system).PostToMessage(message, target)
 }
 
 func (cid *ClientID) Close(system *NetworkSystem) {

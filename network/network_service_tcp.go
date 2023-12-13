@@ -12,6 +12,7 @@ import (
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/metrics"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -97,6 +98,15 @@ func (tns *tcpNetworkServerModule) Stop() {
 	tns._listen = nil
 }
 
+func (tns *tcpNetworkServerModule) isStopped() bool {
+	select {
+	case <-tns._stoped:
+		return true
+	default:
+		return false
+	}
+}
+
 func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	id := tns._system._handlers.NextId()
 
@@ -155,9 +165,32 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 			if msg == nil && ok {
 				break
 			} else if msg != nil {
-				if _, err := handler._c.Write(msg.([]byte)); err != nil {
-					break
+				systemMetrics, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
+				if ok && systemMetrics._enabled {
+					t := time.Now()
+
+					if _, err := handler._c.Write(msg.([]byte)); err != nil {
+						break
+					}
+
+					delta := time.Since(t)
+					_ctx := context.Background()
+
+					if instruments := systemMetrics._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+						histogram := instruments.ClientBytesSendHistogram
+
+						labels := append(
+							systemMetrics.CommonLabels(&ctx),
+							attribute.String("message bytes", fmt.Sprintf("%d", len(msg.([]byte)))),
+						)
+						histogram.Record(_ctx, delta.Seconds(), metric.WithAttributes(labels...))
+					}
+				} else {
+					if _, err := handler._c.Write(msg.([]byte)); err != nil {
+						break
+					}
 				}
+
 			}
 		}
 
@@ -176,12 +209,12 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 
 		for {
 			handler._wmailcond.L.Lock()
-			if handler._started != 1 {
+			if handler._started != 1 && !tns.isStopped() {
 				handler._wmailcond.Wait()
 			}
 			handler._wmailcond.L.Unlock()
 
-			if handler._started == 1 {
+			if handler._started == 1 || tns.isStopped() {
 				break
 			}
 		}
@@ -191,6 +224,10 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 		var tmp [512]byte
 		remoteAddr := handler._c.RemoteAddr()
 		for {
+
+			if tns.isStopped() || handler._closed != 0 {
+				break
+			}
 
 			if handler._keepalive > 0 {
 				handler._c.SetReadDeadline(time.Now().Add(time.Duration(handler._keepalive) * time.Millisecond * 2.0))

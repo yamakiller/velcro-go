@@ -14,10 +14,12 @@ func main() {
 		Description: "网络系统TCP服务系统测试",
 	}
 
-	o, err := guard.Startup(&apps.Program{})
+	p := &apps.Program{}
+	o, err := guard.Startup(p)
 	if err != nil {
 		log.Println(err.Error())
 	} else if o != "" {
 		log.Println(o)
 	}
+
 }

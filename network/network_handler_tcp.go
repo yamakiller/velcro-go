@@ -22,11 +22,11 @@ func (c *ClientHandler) Close() {
 
 }
 
-func (c *ClientHandler) postMessage(b []byte) {
+func (c *ClientHandler) PostMessage(b []byte) {
 
 }
 
-func (c *ClientHandler) postToMessage(b []byte, target net.Addr) {
+func (c *ClientHandler) PostToMessage(b []byte, target net.Addr) {
 
 }
 
@@ -71,7 +71,7 @@ func (c *tcpClientHandler) Close() {
 	c._wmailcond.Broadcast()
 }
 
-func (c *tcpClientHandler) postMessage(b []byte) {
+func (c *tcpClientHandler) PostMessage(b []byte) {
 	c._wmailcond.L.Lock()
 	if c._closed != 0 && c._started == 1 {
 		c._wmailcond.L.Unlock()
@@ -82,6 +82,6 @@ func (c *tcpClientHandler) postMessage(b []byte) {
 	c._wmailcond.Signal()
 }
 
-func (c *tcpClientHandler) postToMessage(b []byte, target net.Addr) {
+func (c *tcpClientHandler) PostToMessage(b []byte, target net.Addr) {
 	panic("tcp undefine post to message")
 }

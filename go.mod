@@ -3,7 +3,6 @@ module github.com/yamakiller/velcro-go
 go 1.20
 
 require (
-	github.com/bwmarrin/snowflake v0.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/kardianos/service v1.2.2
 	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f

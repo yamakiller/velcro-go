@@ -1,5 +1,7 @@
 package network
 
+import "sync"
+
 type cidKey struct {
 	_address string
 	_id      string
@@ -8,6 +10,7 @@ type cidKey struct {
 type ClientIDSet struct {
 	_cids   []*ClientID
 	_lookup map[cidKey]int
+	_mux    sync.Mutex
 }
 
 func (cis *ClientIDSet) key(cid *ClientID) cidKey {
@@ -28,14 +31,17 @@ func (cis *ClientIDSet) indexOf(v *ClientID) int {
 	return -1
 }
 
-func (cids *ClientIDSet) Contains(v *ClientID) bool {
-	_, ok := cids._lookup[cids.key(v)]
+func (cis *ClientIDSet) contains(v *ClientID) bool {
+	_, ok := cis._lookup[cis.key(v)]
 	return ok
 }
 
 func (cis *ClientIDSet) Push(v *ClientID) {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
+
 	cis.ensureInit()
-	if cis.Contains(v) {
+	if cis.contains(v) {
 		return
 	}
 
@@ -44,6 +50,9 @@ func (cis *ClientIDSet) Push(v *ClientID) {
 }
 
 func (cis *ClientIDSet) Erase(v *ClientID) bool {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
+
 	cis.ensureInit()
 	i := cis.indexOf(v)
 	if i == -1 {
@@ -64,33 +73,50 @@ func (cis *ClientIDSet) Erase(v *ClientID) bool {
 }
 
 func (cis *ClientIDSet) Len() int {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
+
 	return len(cis._cids)
 }
 
 // Clear removes all the elements in the set.
 func (cis *ClientIDSet) Clear() {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
+
 	cis._cids = cis._cids[:0]
 	cis._lookup = make(map[cidKey]int)
 }
 
 // Empty reports whether the set is empty.
 func (cis *ClientIDSet) Empty() bool {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
+
 	return cis.Len() == 0
 }
 
 // Values returns all the elements of the set as a slice.
 func (cis *ClientIDSet) Values() []*ClientID {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
+
 	return cis._cids
 }
 
 // ForEach invokes f for every element of the set.
 func (cis *ClientIDSet) ForEach(f func(i int, cid *ClientID)) {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
+
 	for i, cid := range cis._cids {
 		f(i, cid)
 	}
 }
 
 func (cis *ClientIDSet) Get(index int) *ClientID {
+	cis._mux.Lock()
+	defer cis._mux.Unlock()
 	return cis._cids[index]
 }
 

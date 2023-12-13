@@ -28,7 +28,8 @@ type ClientID struct {
 	Address string `protobuf:"bytes,1,opt,name=Address,proto3" json:"Address,omitempty"` // 地址
 	Id      string `protobuf:"bytes,2,opt,name=Id,proto3" json:"Id,omitempty"`           // 唯一标记
 
-	h *Handler
+	// 手动添加
+	h 		*Handler
 }
 
 func (x *ClientID) Reset() {
