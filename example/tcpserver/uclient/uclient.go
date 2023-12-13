@@ -14,7 +14,7 @@ func (tc *TestClient) Accept(ctx network.Context) {
 }
 
 func (tc *TestClient) Recvice(ctx network.Context) {
-	ctx.Info("接收到数据:%d\n", len(ctx.Message()))
+	ctx.Info("接收到数据:%d", len(ctx.Message()))
 	ctx.PostMessage(ctx.Self(), []byte("1212323"))
 }
 
