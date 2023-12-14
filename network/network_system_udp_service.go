@@ -8,7 +8,7 @@ import (
 func NewUDPNetworkSystem(options ...ConfigOption) *NetworkSystem {
 	config := Configure(options...)
 
-	return NewTCPNetworkSystemConfig(config)
+	return NewUDPNetworkSystemConfig(config)
 }
 
 func NewUDPNetworkSystemConfig(config *Config) *NetworkSystem {
