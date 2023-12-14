@@ -13,7 +13,7 @@ var _ Handler = &tcpClientHandler{}
 type tcpClientHandler struct {
 	_c              net.Conn
 	_wmail          *containers.Queue
-	_wmailcond      sync.Cond
+	_wmailcond      *sync.Cond
 	_keepalive      uint32
 	_keepaliveError uint8
 	_invoker        MessageInvoker

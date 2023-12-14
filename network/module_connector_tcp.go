@@ -80,7 +80,7 @@ func (tnc *tcpNetworkConnectorModule) spawn(conn net.Conn) error {
 	handler := &tcpConnectorHandler{
 		_c:             conn,
 		_wmail:         containers.NewQueue(4, &lsync.NoMutex{}),
-		_wmailcond:     *sync.NewCond(&sync.Mutex{}),
+		_wmailcond:     sync.NewCond(&sync.Mutex{}),
 		_invoker:       &ctx,
 		_senderStopped: make(chan struct{}),
 	}
@@ -104,6 +104,10 @@ func (tnc *tcpNetworkConnectorModule) spawn(conn net.Conn) error {
 
 	cid, ok := tnc._system._handlers.Push(handler, id)
 	if !ok {
+		handler._c.Close()
+		handler._wmail = nil
+		handler._wmailcond = nil
+		close(handler._senderStopped)
 		return errors.Errorf("client-id %s existed", id)
 	}
 
@@ -182,7 +186,7 @@ func (tnc *tcpNetworkConnectorModule) spawn(conn net.Conn) error {
 				break
 			}
 
-			handler._invoker.invokerRecvice(tmp[:n], &remoteAddr)
+			handler._invoker.invokerRecvice(tmp[:n], remoteAddr)
 		}
 
 		handler._wmailcond.L.Lock()

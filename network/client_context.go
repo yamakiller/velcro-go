@@ -17,7 +17,7 @@ type clientContext struct {
 	_system      *NetworkSystem
 	_self        *ClientID
 	_message     []byte
-	_messageFrom *net.Addr
+	_messageFrom net.Addr
 	_state       int32
 }
 
@@ -38,7 +38,7 @@ func (ctx *clientContext) Message() []byte {
 	return ctx._message
 }
 
-func (ctx *clientContext) MessageFrom() *net.Addr {
+func (ctx *clientContext) MessageFrom() net.Addr {
 	return ctx._messageFrom
 }
 
@@ -46,8 +46,8 @@ func (ctx *clientContext) PostMessage(cid *ClientID, message []byte) {
 	cid.postMessage(ctx._system, message)
 }
 
-func (ctx *clientContext) PostToMessage(cid *ClientID, message []byte, target *net.Addr) {
-	cid.postToMessage(ctx._system, message, *target)
+func (ctx *clientContext) PostToMessage(cid *ClientID, message []byte, target net.Addr) {
+	cid.postToMessage(ctx._system, message, target)
 }
 
 // Close 关闭当前 Client
@@ -118,7 +118,7 @@ func (ctx *clientContext) invokerAccept() {
 }
 
 // MessageInvoker 接口实现
-func (ctx *clientContext) invokerRecvice(b []byte, addr *net.Addr) {
+func (ctx *clientContext) invokerRecvice(b []byte, addr net.Addr) {
 
 	defer func() {
 		if r := recover(); r != nil {

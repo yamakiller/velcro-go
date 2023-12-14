@@ -4,7 +4,7 @@ import "net"
 
 type MessageInvoker interface {
 	invokerAccept()
-	invokerRecvice([]byte, *net.Addr)
+	invokerRecvice([]byte, net.Addr)
 	invokerPing()
 	invokerClosed()
 }

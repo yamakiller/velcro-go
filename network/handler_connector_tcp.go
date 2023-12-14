@@ -11,7 +11,7 @@ import (
 type tcpConnectorHandler struct {
 	_c             net.Conn
 	_wmail         *containers.Queue
-	_wmailcond     sync.Cond
+	_wmailcond     *sync.Cond
 	_invoker       MessageInvoker
 	_senderStopped chan struct{}
 	_started       int32

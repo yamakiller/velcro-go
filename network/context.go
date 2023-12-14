@@ -18,9 +18,9 @@ type Context interface {
 	NetworkSystem() *NetworkSystem
 	// Message 返回当前数据
 	Message() []byte
-	MessageFrom() *net.Addr
+	MessageFrom() net.Addr
 	PostMessage(*ClientID, []byte)
-	PostToMessage(*ClientID, []byte, *net.Addr)
+	PostToMessage(*ClientID, []byte, net.Addr)
 	// Close 关闭当前连接
 	Close(*ClientID)
 	// 日志
