@@ -54,6 +54,7 @@ func (p *Program) Start(s service.Service) error {
 	}
 
 	config := configs.Config{}
+	envs.With(config.IEnv())
 	if err := envs.Instance().Load("config", cfgFilePath, &config); err != nil {
 		p.logAgent.Error(appName, "Load %s config file fail-%s", cfgFilePath, err.Error())
 		p.logAgent.Close()

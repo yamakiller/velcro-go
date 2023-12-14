@@ -1,13 +1,18 @@
 package network
 
 import (
+	"context"
+	"fmt"
 	"net"
 	sync "sync"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
+	"github.com/yamakiller/velcro-go/metrics"
 	lsync "github.com/yamakiller/velcro-go/sync"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 )
 
 func newTcpConnectorNetworkServerModule(system *NetworkSystem) *tcpNetworkConnectorModule {
@@ -45,6 +50,10 @@ func (tnc *tcpNetworkConnectorModule) Open(addr string) error {
 	return nil
 }
 
+func (tnc *tcpNetworkConnectorModule) Network() string {
+	return "tcpconnector"
+}
+
 func (tnc *tcpNetworkConnectorModule) Stop() {
 	if tnc._stoped != nil {
 		close(tnc._stoped)
@@ -74,6 +83,23 @@ func (tnc *tcpNetworkConnectorModule) spawn(conn net.Conn) error {
 		_wmailcond:     *sync.NewCond(&sync.Mutex{}),
 		_invoker:       &ctx,
 		_senderStopped: make(chan struct{}),
+	}
+
+	if tnc._system.Config.MetricsProvider != nil {
+		sysMetrics, ok := tnc._system._extensions.Get(ctx._system._extensionId).(*Metrics)
+		if ok && sysMetrics._enabled {
+			if instruments := sysMetrics._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
+				sysMetrics.PrepareSendQueueLengthGauge()
+				meter := otel.Meter(metrics.LibName)
+				if _, err := meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
+					o.ObserveInt64(instruments.ClientSendQueueLength, int64(handler._wmail.Length()), metric.WithAttributes(sysMetrics.CommonLabels(&ctx)...))
+					return nil
+				}); err != nil {
+					err = fmt.Errorf("failed to instrument Client SendQueue, %w", err)
+					tnc._system.Error(err.Error())
+				}
+			}
+		}
 	}
 
 	cid, ok := tnc._system._handlers.Push(handler, id)

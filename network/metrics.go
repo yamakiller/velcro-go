@@ -11,12 +11,13 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-var extensionId = extensions.NextExtensionID()
+// var extensionId = extensions.NextExtensionID()
 
 type Metrics struct {
-	_metrics *metrics.ProtoMetrics
-	_enabled bool
-	_system  *NetworkSystem
+	_metrics     *metrics.ProtoMetrics
+	_enabled     bool
+	_system      *NetworkSystem
+	_extensionId extensions.ExtensionID
 }
 
 var _ extensions.Extension = &Metrics{}
@@ -26,7 +27,7 @@ func (m *Metrics) Enabled() bool {
 }
 
 func (m *Metrics) ExtensionID() extensions.ExtensionID {
-	return extensionId
+	return m._extensionId
 }
 
 func NewMetrics(system *NetworkSystem, provider metric.MeterProvider) *Metrics {
@@ -35,15 +36,16 @@ func NewMetrics(system *NetworkSystem, provider metric.MeterProvider) *Metrics {
 	}
 
 	return &Metrics{
-		_metrics: metrics.NewProtoMetrics(system.logger(), system.Config.MeriicsKey),
-		_enabled: true,
-		_system:  system,
+		_metrics:     metrics.NewProtoMetrics(system.logger(), system.Config.meriicsKey),
+		_enabled:     true,
+		_system:      system,
+		_extensionId: extensions.NextExtensionID(),
 	}
 }
 
 func (m *Metrics) PrepareSendQueueLengthGauge() {
 	meter := otel.Meter(metrics.LibName)
-	gauge, err := meter.Int64ObservableGauge("protoactor_client_send_queue_length",
+	gauge, err := meter.Int64ObservableGauge("protonetwork_client_send_queue_length",
 		metric.WithDescription("Client's Send Queue Length"),
 		metric.WithUnit("1"))
 	if err != nil {

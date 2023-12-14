@@ -7,15 +7,14 @@ import (
 
 // NetworkSystem 网络系统
 type NetworkSystem struct {
-	Config  *Config
-	ID      string
-	NetType string
-
-	_module     NetworkModule
-	_producer   ProducerWidthClientSystem
-	_handlers   *HandleRegistryValue
-	_extensions *extensions.Extensions
-	_logger     logs.LogAgent // 日志代理接口
+	Config       *Config
+	ID           string
+	_module      NetworkModule
+	_producer    ProducerWidthClientSystem
+	_handlers    *HandleRegistryValue
+	_extensions  *extensions.Extensions
+	_extensionId extensions.ExtensionID
+	_logger      logs.LogAgent // 日志代理接口
 }
 
 func (ns *NetworkSystem) Address() string {
@@ -30,31 +29,35 @@ func (ns *NetworkSystem) Shutdown() {
 	ns._module.Stop()
 }
 
+/*func (ns *NetworkSystem) MeriicsKey() string {
+	return ns.Config.MeriicsKey + "." + ns.ID
+}*/
+
 func (ns *NetworkSystem) logger() logs.LogAgent {
 	return ns._logger
 }
 
 // 日志
 func (ns *NetworkSystem) Info(sfmt string, args ...interface{}) {
-	ns._logger.Info("[NETWORKSYSTEM]("+ns.ID+")", sfmt, args...)
+	ns._logger.Info("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Debug(sfmt string, args ...interface{}) {
-	ns._logger.Debug("[NETWORKSYSTEM]("+ns.ID+")", sfmt, args...)
+	ns._logger.Debug("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Error(sfmt string, args ...interface{}) {
-	ns._logger.Error("[NETWORKSYSTEM]("+ns.ID+")", sfmt, args...)
+	ns._logger.Error("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Warning(sfmt string, args ...interface{}) {
-	ns._logger.Warning("[NETWORKSYSTEM]("+ns.ID+")", sfmt, args...)
+	ns._logger.Warning("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Fatal(sfmt string, args ...interface{}) {
-	ns._logger.Fatal("[NETWORKSYSTEM]("+ns.ID+")", sfmt, args...)
+	ns._logger.Fatal("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Panic(sfmt string, args ...interface{}) {
-	ns._logger.Panic("[NETWORKSYSTEM]("+ns.ID+")", sfmt, args...)
+	ns._logger.Panic("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }

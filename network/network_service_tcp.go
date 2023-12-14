@@ -99,6 +99,10 @@ func (tns *tcpNetworkServerModule) Stop() {
 	tns._listen = nil
 }
 
+func (tnc *tcpNetworkServerModule) Network() string {
+	return "tcpserver"
+}
+
 func (tns *tcpNetworkServerModule) isStopped() bool {
 	select {
 	case <-tns._stoped:
@@ -122,9 +126,9 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	}
 
 	if tns._system.Config.MetricsProvider != nil {
-		sysMetrics, ok := tns._system._extensions.Get(extensionId).(*Metrics)
+		sysMetrics, ok := tns._system._extensions.Get(tns._system._extensionId).(*Metrics)
 		if ok && sysMetrics._enabled {
-			if instruments := sysMetrics._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+			if instruments := sysMetrics._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
 				sysMetrics.PrepareSendQueueLengthGauge()
 				meter := otel.Meter(metrics.LibName)
 				if _, err := meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
@@ -165,7 +169,7 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 			if msg == nil && ok {
 				break
 			} else if msg != nil {
-				systemMetrics, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
+				systemMetrics, ok := ctx._system._extensions.Get(ctx._system._extensionId).(*Metrics)
 				if ok && systemMetrics._enabled {
 					t := time.Now()
 
@@ -176,7 +180,7 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 					delta := time.Since(t)
 					_ctx := context.Background()
 
-					if instruments := systemMetrics._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+					if instruments := systemMetrics._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
 						histogram := instruments.ClientBytesSendHistogram
 
 						labels := append(

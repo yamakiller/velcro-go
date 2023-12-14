@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/yamakiller/velcro-go/metrics"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -54,10 +53,10 @@ func (ctx *clientContext) PostToMessage(cid *ClientID, message []byte, target *n
 // Close 关闭当前 Client
 func (ctx *clientContext) Close(cid *ClientID) {
 	if ctx._system.Config.MetricsProvider != nil {
-		metricsSystem, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
+		metricsSystem, ok := ctx._system._extensions.Get(ctx._system._extensionId).(*Metrics)
 		if ok && metricsSystem._enabled {
 			_ctx := context.Background()
-			if instruments := metricsSystem._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+			if instruments := metricsSystem._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
 				instruments.ClientCloseCount.Add(_ctx, 1, metric.WithAttributes(metricsSystem.CommonLabels(ctx)...))
 			}
 		}
@@ -72,10 +71,10 @@ func (ctx *clientContext) incarnateClient() {
 	ctx._client = ctx._system._producer(ctx._system)
 
 	if ctx._system.Config.MetricsProvider != nil {
-		metricsSystem, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
+		metricsSystem, ok := ctx._system._extensions.Get(ctx._system._extensionId).(*Metrics)
 		if ok && metricsSystem._enabled {
 			_ctx := context.Background()
-			if instruments := metricsSystem._metrics.Get(ctx._system); instruments != nil {
+			if instruments := metricsSystem._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
 				instruments.ClientSpawnCount.Add(_ctx, 1, metric.WithAttributes(metricsSystem.CommonLabels(ctx)...))
 			}
 		}
@@ -132,7 +131,7 @@ func (ctx *clientContext) invokerRecvice(b []byte, addr *net.Addr) {
 		return
 	}
 
-	systemMetrics, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
+	systemMetrics, ok := ctx._system._extensions.Get(ctx._system._extensionId).(*Metrics)
 	if ok && systemMetrics._enabled {
 		t := time.Now()
 		ctx._message = b
@@ -144,7 +143,7 @@ func (ctx *clientContext) invokerRecvice(b []byte, addr *net.Addr) {
 		delta := time.Since(t)
 		_ctx := context.Background()
 
-		if instruments := systemMetrics._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+		if instruments := systemMetrics._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
 			histogram := instruments.ClientBytesRecviceHistogram
 
 			labels := append(

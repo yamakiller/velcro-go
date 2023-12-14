@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const LibName string = "protoclient"
+const LibName string = "protonetwork"
 
 type ClientMetrics struct {
 	_mutex *sync.Mutex

@@ -6,9 +6,12 @@ import (
 )
 
 func NewTCPConnectorNetworkSystemConfig(config *Config) *NetworkSystem {
-	ns := &NetworkSystem{NetType: "TCPServer"}
+	ns := &NetworkSystem{}
 	ns.ID = shortuuid.New()
 	ns.Config = config
+	if ns.Config.MetricsProvider != nil {
+		ns.Config.meriicsKey = "tcpconnector" + ns.ID
+	}
 	ns._producer = config.Producer
 	ns._handlers = NewHandlerRegistry(ns)
 	ns._extensions = extensions.NewExtensions()
