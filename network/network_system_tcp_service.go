@@ -23,7 +23,7 @@ func NewTCPNetworkSystemConfig(config *Config) *NetworkSystem {
 	ns._extensions = extensions.NewExtensions()
 	ns._extensionId = extensions.NextExtensionID()
 	ns._logger = config.LoggerFactory(ns)
-	ns._module = newTcpNetworkServerModule(ns)
+	ns._module = newTCPNetworkServerModule(ns)
 
 	return ns
 }

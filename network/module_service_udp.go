@@ -14,6 +14,14 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
+func newUDPNetworkServerModule(system *NetworkSystem) *udpNetworkServerModule {
+	return &udpNetworkServerModule{
+		_system:    system,
+		_waitGroup: sync.WaitGroup{},
+		_stoped:    make(chan struct{}),
+	}
+}
+
 type udpNetworkServerModule struct {
 	_system    *NetworkSystem
 	_listen    *net.UDPConn

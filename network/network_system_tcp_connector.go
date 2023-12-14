@@ -17,7 +17,7 @@ func NewTCPConnectorNetworkSystemConfig(config *Config) *NetworkSystem {
 	ns._extensions = extensions.NewExtensions()
 	ns._logger = config.LoggerFactory(ns)
 
-	ns._module = newTcpConnectorNetworkServerModule(ns)
+	ns._module = newTCPConnectorNetworkServerModule(ns)
 
 	return ns
 }

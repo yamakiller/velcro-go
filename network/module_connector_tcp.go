@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-func newTcpConnectorNetworkServerModule(system *NetworkSystem) *tcpNetworkConnectorModule {
+func newTCPConnectorNetworkServerModule(system *NetworkSystem) *tcpNetworkConnectorModule {
 	return &tcpNetworkConnectorModule{
 		_system:    system,
 		_waitGroup: sync.WaitGroup{},
