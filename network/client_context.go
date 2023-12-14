@@ -75,7 +75,7 @@ func (ctx *clientContext) incarnateClient() {
 		metricsSystem, ok := ctx._system._extensions.Get(extensionId).(*Metrics)
 		if ok && metricsSystem._enabled {
 			_ctx := context.Background()
-			if instruments := metricsSystem._metrics.Get(metrics.InternalClientMetrics); instruments != nil {
+			if instruments := metricsSystem._metrics.Get(ctx._system); instruments != nil {
 				instruments.ClientSpawnCount.Add(_ctx, 1, metric.WithAttributes(metricsSystem.CommonLabels(ctx)...))
 			}
 		}

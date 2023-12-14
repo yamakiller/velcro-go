@@ -7,7 +7,7 @@ import (
 	"github.com/yamakiller/velcro-go/logs"
 )
 
-const InternalClientMetrics string = "internal.client.metrics"
+//const InternalClientMetrics string = "internal.client.metrics"
 
 type ProtoMetrics struct {
 	_mutex         sync.Mutex
@@ -16,14 +16,14 @@ type ProtoMetrics struct {
 	_logger        logs.LogAgent
 }
 
-func NewProtoMetrics(logger logs.LogAgent) *ProtoMetrics {
+func NewProtoMetrics(logger logs.LogAgent, metricsKey string) *ProtoMetrics {
 	protoMetrics := ProtoMetrics{
 		_clientMetrics: NewClientMetrics(logger),
 		_knownMetrics:  make(map[string]*ClientMetrics),
 		_logger:        logger,
 	}
 
-	protoMetrics.Register(InternalClientMetrics, protoMetrics._clientMetrics)
+	protoMetrics.Register(metricsKey, protoMetrics._clientMetrics)
 	return &protoMetrics
 }
 

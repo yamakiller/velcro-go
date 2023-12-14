@@ -12,45 +12,50 @@ const (
 	stepBits uint8 = 22
 )
 
-var (
-	_mutex     sync.Mutex
-	_once      sync.Once
+func NewNode(mutex sync.Locker) *Node {
+	var curTime = time.Now()
+	epoch := time.Now().UnixNano()/1e6 - 86400000
+
+	newNode := &Node{
+		_stepMask:  -1 ^ (-1 << stepBits),
+		_timeShift: stepBits,
+		_epoch:     curTime.Add(time.Unix(epoch/1000, (epoch%1000)*1000000).Sub(curTime)),
+		_mu:        mutex,
+	}
+
+	return newNode
+}
+
+// Node 产生的ID 全局不唯一只能保障本节点唯一
+type Node struct {
 	_epoch     time.Time
 	_time      int64
 	_step      int64
 	_stepMask  int64
 	_timeShift uint8
-)
+	_mu        sync.Locker
+}
 
-func Generate() ID {
-	_once.Do(func() {
-		_stepMask = -1 ^ (-1 << stepBits)
-		_timeShift = stepBits
+func (n *Node) Generate() ID {
+	n._mu.Lock()
+	defer n._mu.Unlock()
 
-		var curTime = time.Now()
-		epoch := time.Now().UnixNano()/1e6 - 86400000
-		_epoch = curTime.Add(time.Unix(epoch/1000, (epoch%1000)*1000000).Sub(curTime))
-	})
+	now := time.Since(n._epoch).Milliseconds()
 
-	_mutex.Lock()
-	defer _mutex.Unlock()
+	if now == n._time {
+		n._step = (n._step + 1) & n._stepMask
 
-	now := time.Since(_epoch).Milliseconds()
-
-	if now == _time {
-		_step = (_step + 1) & _stepMask
-
-		if _step == 0 {
-			for now <= _time {
-				now = time.Since(_epoch).Milliseconds()
+		if n._step == 0 {
+			for now <= n._time {
+				now = time.Since(n._epoch).Milliseconds()
 			}
 		}
 	} else {
-		_step = 0
+		n._step = 0
 	}
 
-	_time = now
-	r := ID(((now) << _timeShift) | (_step))
+	n._time = now
+	r := ID(((now) << n._timeShift) | (n._step))
 
 	return r
 }

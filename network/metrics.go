@@ -35,7 +35,7 @@ func NewMetrics(system *NetworkSystem, provider metric.MeterProvider) *Metrics {
 	}
 
 	return &Metrics{
-		_metrics: metrics.NewProtoMetrics(system.logger()),
+		_metrics: metrics.NewProtoMetrics(system.logger(), system.Config.MeriicsKey),
 		_enabled: true,
 		_system:  system,
 	}

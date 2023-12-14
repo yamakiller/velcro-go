@@ -47,3 +47,9 @@ func WithProducer(producer ProducerWidthClientSystem) ConfigOption {
 		config.Producer = producer
 	}
 }
+
+func WithNetworkTimeout(timeout int32) ConfigOption {
+	return func(config *Config) {
+		config.NetowkTimeout = timeout
+	}
+}

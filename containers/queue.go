@@ -1,10 +1,13 @@
 package containers
 
-func NewQueue(cap int) *Queue {
+import "sync"
+
+func NewQueue(cap int, mutex sync.Locker) *Queue {
 	return &Queue{
 		_cap:               cap,
 		_overloadThreshold: cap * 2,
 		_buffer:            make([]interface{}, cap),
+		_mu:                mutex,
 	}
 }
 
@@ -18,12 +21,12 @@ type Queue struct {
 	_overloadThreshold int
 
 	_buffer []interface{}
-	//_sync   sync.Mutex
+	_mu     sync.Locker
 }
 
 func (qe *Queue) Destory() {
-	//qe._sync.Lock()
-	//defer qe._sync.Unlock()
+	qe._mu.Lock()
+	defer qe._mu.Unlock()
 
 	qe._head = 0
 	qe._tail = 0
@@ -34,8 +37,8 @@ func (qe *Queue) Destory() {
 // Push Insert an object
 // @Param (interface{}) item
 func (qe *Queue) Push(item interface{}) {
-	//qe._sync.Lock()
-	//defer qe._sync.Unlock()
+	qe._mu.Lock()
+	defer qe._mu.Unlock()
 	qe.unpush(item)
 }
 
@@ -44,8 +47,8 @@ func (qe *Queue) Push(item interface{}) {
 // @Return (interface{}) return object
 // @Return (bool)
 func (qe *Queue) Pop() (interface{}, bool) {
-	//qe._sync.Lock()
-	//defer qe._sync.Unlock()
+	qe._mu.Lock()
+	defer qe._mu.Unlock()
 	return qe.unpop()
 }
 
@@ -68,11 +71,11 @@ func (qe *Queue) Length() int {
 		tail int
 		cap  int
 	)
-	//qe._sync.Lock()
+	qe._mu.Lock()
 	head = qe._head
 	tail = qe._tail
 	cap = qe._cap
-	//qe._sync.Unlock()
+	qe._mu.Unlock()
 
 	if head <= tail {
 		return tail - head

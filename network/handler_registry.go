@@ -3,6 +3,7 @@ package network
 import (
 	cmap "github.com/orcaman/concurrent-map"
 	murmur32 "github.com/twmb/murmur3"
+	lsync "github.com/yamakiller/velcro-go/sync"
 	"github.com/yamakiller/velcro-go/utils/snowflakealien"
 )
 
@@ -15,6 +16,7 @@ func NewHandlerRegistry(system *NetworkSystem) *HandleRegistryValue {
 	hrv := &HandleRegistryValue{
 		Address:    localAddress,
 		_system:    system,
+		_node:      snowflakealien.NewNode(&lsync.NoMutex{}),
 		_localCIDs: newSliceMap(),
 	}
 
@@ -67,13 +69,14 @@ func int64ToId(u int64) string {
 type HandleRegistryValue struct {
 	Address    string
 	_system    *NetworkSystem
+	_node      *snowflakealien.Node
 	_localCIDs *sliceMap
 }
 
 func (hr *HandleRegistryValue) NextId() string {
-	counter := int64(snowflakealien.Generate())
+	counter := int64(hr._node.Generate())
 
-	return int64ToId(counter)
+	return hr._system.ID + "/" + int64ToId(counter)
 }
 
 func (hr *HandleRegistryValue) Push(handler Handler, id string) (*ClientID, bool) {

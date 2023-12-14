@@ -42,14 +42,6 @@ func (p *Program) Start(s service.Service) error {
 
 	p.System.Info("Listening 127.0.0.1:9860")
 
-	/*go func() {
-
-		time.Sleep(time.Second * 6)
-		fmt.Println("stop")
-		p.testStop()
-		fmt.Println("stop complate")
-	}()*/
-
 	return nil
 }
 

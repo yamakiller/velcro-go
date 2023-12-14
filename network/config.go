@@ -15,8 +15,10 @@ import (
 
 type Config struct {
 	MetricsProvider metric.MeterProvider
+	MeriicsKey      string
 	LoggerFactory   func(system *NetworkSystem) logs.LogAgent // 日志仓库
 	Producer        ProducerWidthClientSystem
+	NetowkTimeout   int32 //网络超时(单位毫秒)
 }
 
 func defaultConfig() *Config {
@@ -27,7 +29,8 @@ func defaultConfig() *Config {
 			logAgent := &logs.DefaultAgent{}
 			logAgent.WithHandle(pLogHandle)
 			return logAgent
-		}}
+		},
+		NetowkTimeout: 2000}
 }
 
 func defaultPrometheusProvider(port int) metric.MeterProvider {

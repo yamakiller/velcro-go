@@ -2,6 +2,7 @@ package circbuf
 
 import (
 	"errors"
+	"sync"
 	"unsafe"
 )
 
@@ -13,18 +14,20 @@ var (
 )
 
 type RingBuffer struct {
-	buf    []byte
-	size   int
-	r      int // next position to read
-	w      int // next position to write
-	isFull bool
+	_buf    []byte
+	_size   int
+	_r      int // next position to read
+	_w      int // next position to write
+	_isFull bool
+	_mu     sync.Locker
 }
 
-// New returns a new RingBuffer whose buffer has the given size.
-func New(size int) *RingBuffer {
+// New returns a new RingBuffer whose buffer has the given _size.
+func New(size int, mutex sync.Locker) *RingBuffer {
 	return &RingBuffer{
-		buf:  make([]byte, size),
-		size: size,
+		_buf:  make([]byte, size),
+		_size: size,
+		_mu:   mutex,
 	}
 }
 
@@ -36,60 +39,66 @@ func (r *RingBuffer) Read(p []byte) (n int, err error) {
 		return 0, nil
 	}
 
-	return r.read(p)
+	r._mu.Lock()
+	n, err = r.read(p)
+	r._mu.Unlock()
+	return n, err
 }
 
 func (r *RingBuffer) read(p []byte) (n int, err error) {
-	if r.w == r.r && !r.isFull {
+	if r._w == r._r && !r._isFull {
 		return 0, ErrIsEmpty
 	}
 
-	if r.w > r.r {
-		n = r.w - r.r
+	if r._w > r._r {
+		n = r._w - r._r
 		if n > len(p) {
 			n = len(p)
 		}
-		copy(p, r.buf[r.r:r.r+n])
-		r.r = (r.r + n) % r.size
+		copy(p, r._buf[r._r:r._r+n])
+		r._r = (r._r + n) % r._size
 		return
 	}
 
-	n = r.size - r.r + r.w
+	n = r._size - r._r + r._w
 	if n > len(p) {
 		n = len(p)
 	}
 
-	if r.r+n <= r.size {
-		copy(p, r.buf[r.r:r.r+n])
+	if r._r+n <= r._size {
+		copy(p, r._buf[r._r:r._r+n])
 	} else {
-		c1 := r.size - r.r
-		copy(p, r.buf[r.r:r.size])
+		c1 := r._size - r._r
+		copy(p, r._buf[r._r:r._size])
 		c2 := n - c1
-		copy(p[c1:], r.buf[0:c2])
+		copy(p[c1:], r._buf[0:c2])
 	}
-	r.r = (r.r + n) % r.size
+	r._r = (r._r + n) % r._size
 
-	r.isFull = false
+	r._isFull = false
 
 	return n, err
 }
 
 // ReadByte reads and returns the next byte from the input or ErrIsEmpty.
 func (r *RingBuffer) ReadByte() (b byte, err error) {
-	if r.w == r.r && !r.isFull {
+	r._mu.Lock()
+	if r._w == r._r && !r._isFull {
+		r._mu.Unlock()
 		return 0, ErrIsEmpty
 	}
-	b = r.buf[r.r]
-	r.r++
-	if r.r == r.size {
-		r.r = 0
+	b = r._buf[r._r]
+	r._r++
+	if r._r == r._size {
+		r._r = 0
 	}
 
-	r.isFull = false
+	r._isFull = false
+	r._mu.Unlock()
 	return b, err
 }
 
-// Write writes len(p) bytes from p to the underlying buf.
+// Write writes len(p) bytes from p to the underlying _buf.
 // It returns the number of bytes written from p (0 <= n <= len(p)) and any error encountered that caused the write to stop early.
 // Write returns a non-nil error if it returns n < len(p).
 // Write must not modify the slice data, even temporarily.
@@ -97,20 +106,23 @@ func (r *RingBuffer) Write(p []byte) (n int, err error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
+	r._mu.Lock()
+	n, err = r.write(p)
+	r._mu.Unlock()
 
-	return r.write(p)
+	return n, err
 }
 
 func (r *RingBuffer) write(p []byte) (n int, err error) {
-	if r.isFull {
+	if r._isFull {
 		return 0, ErrIsFull
 	}
 
 	var avail int
-	if r.w >= r.r {
-		avail = r.size - r.w + r.r
+	if r._w >= r._r {
+		avail = r._size - r._w + r._r
 	} else {
-		avail = r.r - r.w
+		avail = r._r - r._w
 	}
 
 	if len(p) > avail {
@@ -119,27 +131,27 @@ func (r *RingBuffer) write(p []byte) (n int, err error) {
 	}
 	n = len(p)
 
-	if r.w >= r.r {
-		c1 := r.size - r.w
+	if r._w >= r._r {
+		c1 := r._size - r._w
 		if c1 >= n {
-			copy(r.buf[r.w:], p)
-			r.w += n
+			copy(r._buf[r._w:], p)
+			r._w += n
 		} else {
-			copy(r.buf[r.w:], p[:c1])
+			copy(r._buf[r._w:], p[:c1])
 			c2 := n - c1
-			copy(r.buf[0:], p[c1:])
-			r.w = c2
+			copy(r._buf[0:], p[c1:])
+			r._w = c2
 		}
 	} else {
-		copy(r.buf[r.w:], p)
-		r.w += n
+		copy(r._buf[r._w:], p)
+		r._w += n
 	}
 
-	if r.w == r.size {
-		r.w = 0
+	if r._w == r._size {
+		r._w = 0
 	}
-	if r.w == r.r {
-		r.isFull = true
+	if r._w == r._r {
+		r._isFull = true
 	}
 
 	return n, err
@@ -147,21 +159,24 @@ func (r *RingBuffer) write(p []byte) (n int, err error) {
 
 // WriteByte writes one byte into buffer, and returns ErrIsFull if buffer is full.
 func (r *RingBuffer) WriteByte(c byte) error {
-	return r.writeByte(c)
+	r._mu.Lock()
+	err := r.writeByte(c)
+	r._mu.Unlock()
+	return err
 }
 
 func (r *RingBuffer) writeByte(c byte) error {
-	if r.w == r.r && r.isFull {
+	if r._w == r._r && r._isFull {
 		return ErrIsFull
 	}
-	r.buf[r.w] = c
-	r.w++
+	r._buf[r._w] = c
+	r._w++
 
-	if r.w == r.size {
-		r.w = 0
+	if r._w == r._size {
+		r._w = 0
 	}
-	if r.w == r.r {
-		r.isFull = true
+	if r._w == r._r {
+		r._isFull = true
 	}
 
 	return nil
@@ -169,99 +184,113 @@ func (r *RingBuffer) writeByte(c byte) error {
 
 // Length return the length of available read bytes.
 func (r *RingBuffer) Length() int {
+	r._mu.Lock()
+	defer r._mu.Unlock()
 
-	if r.w == r.r {
-		if r.isFull {
-			return r.size
+	if r._w == r._r {
+		if r._isFull {
+			return r._size
 		}
 		return 0
 	}
 
-	if r.w > r.r {
-		return r.w - r.r
+	if r._w > r._r {
+		return r._w - r._r
 	}
 
-	return r.size - r.r + r.w
+	return r._size - r._r + r._w
 }
 
-// Capacity returns the size of the underlying buffer.
+// Capacity returns the _size of the underlying buffer.
 func (r *RingBuffer) Capacity() int {
-	return r.size
+	return r._size
 }
 
 // Free returns the length of available bytes to write.
 func (r *RingBuffer) Free() int {
+	r._mu.Lock()
+	defer r._mu.Unlock()
 
-	if r.w == r.r {
-		if r.isFull {
+	if r._w == r._r {
+		if r._isFull {
 			return 0
 		}
-		return r.size
+		return r._size
 	}
 
-	if r.w < r.r {
-		return r.r - r.w
+	if r._w < r._r {
+		return r._r - r._w
 	}
 
-	return r.size - r.w + r.r
+	return r._size - r._w + r._r
 }
 
 // WriteString writes the contents of the string s to buffer, which accepts a slice of bytes.
 func (r *RingBuffer) WriteString(s string) (n int, err error) {
 	x := (*[2]uintptr)(unsafe.Pointer(&s))
 	h := [3]uintptr{x[0], x[1], x[1]}
-	buf := *(*[]byte)(unsafe.Pointer(&h))
-	return r.Write(buf)
+	_buf := *(*[]byte)(unsafe.Pointer(&h))
+	return r.Write(_buf)
 }
 
-// Bytes returns all available read bytes.
-// It does not move the read pointer and only copy the available data.
+// Bytes returns all available read bytes. It does not move the read pointer and only copy the available data.
 func (r *RingBuffer) Bytes() []byte {
+	r._mu.Lock()
+	defer r._mu.Unlock()
 
-	if r.w == r.r {
-		if r.isFull {
-			buf := make([]byte, r.size)
-			copy(buf, r.buf[r.r:])
-			copy(buf[r.size-r.r:], r.buf[:r.w])
-			return buf
+	if r._w == r._r {
+		if r._isFull {
+			_buf := make([]byte, r._size)
+			copy(_buf, r._buf[r._r:])
+			copy(_buf[r._size-r._r:], r._buf[:r._w])
+			return _buf
 		}
 		return nil
 	}
 
-	if r.w > r.r {
-		buf := make([]byte, r.w-r.r)
-		copy(buf, r.buf[r.r:r.w])
-		return buf
+	if r._w > r._r {
+		_buf := make([]byte, r._w-r._r)
+		copy(_buf, r._buf[r._r:r._w])
+		return _buf
 	}
 
-	n := r.size - r.r + r.w
-	buf := make([]byte, n)
+	n := r._size - r._r + r._w
+	_buf := make([]byte, n)
 
-	if r.r+n < r.size {
-		copy(buf, r.buf[r.r:r.r+n])
+	if r._r+n < r._size {
+		copy(_buf, r._buf[r._r:r._r+n])
 	} else {
-		c1 := r.size - r.r
-		copy(buf, r.buf[r.r:r.size])
+		c1 := r._size - r._r
+		copy(_buf, r._buf[r._r:r._size])
 		c2 := n - c1
-		copy(buf[c1:], r.buf[0:c2])
+		copy(_buf[c1:], r._buf[0:c2])
 	}
 
-	return buf
+	return _buf
 }
 
 // IsFull returns this ringbuffer is full.
 func (r *RingBuffer) IsFull() bool {
-	return r.isFull
+	r._mu.Lock()
+	defer r._mu.Unlock()
+
+	return r._isFull
 }
 
 // IsEmpty returns this ringbuffer is empty.
 func (r *RingBuffer) IsEmpty() bool {
-	return !r.isFull && r.w == r.r
+	r._mu.Lock()
+	defer r._mu.Unlock()
+
+	return !r._isFull && r._w == r._r
 }
 
 // Reset the read pointer and writer pointer to zero.
 func (r *RingBuffer) Reset() {
-	r.r = 0
-	r.w = 0
-	r.isFull = false
+	r._mu.Lock()
+	defer r._mu.Unlock()
+
+	r._r = 0
+	r._w = 0
+	r._isFull = false
 }

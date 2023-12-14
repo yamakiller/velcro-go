@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/metrics"
+	lsync "github.com/yamakiller/velcro-go/sync"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -113,12 +114,11 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	ctx := clientContext{_system: tns._system, _state: stateAccept}
 	handler := &tcpClientHandler{
 		_c:             conn,
-		_wmail:         containers.NewQueue(4),
+		_wmail:         containers.NewQueue(4, &lsync.NoMutex{}),
 		_wmailcond:     *sync.NewCond(&sync.Mutex{}),
-		_keepalive:     2000,
+		_keepalive:     uint32(tns._system.Config.NetowkTimeout),
 		_invoker:       &ctx,
 		_senderStopped: make(chan struct{}),
-		_closed:        0,
 	}
 
 	if tns._system.Config.MetricsProvider != nil {
