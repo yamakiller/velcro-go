@@ -1,5 +1,13 @@
 package router
 
+// 默认角色ID
+const (
+	// NONE_RULE_ID 初始角色
+	NONE_RULE_ID = -2
+	// 密钥完成角色
+	KEYED_RULE_ID = -1
+)
+
 /*type RuleGroup struct {
 	RouteId          string `yaml:"routeId"`
 	RouteName        string `yaml:"routeName"`

@@ -1,4 +1,4 @@
-package gateway
+package classes
 
 import (
 	"io"
@@ -9,7 +9,8 @@ import (
 	"github.com/yamakiller/velcro-go/logs"
 )
 
-func produceLogger() logs.LogAgent {
+// ProduceLogger 产生日志对象
+func ProduceLogger() logs.LogAgent {
 	logLevel := logrus.DebugLevel
 	if os.Getenv("DEBUG") != "" {
 		logLevel = logrus.InfoLevel

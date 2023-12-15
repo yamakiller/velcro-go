@@ -31,6 +31,48 @@ func New(size int, mutex sync.Locker) *RingBuffer {
 	}
 }
 
+func (r *RingBuffer) Get(p []byte) (n int, err error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+
+	r._mu.Lock()
+	n, err = r.get(p)
+	r._mu.Unlock()
+	return n, err
+}
+
+func (r *RingBuffer) get(p []byte) (n int, err error) {
+	if r._w == r._r && !r._isFull {
+		return 0, ErrIsEmpty
+	}
+
+	if r._w > r._r {
+		n = r._w - r._r
+		if n > len(p) {
+			n = len(p)
+		}
+		copy(p, r._buf[r._r:r._r+n])
+		return
+	}
+
+	n = r._size - r._r + r._w
+	if n > len(p) {
+		n = len(p)
+	}
+
+	if r._r+n <= r._size {
+		copy(p, r._buf[r._r:r._r+n])
+	} else {
+		c1 := r._size - r._r
+		copy(p, r._buf[r._r:r._size])
+		c2 := n - c1
+		copy(p[c1:], r._buf[0:c2])
+	}
+
+	return n, err
+}
+
 // Read reads up to len(p) bytes into p. It returns the number of bytes read (0 <= n <= len(p)) and any error encountered. Even if Read returns n < len(p), it may use all of p as scratch space during the call. If some data is available but not len(p) bytes, Read conventionally returns what is available instead of waiting for more.
 // When Read encounters an error or end-of-file condition after successfully reading n > 0 bytes, it returns the number of bytes read. It may return the (non-nil) error from the same call or return the error (and n == 0) from a subsequent call.
 // Callers should always process the n > 0 bytes returned before considering the error err. Doing so correctly handles I/O errors that happen after reading some bytes and also both of the allowed EOF behaviors.

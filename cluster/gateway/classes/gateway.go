@@ -1,29 +1,46 @@
-package gateway
+package classes
 
 import (
 	"github.com/kardianos/service"
-	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
 )
 
-// Gateway 网关
-type Gateway struct {
-	intelServerNetwork *network.NetworkSystem
-	logger             logs.LogAgent
+func New(interAddress string, // inter 服务地址
+	interSystem *network.NetworkSystem, // inter 服务系统接口
+	group GatewayLinkerGroup, // 连接者管理组
+	encryption *Encryption, // 通信加密组
+) *Gateway {
+	return &Gateway{intelServerAddress: interAddress,
+		intelServerSystem: interSystem,
+		linkerGroup:       group,
+		encryption:        encryption}
 }
 
-func (p *Gateway) Start(s service.Service) error {
-	p.logger = produceLogger()
-	p.intelServerNetwork = network.NewTCPServerNetworkSystem(
-		network.WithMetricProviders(nil),
-		network.WithNetworkTimeout(2000),
-		network.WithProducer(newLinker),
-		network.WithLoggerFactory(p.loggerFactory),
-	)
+// Gateway 网关
+type Gateway struct {
+	intelServerAddress string
+	intelServerSystem  *network.NetworkSystem
+	linkerGroup        GatewayLinkerGroup
+	encryption         *Encryption
+}
+
+func (dg *Gateway) Start(s service.Service) error {
+
+	if err := dg.intelServerSystem.Open(dg.intelServerAddress); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (g *Gateway) loggerFactory(system *network.NetworkSystem) logs.LogAgent {
-	return g.logger
+func (dg *Gateway) Stop(s service.Service) error {
+	if dg.intelServerSystem != nil {
+		dg.intelServerSystem.Info("Gateway Shutdown Closing linker")
+		dg.linkerGroup.Clear()
+		dg.intelServerSystem.Info("Gateway Shutdown Closed linker")
+		dg.intelServerSystem.Shutdown()
+		dg.intelServerSystem.Info("Gateway Shutdown")
+		dg.intelServerSystem = nil
+	}
+	return nil
 }
