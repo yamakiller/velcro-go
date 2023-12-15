@@ -3,6 +3,7 @@ module github.com/yamakiller/velcro-go
 go 1.20
 
 require (
+	github.com/go-kratos/kratos/v2 v2.7.2
 	github.com/json-iterator/go v1.1.12
 	github.com/kardianos/service v1.2.2
 	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
@@ -51,4 +52,6 @@ require (
 	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230629202037-9506855d4529 // indirect
+	google.golang.org/grpc v1.56.3 // indirect
 )
