@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/yamakiller/velcro-go/debugs/metrics"
 	"github.com/yamakiller/velcro-go/extensions"
-	"github.com/yamakiller/velcro-go/metrics"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"

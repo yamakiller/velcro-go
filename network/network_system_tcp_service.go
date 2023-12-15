@@ -5,13 +5,13 @@ import (
 	"github.com/yamakiller/velcro-go/extensions"
 )
 
-func NewTCPNetworkSystem(options ...ConfigOption) *NetworkSystem {
+func NewTCPServerNetworkSystem(options ...ConfigOption) *NetworkSystem {
 	config := Configure(options...)
 
-	return NewTCPNetworkSystemConfig(config)
+	return NewTCPServerNetworkSystemConfig(config)
 }
 
-func NewTCPNetworkSystemConfig(config *Config) *NetworkSystem {
+func NewTCPServerNetworkSystemConfig(config *Config) *NetworkSystem {
 	ns := &NetworkSystem{}
 	ns.ID = shortuuid.New()
 	ns.Config = config

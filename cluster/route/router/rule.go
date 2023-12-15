@@ -1,6 +1,6 @@
 package router
 
-type RuleGroup struct {
+/*type RuleGroup struct {
 	RouteId          string `yaml:"routeId"`
 	RouteName        string `yaml:"routeName"`
 	RouteDesc        string `yaml:"routeDesc"`
@@ -39,7 +39,7 @@ type TagRule struct {
 	TagOperator string `yaml:"tagOperator"`
 	TagValue    string `yaml:"tagValue"`
 	RouteRuleId string `yaml:"routeRuleId"`
-}
+}*/
 
 /*func (rule Rule) toCommonTagRule() tag.Rule {
 	tagRule := tag.Rule{

@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
-	"github.com/yamakiller/velcro-go/metrics"
+	"github.com/yamakiller/velcro-go/debugs/metrics"
 	lsync "github.com/yamakiller/velcro-go/sync"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"

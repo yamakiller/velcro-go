@@ -28,7 +28,7 @@ func (p *Program) Start(s service.Service) error {
 	p.logAgent = &logs.DefaultAgent{}
 	p.logAgent.WithHandle(pLogHandle)
 
-	p.System = network.NewTCPNetworkSystem(network.WithMetricProviders(testPrometheusProvider(8091)),
+	p.System = network.NewTCPServerNetworkSystem(network.WithMetricProviders(testPrometheusProvider(8091)),
 		network.WithLoggerFactory(func(system *network.NetworkSystem) logs.LogAgent {
 
 			return p.logAgent
