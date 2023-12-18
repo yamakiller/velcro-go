@@ -5,13 +5,14 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func MarshalRequestProtobuf(sequenceID int32, timeout uint64, message proto.Message) ([]byte, error) {
-	msgBytes, err := proto.Marshal(message)
+func MarshalRequestProtobuf(sequenceID int32, timeout uint64, message interface{}) ([]byte, error) {
+	protomessage := message.(proto.Message)
+	msgBytes, err := proto.Marshal(protomessage)
 	if err != nil {
 		return nil, err
 	}
 
-	msgName := proto.MessageName(message)
+	msgName := proto.MessageName(protomessage)
 	msgNameBytes := []byte(string(msgName))
 	msgNameLen := len(msgNameBytes)
 
@@ -29,16 +30,17 @@ func MarshalRequestProtobuf(sequenceID int32, timeout uint64, message proto.Mess
 	return msgBuffer[:length], nil
 }
 
-func MarshalResponseProtobuf(sequenceID int32, result int8, message proto.Message) ([]byte, error) {
+func MarshalResponseProtobuf(sequenceID int32, result int8, message interface{}) ([]byte, error) {
+	protomessage := message.(proto.Message)
 	var msgBodyBytes []byte = nil
 	var msgBodyLength int = 0
 	if message != nil {
-		msgBytes, err := proto.Marshal(message)
+		msgBytes, err := proto.Marshal(protomessage)
 		if err != nil {
 			return nil, err
 		}
 
-		msgName := proto.MessageName(message)
+		msgName := proto.MessageName(protomessage)
 		msgNameBytes := []byte(string(msgName))
 		msgNameLen := len(msgNameBytes)
 
@@ -58,13 +60,14 @@ func MarshalResponseProtobuf(sequenceID int32, result int8, message proto.Messag
 	return msgBuffer[:length], nil
 }
 
-func MarshalMessageProtobuf(sequenceID int32, result int8, message proto.Message) ([]byte, error) {
-	msgBytes, err := proto.Marshal(message)
+func MarshalMessageProtobuf(sequenceID int32, message interface{}) ([]byte, error) {
+	protomessage := message.(proto.Message)
+	msgBytes, err := proto.Marshal(protomessage)
 	if err != nil {
 		return nil, err
 	}
 
-	msgName := proto.MessageName(message)
+	msgName := proto.MessageName(protomessage)
 	msgNameBytes := []byte(string(msgName))
 	msgNameLen := len(msgNameBytes)
 

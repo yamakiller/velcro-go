@@ -95,7 +95,7 @@ func marshalMessage(buffer []byte, sequenceID int32, message []byte) (int, error
 	return offset, nil
 }
 
-func marshalPing(VerifyKey uint64) ([]byte, error) {
+func MarshalPing(VerifyKey uint64) ([]byte, error) {
 	var data [9]byte
 	data[0] = RpcPing
 	binary.BigEndian.PutUint64(data[1:], VerifyKey)
