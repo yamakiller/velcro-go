@@ -80,3 +80,7 @@ func (cid *ClientID) Equal(other *ClientID) bool {
 
 	return cid.Id == other.Id && cid.Address == other.Address
 }
+
+func NewClientID(address, id string) *ClientID {
+	return &ClientID{Address: address, Id: id}
+}

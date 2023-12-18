@@ -29,10 +29,6 @@ func (ns *NetworkSystem) Shutdown() {
 	ns._module.Stop()
 }
 
-/*func (ns *NetworkSystem) MeriicsKey() string {
-	return ns.Config.MeriicsKey + "." + ns.ID
-}*/
-
 func (ns *NetworkSystem) logger() logs.LogAgent {
 	return ns._logger
 }
