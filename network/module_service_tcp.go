@@ -6,14 +6,12 @@ import (
 	"net"
 	"strings"
 	sync "sync"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/debugs/metrics"
 	lsync "github.com/yamakiller/velcro-go/sync"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -117,12 +115,14 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 
 	ctx := clientContext{_system: tns._system, _state: stateAccept}
 	handler := &tcpClientHandler{
-		_c:             conn,
-		_wmail:         containers.NewQueue(4, &lsync.NoMutex{}),
-		_wmailcond:     sync.NewCond(&sync.Mutex{}),
-		_keepalive:     uint32(tns._system.Config.NetowkTimeout),
-		_invoker:       &ctx,
-		_senderStopped: make(chan struct{}),
+		conn:      conn,
+		sendbox:   containers.NewQueue(4, &lsync.NoMutex{}),
+		sendcond:  sync.NewCond(&sync.Mutex{}),
+		keepalive: uint32(tns._system.Config.NetowkTimeout),
+		invoker:   &ctx,
+		mailbox:   make(chan interface{}, 1),
+		stopper:   make(chan struct{}),
+		refdone:   &tns._waitGroup,
 	}
 
 	if tns._system.Config.MetricsProvider != nil {
@@ -132,7 +132,7 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 				sysMetrics.PrepareSendQueueLengthGauge()
 				meter := otel.Meter(metrics.LibName)
 				if _, err := meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
-					o.ObserveInt64(instruments.ClientSendQueueLength, int64(handler._wmail.Length()), metric.WithAttributes(sysMetrics.CommonLabels(&ctx)...))
+					o.ObserveInt64(instruments.ClientSendQueueLength, int64(handler.sendbox.Length()), metric.WithAttributes(sysMetrics.CommonLabels(&ctx)...))
 					return nil
 				}); err != nil {
 					err = fmt.Errorf("failed to instrument Client SendQueue, %w", err)
@@ -144,136 +144,19 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 
 	cid, ok := tns._system._handlers.Push(handler, id)
 	if !ok {
-		handler._c.Close()
-		handler._wmail = nil
-		handler._wmailcond = nil
-		close(handler._senderStopped)
-		return errors.Errorf("client-id %s existed", id)
+		handler.Close()
+		// 释放资源
+		close(handler.mailbox)
+		close(handler.stopper)
+		handler.sendbox.Destory()
+		handler.sendbox = nil
+		handler.sendcond = nil
+
+		return errors.Errorf("client-id %s existed", cid.ToString())
 	}
 
 	ctx._self = cid
 	ctx.incarnateClient()
-
-	tns._waitGroup.Add(2)
-	go func() {
-		defer tns._waitGroup.Done()
-		for {
-			handler._wmailcond.L.Lock()
-			msg, ok := handler._wmail.Pop()
-			if !ok || (handler._started == 0 && msg != nil) {
-				handler._wmailcond.Wait()
-			}
-
-			if handler._closed != 0 {
-				handler._wmailcond.L.Unlock()
-				break
-			}
-			handler._wmailcond.L.Unlock()
-
-			if msg == nil && ok {
-				break
-			} else if msg != nil {
-				systemMetrics, ok := ctx._system._extensions.Get(ctx._system._extensionId).(*Metrics)
-				if ok && systemMetrics._enabled {
-					t := time.Now()
-
-					if _, err := handler._c.Write(msg.([]byte)); err != nil {
-						break
-					}
-
-					delta := time.Since(t)
-					_ctx := context.Background()
-
-					if instruments := systemMetrics._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
-						histogram := instruments.ClientBytesSendHistogram
-
-						labels := append(
-							systemMetrics.CommonLabels(&ctx),
-							attribute.String("message bytes", fmt.Sprintf("%d", len(msg.([]byte)))),
-						)
-						histogram.Record(_ctx, delta.Seconds(), metric.WithAttributes(labels...))
-					}
-				} else {
-					if _, err := handler._c.Write(msg.([]byte)); err != nil {
-						break
-					}
-				}
-
-			}
-		}
-
-		handler._wmailcond.L.Lock()
-		handler._closed = 1
-		handler._wmailcond.L.Unlock()
-
-		handler._c.Close()
-		handler._wmail.Destory()
-		handler._wmail = nil
-		close(handler._senderStopped)
-	}()
-
-	go func() {
-		defer tns._waitGroup.Done()
-
-		for {
-			handler._wmailcond.L.Lock()
-			if handler._started != 1 && !tns.isStopped() {
-				handler._wmailcond.Wait()
-			}
-			handler._wmailcond.L.Unlock()
-
-			if handler._started == 1 || tns.isStopped() {
-				break
-			}
-		}
-
-		handler._invoker.invokerAccept()
-
-		var tmp [512]byte
-		remoteAddr := handler._c.RemoteAddr()
-		for {
-
-			if tns.isStopped() || handler._closed != 0 {
-				break
-			}
-
-			if handler._keepalive > 0 {
-				handler._c.SetReadDeadline(time.Now().Add(time.Duration(handler._keepalive) * time.Millisecond * 2.0))
-			}
-
-			n, err := handler._c.Read(tmp[:])
-			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					handler._keepaliveError++
-					if handler._keepaliveError <= 3 {
-						handler._invoker.invokerPing()
-						continue
-					}
-				}
-				break
-			}
-
-			handler._keepaliveError = 0
-			handler._invoker.invokerRecvice(tmp[:n], remoteAddr)
-		}
-
-		handler._wmailcond.L.Lock()
-		if handler._closed == 0 {
-			handler._closed = 1
-			handler._c.Close()
-		}
-		handler._wmailcond.L.Unlock()
-		handler._wmailcond.Signal()
-
-		// 等待发送端结束
-		_ = <-handler._senderStopped
-
-		//调用已关闭
-		if handler._invoker != nil {
-			handler._invoker.invokerClosed()
-		}
-
-	}()
 
 	handler.start()
 	return nil

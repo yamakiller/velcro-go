@@ -89,6 +89,7 @@ func (rc *Conn) Redial() error {
 		return err
 	}
 
+	rc.stopper = make(chan struct{})
 	//1.启动发送及接收
 	rc.done.Add(2)
 
@@ -184,7 +185,7 @@ func (rc *Conn) removeFuture(id int32) {
 }
 
 func (rc *Conn) Close() {
-	close(rc.stopper)
+
 	rc.conn.Close()
 	rc.done.Wait()
 	rc.mailboxDone.Wait()
@@ -219,7 +220,12 @@ func (rc *Conn) Close() {
 }
 
 func (rc *Conn) nextID() int32 {
-	return atomic.AddInt32(&rc.sequence, 1)
+	newid := atomic.AddInt32(&rc.sequence, 1)
+	if newid == 0 {
+		return atomic.AddInt32(&rc.sequence, 1)
+	}
+
+	return newid
 }
 
 func (rc *Conn) isStopped() bool {
@@ -274,6 +280,10 @@ func (rc *Conn) sender() {
 		rc.sendcon.L.Unlock()
 
 		for {
+			if rc.isStopped() {
+				goto exit_sender_lable
+			}
+
 			msg, ok := rc.sendbox.Pop()
 			if ok && msg == nil {
 				goto exit_sender_lable
@@ -399,8 +409,11 @@ func (rc *Conn) reader() {
 
 	}
 exit_reader_lable:
-	rc.mailbox <- nil
 	rc.conn.Close()
+	close(rc.stopper)
+	rc.sendcon.Signal()
+
+	rc.mailbox <- nil
 }
 
 func (rc *Conn) guardian() {
