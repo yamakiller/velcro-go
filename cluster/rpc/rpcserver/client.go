@@ -9,18 +9,28 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	lsync "github.com/yamakiller/velcro-go/sync"
 )
+
+func NewRpcClient(s *RpcServer) *RpcClient {
+	return &RpcClient{parent: s, recvice : circbuf.New(32768, &lsync.NoMutex{}), 
+	methods:make(map[interface{}]func(ctxtimeout context.Context, ctx network.Context, message interface{}) interface{})}
+}
 
 type RpcClient struct {
 	parent   *RpcServer
 	clientID *network.ClientID   // 客户端ID
 	recvice  *circbuf.RingBuffer // 接收缓冲区
-	requests map[interface{}]func(ctxtimeout context.Context,
+	methods map[interface{}]func(ctxtimeout context.Context,
 		ctx network.Context,
 		message interface{}) interface{}
-	messages map[interface{}]func(ctx network.Context, message interface{})
-
 	reference int32 //引用计数器
+}
+
+func (rc *RpcClient) Register(key interface{},f func(ctxtimeout context.Context,
+	ctx network.Context,
+	message interface{}) interface{}){
+	rc.methods[key] = f
 }
 
 func (rc *RpcClient) Accept(ctx network.Context) {
@@ -53,33 +63,30 @@ func (rc *RpcClient) Recvice(ctx network.Context) {
 			return
 		}
 
-		if offset == len(ctx.Message()) {
-			break
-		}
+
 
 		if msg == nil {
-			continue
+			goto rpc_client_offset_label
 		}
 
 		switch message := msg.(type) {
 		case *rpcmessage.RpcPingMessage:
 			rc.onRpcPing(ctx, message)
 		case *rpcmessage.RpcRequestMessage:
-			f, ok := rc.requests[reflect.TypeOf(msg)]
+			f, ok := rc.methods[reflect.TypeOf(message.Message)]
 			if !ok {
-				continue
+				goto rpc_client_offset_label
 			}
 
-			timeout := int64(message.Timeout) - time.Now().UnixMilli() - int64(message.ForwardTime)
-
+			timeout := int64(message.Timeout)- (time.Now().UnixMilli() - int64(message.ForwardTime))
 			// 如果已超时
 			if timeout <= 0 {
 				//rc.onTimeout(ctx, message.SequenceID)
-				continue
+				goto rpc_client_offset_label
 			}
 			// 设置超时器
 			ctxout, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
-			result := f(ctxout, ctx, msg)
+			result := f(ctxout, ctx, message.Message)
 			// 判断是否超时
 			select {
 			case <-ctxout.Done():
@@ -94,15 +101,18 @@ func (rc *RpcClient) Recvice(ctx network.Context) {
 			}
 			cancel()
 		case *rpcmessage.RpcMsgMessage:
-			f, ok := rc.messages[reflect.TypeOf(msg)]
+			f, ok := rc.methods[reflect.TypeOf(message.Message)]
 			if !ok {
-				continue
+				goto rpc_client_offset_label
 			}
-			f(ctx, msg)
+			f(nil, ctx, message.Message)
 		default:
 			ctx.Debug("unknown RPC message")
 		}
-
+rpc_client_offset_label:
+		if offset == len(ctx.Message()) {
+			break
+		}
 	}
 }
 
