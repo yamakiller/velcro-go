@@ -1,7 +1,6 @@
 package classes
 
 import (
-	"github.com/kardianos/service"
 	"github.com/yamakiller/velcro-go/network"
 )
 
@@ -24,7 +23,7 @@ type Gateway struct {
 	encryption         *Encryption
 }
 
-func (dg *Gateway) Start(s service.Service) error {
+func (dg *Gateway) Start() error {
 
 	if err := dg.intelServerSystem.Open(dg.intelServerAddress); err != nil {
 		return err
@@ -33,7 +32,7 @@ func (dg *Gateway) Start(s service.Service) error {
 	return nil
 }
 
-func (dg *Gateway) Stop(s service.Service) error {
+func (dg *Gateway) Stop() error {
 	if dg.intelServerSystem != nil {
 		dg.intelServerSystem.Info("Gateway Shutdown Closing linker")
 		dg.linkerGroup.Clear()
