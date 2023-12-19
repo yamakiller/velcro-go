@@ -221,12 +221,13 @@ func (rc *Conn) Close() {
 }
 
 func (rc *Conn) nextID() int32 {
-	newid := atomic.AddInt32(&rc.sequence, 1)
-	if newid == 0 {
-		return atomic.AddInt32(&rc.sequence, 1)
+	for {
+		if id := atomic.AddInt32(&rc.sequence, 1); id > 0 {
+			return id
+		} else if atomic.CompareAndSwapInt32(&rc.sequence, id, 1) {
+			return 1
+		}
 	}
-
-	return newid
 }
 
 func (rc *Conn) isStopped() bool {
