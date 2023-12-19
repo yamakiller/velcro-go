@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/yamakiller/velcro-go/cluster/gateway/protocols"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protocols/protomessage"
-	"github.com/yamakiller/velcro-go/cluster/route/router"
+	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )

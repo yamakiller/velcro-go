@@ -13,7 +13,7 @@ import (
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/rpc"
 	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
-	lsync "github.com/yamakiller/velcro-go/sync"
+	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
@@ -26,7 +26,7 @@ func NewConn(options ...ConnConfigOption) *Conn {
 func NewConnConfig(config *ConnConfig) *Conn {
 	return &Conn{
 		Config:     config,
-		sendbox:    containers.NewQueue(8, &lsync.NoMutex{}),
+		sendbox:    containers.NewQueue(8, &syncx.NoMutex{}),
 		sendcon:    sync.NewCond(&sync.Mutex{}),
 		stopper:    make(chan struct{}),
 		sequence:   1,
@@ -352,7 +352,7 @@ func (rc *Conn) reader() {
 	defer rc.done.Done()
 
 	var readtemp [1024]byte
-	readbuffer := circbuf.New(32768, &lsync.NoMutex{})
+	readbuffer := circbuf.New(32768, &syncx.NoMutex{})
 	for {
 		if !rc.isStopped() {
 			goto exit_reader_lable

@@ -3,7 +3,7 @@ package network
 import (
 	cmap "github.com/orcaman/concurrent-map"
 	murmur32 "github.com/twmb/murmur3"
-	lsync "github.com/yamakiller/velcro-go/sync"
+	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/snowflakealien"
 )
 
@@ -16,7 +16,7 @@ func NewHandlerRegistry(system *NetworkSystem) *HandleRegistryValue {
 	hrv := &HandleRegistryValue{
 		Address:    localAddress,
 		_system:    system,
-		_node:      snowflakealien.NewNode(&lsync.NoMutex{}),
+		_node:      snowflakealien.NewNode(&syncx.NoMutex{}),
 		_localCIDs: newSliceMap(),
 	}
 

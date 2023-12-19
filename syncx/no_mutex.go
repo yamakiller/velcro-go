@@ -1,4 +1,4 @@
-package sync
+package syncx
 
 type NoMutex struct {
 }

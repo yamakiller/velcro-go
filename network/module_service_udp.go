@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
-	lsync "github.com/yamakiller/velcro-go/sync"
+	"github.com/yamakiller/velcro-go/syncx"
 )
 
 func newUDPNetworkServerModule(system *NetworkSystem) *udpNetworkServerModule {
@@ -40,7 +40,7 @@ func (uns *udpNetworkServerModule) Open(addr string) error {
 	ctx := clientContext{_system: uns._system, _state: stateAccept}
 	handler := &udpClientHandler{
 		conn:     uns._listen,
-		sendbox:  containers.NewQueue(4, &lsync.NoMutex{}),
+		sendbox:  containers.NewQueue(4, &syncx.NoMutex{}),
 		sendcond: sync.NewCond(&sync.Mutex{}),
 		invoker:  &ctx,
 		mailbox:  make(chan interface{}, 1),

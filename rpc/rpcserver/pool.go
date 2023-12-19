@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/yamakiller/velcro-go/network"
-	lsync "github.com/yamakiller/velcro-go/sync"
+	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
@@ -16,7 +16,7 @@ type RpcPool interface {
 func NewDefaultRpcPool(s *RpcServer) RpcPool {
 	return &defaultRpcPool{pls: sync.Pool{
 		New: func() interface{} {
-			return &RpcClient{parent: s, recvice: circbuf.New(32768, &lsync.NoMutex{})}
+			return &RpcClient{parent: s, recvice: circbuf.New(32768, &syncx.NoMutex{})}
 		},
 	}}
 }

@@ -8,12 +8,12 @@ import (
 
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
-	lsync "github.com/yamakiller/velcro-go/sync"
+	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
 func NewRpcClient(s *RpcServer) *RpcClient {
-	return &RpcClient{parent: s, recvice: circbuf.New(32768, &lsync.NoMutex{}),
+	return &RpcClient{parent: s, recvice: circbuf.New(32768, &syncx.NoMutex{}),
 		methods: make(map[interface{}]func(ctxtimeout context.Context, ctx network.Context, message interface{}) interface{})}
 }
 

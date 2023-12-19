@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/debugs/metrics"
-	lsync "github.com/yamakiller/velcro-go/sync"
+	"github.com/yamakiller/velcro-go/syncx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -116,7 +116,7 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	ctx := clientContext{_system: tns._system, _state: stateAccept}
 	handler := &tcpClientHandler{
 		conn:      conn,
-		sendbox:   containers.NewQueue(4, &lsync.NoMutex{}),
+		sendbox:   containers.NewQueue(4, &syncx.NoMutex{}),
 		sendcond:  sync.NewCond(&sync.Mutex{}),
 		keepalive: uint32(tns._system.Config.NetowkTimeout),
 		invoker:   &ctx,

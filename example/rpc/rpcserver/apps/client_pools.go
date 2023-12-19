@@ -12,7 +12,7 @@ import (
 func NewClientPools(s *rpcserver.RpcServer) rpcserver.RpcPool {
 	return &ClientPools{pls: sync.Pool{
 		New: func() interface{} {
-			//return &RpcClient{parent: s, recvice: circbuf.New(32768, &lsync.NoMutex{})}
+			//return &RpcClient{parent: s, recvice: circbuf.New(32768, &syncx.NoMutex{})}
 
 			c := &TestClient{RpcClient: rpcserver.NewRpcClient(s)}
 			c.Register(reflect.TypeOf(&protos.Auth{}), c.OnAuth)
