@@ -1,6 +1,8 @@
-package rpcclient
+package rpcserver
 
-import "github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
+import (
+	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
+)
 
 // ConnConfigOption 是一个配置rpc connector 的函数
 type ConnConfigOption func(config *ConnConfig)
@@ -22,9 +24,9 @@ func WithKleepalive(kleepalive int32) ConnConfigOption {
 	}
 }
 
-func WithMarshalRequest(f rpcmessage.MarshalRequestFunc) ConnConfigOption {
+func WithMarshalResponse(f rpcmessage.MarshalResponseFunc) ConnConfigOption {
 	return func(config *ConnConfig) {
-		config.MarshalRequest = f
+		config.MarshalResponse = f
 	}
 }
 
@@ -46,14 +48,8 @@ func WithUnMarshal(f rpcmessage.UnMarshalFunc) ConnConfigOption {
 	}
 }
 
-func WithReceive(f ReceiveFunc) ConnConfigOption {
+func WithPool(f RpcPool) ConnConfigOption {
 	return func(config *ConnConfig) {
-		config.Receive = f
-	}
-}
-
-func WithClosed(f ClosedFunc) ConnConfigOption {
-	return func(config *ConnConfig) {
-		config.Closed = f
+		config.Pool = f
 	}
 }

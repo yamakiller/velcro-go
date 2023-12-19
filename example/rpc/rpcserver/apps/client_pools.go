@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcserver"
 	"github.com/yamakiller/velcro-go/example/rpc/protos"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/rpcserver"
 )
 
 func NewClientPools(s *rpcserver.RpcServer) rpcserver.RpcPool {
@@ -15,7 +15,7 @@ func NewClientPools(s *rpcserver.RpcServer) rpcserver.RpcPool {
 			//return &RpcClient{parent: s, recvice: circbuf.New(32768, &lsync.NoMutex{})}
 
 			c := &TestClient{RpcClient: rpcserver.NewRpcClient(s)}
-			c.Register(reflect.TypeOf(&protos.Auth{}),c.OnAuth)
+			c.Register(reflect.TypeOf(&protos.Auth{}), c.OnAuth)
 			return c
 		},
 	}}

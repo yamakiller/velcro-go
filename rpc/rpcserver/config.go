@@ -1,8 +1,8 @@
 package rpcserver
 
 import (
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
 )
 
 type ConnConfig struct {
@@ -11,8 +11,8 @@ type ConnConfig struct {
 	Kleepalive int32
 
 	MarshalResponse rpcmessage.MarshalResponseFunc
-	MarshalMessage rpcmessage.MarshalMessageFunc
-	MarshalPing    rpcmessage.MarshalPingFunc
+	MarshalMessage  rpcmessage.MarshalMessageFunc
+	MarshalPing     rpcmessage.MarshalPingFunc
 
 	UnMarshal rpcmessage.UnMarshalFunc
 
@@ -21,11 +21,11 @@ type ConnConfig struct {
 
 func defaultConfig() *ConnConfig {
 	return &ConnConfig{
-		Kleepalive:     10 * 1000,
+		Kleepalive:      10 * 1000,
 		MarshalResponse: rpcmessage.MarshalResponseProtobuf,
-		MarshalMessage: rpcmessage.MarshalMessageProtobuf,
-		MarshalPing:    rpcmessage.MarshalPing,
-		UnMarshal:      rpcmessage.UnMarshalProtobuf,
-		Pool: nil,
+		MarshalMessage:  rpcmessage.MarshalMessageProtobuf,
+		MarshalPing:     rpcmessage.MarshalPing,
+		UnMarshal:       rpcmessage.UnMarshalProtobuf,
+		Pool:            nil,
 	}
 }

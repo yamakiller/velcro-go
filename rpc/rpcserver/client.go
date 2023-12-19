@@ -6,30 +6,30 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
 	lsync "github.com/yamakiller/velcro-go/sync"
+	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
 func NewRpcClient(s *RpcServer) *RpcClient {
-	return &RpcClient{parent: s, recvice : circbuf.New(32768, &lsync.NoMutex{}), 
-	methods:make(map[interface{}]func(ctxtimeout context.Context, ctx network.Context, message interface{}) interface{})}
+	return &RpcClient{parent: s, recvice: circbuf.New(32768, &lsync.NoMutex{}),
+		methods: make(map[interface{}]func(ctxtimeout context.Context, ctx network.Context, message interface{}) interface{})}
 }
 
 type RpcClient struct {
 	parent   *RpcServer
 	clientID *network.ClientID   // 客户端ID
 	recvice  *circbuf.RingBuffer // 接收缓冲区
-	methods map[interface{}]func(ctxtimeout context.Context,
+	methods  map[interface{}]func(ctxtimeout context.Context,
 		ctx network.Context,
 		message interface{}) interface{}
 	reference int32 //引用计数器
 }
 
-func (rc *RpcClient) Register(key interface{},f func(ctxtimeout context.Context,
+func (rc *RpcClient) Register(key interface{}, f func(ctxtimeout context.Context,
 	ctx network.Context,
-	message interface{}) interface{}){
+	message interface{}) interface{}) {
 	rc.methods[key] = f
 }
 
@@ -63,8 +63,6 @@ func (rc *RpcClient) Recvice(ctx network.Context) {
 			return
 		}
 
-
-
 		if msg == nil {
 			goto rpc_client_offset_label
 		}
@@ -78,7 +76,7 @@ func (rc *RpcClient) Recvice(ctx network.Context) {
 				goto rpc_client_offset_label
 			}
 
-			timeout := int64(message.Timeout)- (time.Now().UnixMilli() - int64(message.ForwardTime))
+			timeout := int64(message.Timeout) - (time.Now().UnixMilli() - int64(message.ForwardTime))
 			// 如果已超时
 			if timeout <= 0 {
 				//rc.onTimeout(ctx, message.SequenceID)
@@ -109,7 +107,7 @@ func (rc *RpcClient) Recvice(ctx network.Context) {
 		default:
 			ctx.Debug("unknown RPC message")
 		}
-rpc_client_offset_label:
+	rpc_client_offset_label:
 		if offset == len(ctx.Message()) {
 			break
 		}

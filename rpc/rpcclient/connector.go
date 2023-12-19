@@ -10,9 +10,9 @@ import (
 	"unsafe"
 
 	"github.com/google/uuid"
-	"github.com/yamakiller/velcro-go/cluster/rpc"
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
 	"github.com/yamakiller/velcro-go/containers"
+	"github.com/yamakiller/velcro-go/rpc"
+	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
 	lsync "github.com/yamakiller/velcro-go/sync"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
@@ -25,13 +25,13 @@ func NewConn(options ...ConnConfigOption) *Conn {
 
 func NewConnConfig(config *ConnConfig) *Conn {
 	return &Conn{
-		Config:   config,
-		sendbox:  containers.NewQueue(8, &lsync.NoMutex{}),
-		sendcon:  sync.NewCond(&sync.Mutex{}),
-		stopper:  make(chan struct{}),
-		sequence: 1,
-		mailbox:  make(chan interface{}, 1),
-		requestbox:sync.Map{},
+		Config:     config,
+		sendbox:    containers.NewQueue(8, &lsync.NoMutex{}),
+		sendcon:    sync.NewCond(&sync.Mutex{}),
+		stopper:    make(chan struct{}),
+		sequence:   1,
+		mailbox:    make(chan interface{}, 1),
+		requestbox: sync.Map{},
 	}
 }
 
@@ -313,7 +313,7 @@ func (rc *Conn) sender() {
 				}
 
 				// 剩余时间小于超时20%无再发送意义,直接等待超时
-				diff :=int64(message.Timeout)- (time.Now().UnixMilli() - int64(message.ForwardTime))
+				diff := int64(message.Timeout) - (time.Now().UnixMilli() - int64(message.ForwardTime))
 				if diff < int64(float64(message.Timeout)*0.2) {
 					future.cond.L.Unlock()
 					continue

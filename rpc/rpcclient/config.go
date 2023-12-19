@@ -1,7 +1,7 @@
 package rpcclient
 
 import (
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
+	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
 )
 
 type ConnConfig struct {

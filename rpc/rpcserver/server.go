@@ -1,18 +1,17 @@
 package rpcserver
 
 import (
-
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
 )
 
 func New(options ...ConnConfigOption) *RpcServer {
 	config := Configure(options...)
 	s := &RpcServer{
-		group:         &ClientGroup{clients: make(map[network.CIDKEY]*RpcClient)},
+		group: &ClientGroup{clients: make(map[network.CIDKEY]*RpcClient)},
 	}
 	s.NetworkSystem = network.NewTCPServerNetworkSystem(network.WithProducer(s.newClient))
-	
+
 	if config.Pool == nil {
 		config.Pool = NewDefaultRpcPool(s)
 	}
@@ -34,11 +33,10 @@ type RpcServer struct {
 	MarshalMessage  rpcmessage.MarshalMessageFunc
 	MarshalPing     rpcmessage.MarshalPingFunc
 
-	UnMarshal       rpcmessage.UnMarshalFunc
-	
+	UnMarshal rpcmessage.UnMarshalFunc
 }
 
-func (s *RpcServer) WithPool(pool RpcPool){
+func (s *RpcServer) WithPool(pool RpcPool) {
 	s.clientPool = pool
 }
 

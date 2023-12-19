@@ -6,12 +6,12 @@ import (
 
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcserver"
 	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/rpc/rpcserver"
 )
 
 type Program struct {
-	_s *rpcserver.RpcServer
+	_s       *rpcserver.RpcServer
 	logAgent *logs.DefaultAgent
 }
 

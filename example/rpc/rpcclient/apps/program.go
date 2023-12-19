@@ -7,12 +7,12 @@ import (
 
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
-	"github.com/yamakiller/velcro-go/cluster/rpc/rpcclient"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/rpc/protos"
 	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/configs"
 	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/internet"
 	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/rpc/rpcclient"
 )
 
 var appName string = "test-rpc-client"
@@ -54,9 +54,9 @@ func (p *Program) Start(s service.Service) error {
 		return err
 	}
 
-	if msg ,err := p._c.RequestMessage(&protos.Auth{Msg: "123456"},30000);err == nil{
+	if msg, err := p._c.RequestMessage(&protos.Auth{Msg: "123456"}, 30000); err == nil {
 		p.logAgent.Info("Auth %s success", msg.(*protos.Auth).Msg)
-	}else{
+	} else {
 		p.logAgent.Error("RequestMessage fail[error:%s]", err.Error())
 	}
 	return nil
