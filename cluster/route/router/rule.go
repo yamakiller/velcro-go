@@ -15,7 +15,7 @@ type Rule struct {
 }
 
 // RouteGroup 路由组
-type RouteGroup struct {
+/*type RouteGroup struct {
 	RouteId     string   `yaml:"route-id"`           // 路由ID
 	RouteName   string   `yaml:"route-name"`         // 路由名称
 	RouteDesc   string   `yaml:"route-desc"`         // 路由说明
@@ -28,4 +28,4 @@ type Target struct {
 	TargetId      string `yaml:"target-id"`      // 目标ID
 	TargetWeight  int64  `yaml:"target-weight"`  // 目标权重
 	TargetAddress string `yaml:"target-address"` // 目标地址
-}
+}*/
