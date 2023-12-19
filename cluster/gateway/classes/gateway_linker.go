@@ -15,7 +15,7 @@ import (
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
-type GatewayLinker interface {
+type GLinker interface {
 	ClientID() *network.ClientID
 	Accept(ctx network.Context)
 	Ping(ctx network.Context)

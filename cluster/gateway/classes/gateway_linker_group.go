@@ -6,20 +6,20 @@ import (
 	"github.com/yamakiller/velcro-go/network"
 )
 
-type GatewayLinkerGroup interface {
-	Register(cid *network.ClientID, l GatewayLinker)
+type GLinkerGroup interface {
+	Register(cid *network.ClientID, l GLinker)
 	UnRegister(cid *network.ClientID)
 	GetLinker(cid *network.ClientID)
-	ReleaseLinkerOwner(linker GatewayLinker)
+	ReleaseLinkerOwner(linker GLinker)
 	Clear()
 }
 
 type DefaultLinkerGroup struct {
-	links map[network.CIDKEY]GatewayLinker
+	links map[network.CIDKEY]GLinker
 	mu    sync.Mutex
 }
 
-func (lg *DefaultLinkerGroup) Register(cid *network.ClientID, l GatewayLinker) {
+func (lg *DefaultLinkerGroup) Register(cid *network.ClientID, l GLinker) {
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
@@ -51,7 +51,7 @@ func (lg *DefaultLinkerGroup) UnRegister(cid *network.ClientID) {
 	}
 }
 
-func (lg *DefaultLinkerGroup) GetLinker(cid *network.ClientID) GatewayLinker {
+func (lg *DefaultLinkerGroup) GetLinker(cid *network.ClientID) GLinker {
 	lg.mu.Lock()
 	defer lg.mu.Unlock()
 
@@ -64,7 +64,7 @@ func (lg *DefaultLinkerGroup) GetLinker(cid *network.ClientID) GatewayLinker {
 	return l
 }
 
-func (lg *DefaultLinkerGroup) ReleaseLinker(linker GatewayLinker) {
+func (lg *DefaultLinkerGroup) ReleaseLinker(linker GLinker) {
 	lg.mu.Lock()
 	ref := linker.referenceDecrement()
 	lg.mu.Unlock()
@@ -83,6 +83,6 @@ func (lg *DefaultLinkerGroup) Clear() {
 	}
 }
 
-func (lg *DefaultLinkerGroup) free(l GatewayLinker) {
+func (lg *DefaultLinkerGroup) free(l GLinker) {
 	l.Destory()
 }
