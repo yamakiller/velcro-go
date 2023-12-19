@@ -3,8 +3,8 @@ package network
 import (
 	cmap "github.com/orcaman/concurrent-map"
 	murmur32 "github.com/twmb/murmur3"
-	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/snowflakealien"
+	"github.com/yamakiller/velcro-go/utils/syncx"
 )
 
 const (

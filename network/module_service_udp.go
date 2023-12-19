@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
-	"github.com/yamakiller/velcro-go/syncx"
+	"github.com/yamakiller/velcro-go/utils/syncx"
 )
 
 func newUDPNetworkServerModule(system *NetworkSystem) *udpNetworkServerModule {

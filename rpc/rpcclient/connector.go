@@ -13,8 +13,8 @@ import (
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/rpc"
 	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
-	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/syncx"
 )
 
 func NewConn(options ...ConnConfigOption) *Conn {

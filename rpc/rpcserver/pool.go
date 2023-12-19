@@ -4,8 +4,8 @@ import (
 	"sync"
 
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/syncx"
 )
 
 type RpcPool interface {

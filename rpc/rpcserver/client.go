@@ -8,8 +8,8 @@ import (
 
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
-	"github.com/yamakiller/velcro-go/syncx"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/syncx"
 )
 
 func NewRpcClient(s *RpcServer) *RpcClient {

@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/debugs/metrics"
-	"github.com/yamakiller/velcro-go/syncx"
+	"github.com/yamakiller/velcro-go/utils/syncx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 )
