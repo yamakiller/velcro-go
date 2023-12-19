@@ -31,6 +31,7 @@ func NewConnConfig(config *ConnConfig) *Conn {
 		stopper:  make(chan struct{}),
 		sequence: 1,
 		mailbox:  make(chan interface{}, 1),
+		requestbox:sync.Map{},
 	}
 }
 
@@ -114,7 +115,7 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 
 	future := &Future{
 		sequenceID: seq,
-		cond:       &sync.Cond{},
+		cond:       sync.NewCond(&sync.Mutex{}),
 		done:       false,
 		result:     nil,
 		err:        nil,
@@ -135,7 +136,7 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 			}
 			future.err = rpc.ErrorRequestTimeout
 			future.cond.L.Unlock()
-			future.Stop()
+			future.Stop(rc)
 		})
 		atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&future.t)), unsafe.Pointer(tp))
 	}
@@ -155,7 +156,7 @@ func (rc *Conn) PostMessage(message interface{}) error {
 
 func (rc *Conn) pushSendBox(data interface{}, future *Future) error {
 	rc.sendcon.L.Lock()
-	if rc.isStopped() {
+	if !rc.isStopped() {
 		rc.sendcon.L.Unlock()
 		return errors.New("rpc connector: closed")
 	}
@@ -280,7 +281,7 @@ func (rc *Conn) sender() {
 		rc.sendcon.L.Unlock()
 
 		for {
-			if rc.isStopped() {
+			if !rc.isStopped() {
 				goto exit_sender_lable
 			}
 
@@ -312,7 +313,7 @@ func (rc *Conn) sender() {
 				}
 
 				// 剩余时间小于超时20%无再发送意义,直接等待超时
-				diff := int64(message.Timeout) - time.Now().UnixMilli() - int64(message.ForwardTime)
+				diff :=int64(message.Timeout)- (time.Now().UnixMilli() - int64(message.ForwardTime))
 				if diff < int64(float64(message.Timeout)*0.2) {
 					future.cond.L.Unlock()
 					continue

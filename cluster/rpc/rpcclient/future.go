@@ -9,7 +9,6 @@ import (
 
 // 请求器
 type Future struct {
-	conn       *Conn
 	sequenceID int32
 	cond       *sync.Cond
 	done       bool
@@ -26,7 +25,7 @@ func (ref *Future) wait() {
 	ref.cond.L.Unlock()
 }
 
-func (ref *Future) Stop() {
+func (ref *Future) Stop(slf *Conn) {
 	ref.cond.L.Lock()
 	if ref.done {
 		ref.cond.L.Unlock()
@@ -42,7 +41,7 @@ func (ref *Future) Stop() {
 	}
 
 	//移除
-	ref.conn.removeFuture(ref.sequenceID)
+	slf.removeFuture(ref.sequenceID)
 
 	ref.cond.L.Unlock()
 	ref.cond.Signal()

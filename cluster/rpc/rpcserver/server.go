@@ -1,12 +1,32 @@
 package rpcserver
 
 import (
+
 	"github.com/yamakiller/velcro-go/cluster/rpc/rpcmessage"
 	"github.com/yamakiller/velcro-go/network"
 )
 
+func New(options ...ConnConfigOption) *RpcServer {
+	config := Configure(options...)
+	s := &RpcServer{
+		group:         &ClientGroup{clients: make(map[network.CIDKEY]*RpcClient)},
+	}
+	s.NetworkSystem = network.NewTCPServerNetworkSystem(network.WithProducer(s.newClient))
+	
+	if config.Pool == nil {
+		config.Pool = NewDefaultRpcPool(s)
+	}
+	s.clientPool = config.Pool
+	s.MarshalMessage = config.MarshalMessage
+	s.MarshalPing = config.MarshalPing
+	s.MarshalResponse = config.MarshalResponse
+	s.UnMarshal = config.UnMarshal
+
+	return s
+}
+
 type RpcServer struct {
-	network.NetworkSystem
+	*network.NetworkSystem
 	group      *ClientGroup
 	clientPool RpcPool
 
@@ -14,7 +34,26 @@ type RpcServer struct {
 	MarshalMessage  rpcmessage.MarshalMessageFunc
 	MarshalPing     rpcmessage.MarshalPingFunc
 
-	UnMarshal rpcmessage.UnMarshalFunc
+	UnMarshal       rpcmessage.UnMarshalFunc
+	
+}
+
+func (s *RpcServer) WithPool(pool RpcPool){
+	s.clientPool = pool
+}
+
+func (s *RpcServer) Open(addr string) error {
+	return s.NetworkSystem.Open(addr)
+}
+
+func (s *RpcServer) Shutdown() {
+	s.group.mu.Lock()
+	for _, c := range s.group.clients {
+		c.clientID.UserClose()
+	}
+	s.group.mu.Unlock()
+
+	s.NetworkSystem.Shutdown()
 }
 
 func (s *RpcServer) Register(cid *network.ClientID, rc *RpcClient) {
