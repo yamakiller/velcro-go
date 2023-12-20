@@ -3,7 +3,7 @@ package envs
 import (
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/yamakiller/velcro-go/files"
+	"github.com/yamakiller/velcro-go/utils/files"
 )
 
 // YAMLEnv docS

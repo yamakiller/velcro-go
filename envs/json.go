@@ -1,8 +1,8 @@
 package envs
 
 import (
-	"github.com/yamakiller/velcro-go/files"
 	"github.com/yamakiller/velcro-go/utils"
+	"github.com/yamakiller/velcro-go/utils/files"
 )
 
 // JSONEnv doc

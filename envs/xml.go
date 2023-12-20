@@ -3,7 +3,7 @@ package envs
 import (
 	"encoding/xml"
 
-	"github.com/yamakiller/velcro-go/files"
+	"github.com/yamakiller/velcro-go/utils/files"
 )
 
 // XMLEnv doc

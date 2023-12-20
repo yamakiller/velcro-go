@@ -1,6 +1,10 @@
 package proxy
 
-import "github.com/yamakiller/velcro-go/rpc/rpcclient"
+import (
+	"reflect"
+
+	"github.com/yamakiller/velcro-go/rpc/rpcclient"
+)
 
 type RpcProxyConn struct {
 	proxy *RpcProxy
@@ -16,6 +20,8 @@ func (rpcx *RpcProxyConn) Closed() {
 	rpcx.proxy.alive[rpcx.ToAddress()] = false
 	rpcx.proxy.Unlock()
 	rpcx.proxy.balancer.Remove(rpcx.ToAddress())
+
+	rpcx.proxy.loginfo("%s closed", rpcx.ToAddress())
 }
 
 func (rpcx *RpcProxyConn) Receive(msg interface{}) {
@@ -24,4 +30,6 @@ func (rpcx *RpcProxyConn) Receive(msg interface{}) {
 	}
 
 	rpcx.proxy.recvice(msg)
+
+	rpcx.proxy.logdebug("receive %s", reflect.TypeOf(msg))
 }
