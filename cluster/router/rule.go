@@ -1,6 +1,8 @@
 package router
 
 const (
-	NONE_RULE_ID  = 1 // 初始化角色
-	KEYED_RULE_ID = 2 // 完成密钥交换
+	// NONE_RULE_ID 初始化角色
+	NONE_RULE_ID = 1
+	// KEYED_RULE_ID 完成密钥交换
+	KEYED_RULE_ID = 2
 )
