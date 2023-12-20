@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "client_id.proto";
+
+package protocols;
+option go_package=".;protocols";
+
+
+message ForwardMessage {
+    network.ClientID sender = 1;  // 发送者(可为空)
+    network.ClientID target = 2;  // 目标(可为空)  
+    google.protobuf.Any msg = 3;  // 具体消息 
+}

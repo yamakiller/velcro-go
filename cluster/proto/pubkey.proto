@@ -1,6 +1,6 @@
 syntax = "proto3";
-option go_package=".;protocols";
 package protocols;
+option go_package=".;protocols";
 
 // PubkeyMsg 公钥
 message PubkeyMsg {

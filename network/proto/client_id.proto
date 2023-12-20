@@ -1,7 +1,6 @@
 syntax = "proto3";
-option go_package=".;network";
 package network;
-
+option go_package="github.com/yamakiller/velcro-go/network";
 
 message ClientID {
     string Address = 1;  // 地址 

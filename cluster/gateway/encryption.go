@@ -1,4 +1,4 @@
-package classes
+package gateway
 
 import (
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"

@@ -1,4 +1,4 @@
-package classes
+package gateway
 
 import (
 	"io"

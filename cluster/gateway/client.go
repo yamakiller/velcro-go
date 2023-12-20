@@ -1,4 +1,4 @@
-package classes
+package gateway
 
 import (
 	"crypto"
@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 
 	"github.com/google/uuid"
-	"github.com/yamakiller/velcro-go/cluster/gateway/protocols"
-	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protocols/protomessage"
+	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
+	"github.com/yamakiller/velcro-go/cluster/protocols"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
@@ -25,20 +25,20 @@ type Client interface {
 
 	onPingReply(ctx network.Context, message interface{})
 	onPubkeyReply(ctx network.Context, message interface{})
+	onOtherMessage(ctx network.Context, message interface{})
 
 	referenceIncrement() int32
 	referenceDecrement() int32
 }
 
 type ClientConn struct {
-	gateway      *Gateway
-	clientID     *network.ClientID
-	ruleID       int32  //角色ID
-	secret       []byte //密钥
-	recvice      *circbuf.RingBuffer
-	ping         uint64
-	otherMessage func(network.Context, interface{})
-	reference    int32 //引用计数器
+	gateway   *Gateway
+	clientID  *network.ClientID
+	ruleID    int32  //角色ID
+	secret    []byte //密钥
+	recvice   *circbuf.RingBuffer
+	ping      uint64
+	reference int32 //引用计数器
 }
 
 func (dl *ClientConn) ClientID() *network.ClientID {
@@ -48,7 +48,7 @@ func (dl *ClientConn) ClientID() *network.ClientID {
 func (dl *ClientConn) Accept(ctx network.Context) {
 	dl.clientID = ctx.Self()
 	dl.ruleID = router.NONE_RULE_ID
-	dl.gateway.clientGroup.Register(dl.clientID, dl)
+	dl.gateway.Register(dl.clientID, dl)
 }
 
 func (dl *ClientConn) Ping(ctx network.Context) {
@@ -90,21 +90,21 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 		case *protocols.PubkeyMsg:
 			dl.onPubkeyReply(ctx, message)
 		default:
-			dl.otherMessage(ctx, message)
+			dl.onOtherMessage(ctx, message)
 		}
 	}
 
 }
 
 func (dl *ClientConn) Closed(ctx network.Context) {
-	dl.gateway.clientGroup.UnRegister(ctx.Self()) //关闭释放对象
+	dl.gateway.UnRegister(ctx.Self()) //关闭释放对象
 }
 
 func (dl *ClientConn) Destory() {
 	dl.clientID = nil
-	dl.secret = nil
 	dl.gateway = nil
-	dl.recvice = nil
+
+	dl.recvice.Reset()
 }
 
 func (dl *ClientConn) onPingReply(ctx network.Context, message interface{}) {
@@ -187,6 +187,10 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message interface{}) {
 	}
 
 	ctx.PostMessage(ctx.Self(), tmp[:n])
+}
+
+func (dl *ClientConn) onOtherMessage(ctx network.Context, message interface{}) {
+	// TODO: 编写其它处理代码
 }
 
 // RefInc 引用计数器+1
