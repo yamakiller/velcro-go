@@ -20,8 +20,7 @@ func (rpcx *RpcProxyConn) Closed() {
 	rpcx.proxy.alive[rpcx.ToAddress()] = false
 	rpcx.proxy.Unlock()
 	rpcx.proxy.balancer.Remove(rpcx.ToAddress())
-
-	rpcx.proxy.loginfo("%s closed", rpcx.ToAddress())
+	rpcx.proxy.logdebug("%s closed", rpcx.ToAddress())
 }
 
 func (rpcx *RpcProxyConn) Receive(msg interface{}) {
