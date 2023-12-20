@@ -15,7 +15,7 @@ import (
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
-type GLinker interface {
+type Client interface {
 	ClientID() *network.ClientID
 	Accept(ctx network.Context)
 	Ping(ctx network.Context)
@@ -30,7 +30,7 @@ type GLinker interface {
 	referenceDecrement() int32
 }
 
-type Linker struct {
+type ClientConn struct {
 	gateway      *Gateway
 	clientID     *network.ClientID
 	ruleID       int32  //角色ID
@@ -41,17 +41,17 @@ type Linker struct {
 	reference    int32 //引用计数器
 }
 
-func (dl *Linker) ClientID() *network.ClientID {
+func (dl *ClientConn) ClientID() *network.ClientID {
 	return dl.clientID
 }
 
-func (dl *Linker) Accept(ctx network.Context) {
+func (dl *ClientConn) Accept(ctx network.Context) {
 	dl.clientID = ctx.Self()
 	dl.ruleID = router.NONE_RULE_ID
-	dl.gateway.linkerGroup.Register(dl.clientID, dl)
+	dl.gateway.clientGroup.Register(dl.clientID, dl)
 }
 
-func (dl *Linker) Ping(ctx network.Context) {
+func (dl *ClientConn) Ping(ctx network.Context) {
 	if dl.ruleID <= router.KEYED_RULE_ID {
 		return
 	}
@@ -71,7 +71,7 @@ func (dl *Linker) Ping(ctx network.Context) {
 	ctx.PostMessage(ctx.Self(), temp[:msgLen])
 }
 
-func (dl *Linker) Recvice(ctx network.Context) {
+func (dl *ClientConn) Recvice(ctx network.Context) {
 	offset := 0
 	for {
 		n, _ := dl.recvice.Write(ctx.Message()[offset:])
@@ -96,18 +96,18 @@ func (dl *Linker) Recvice(ctx network.Context) {
 
 }
 
-func (dl *Linker) Closed(ctx network.Context) {
-	dl.gateway.linkerGroup.UnRegister(ctx.Self()) //关闭释放对象
+func (dl *ClientConn) Closed(ctx network.Context) {
+	dl.gateway.clientGroup.UnRegister(ctx.Self()) //关闭释放对象
 }
 
-func (dl *Linker) Destory() {
+func (dl *ClientConn) Destory() {
 	dl.clientID = nil
 	dl.secret = nil
 	dl.gateway = nil
 	dl.recvice = nil
 }
 
-func (dl *Linker) onPingReply(ctx network.Context, message interface{}) {
+func (dl *ClientConn) onPingReply(ctx network.Context, message interface{}) {
 	pingReq := message.(*protocols.PingMsg)
 	if dl.ping == 0 {
 		ctx.Debug("unrequest ping")
@@ -125,7 +125,7 @@ func (dl *Linker) onPingReply(ctx network.Context, message interface{}) {
 	ctx.Debug("ping reply success")
 }
 
-func (dl *Linker) onPubkeyReply(ctx network.Context, message interface{}) {
+func (dl *ClientConn) onPubkeyReply(ctx network.Context, message interface{}) {
 	if dl.gateway.encryption == nil {
 		ctx.Debug("encrypted communication not enabled")
 		ctx.Close(ctx.Self())
@@ -190,11 +190,11 @@ func (dl *Linker) onPubkeyReply(ctx network.Context, message interface{}) {
 }
 
 // RefInc 引用计数器+1
-func (dl *Linker) referenceIncrement() int32 {
+func (dl *ClientConn) referenceIncrement() int32 {
 	return atomic.AddInt32(&dl.reference, 1)
 }
 
 // RefDec 引用计数器-1
-func (dl *Linker) referenceDecrement() int32 {
+func (dl *ClientConn) referenceDecrement() int32 {
 	return atomic.AddInt32(&dl.reference, -1)
 }
