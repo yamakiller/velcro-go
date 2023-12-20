@@ -32,8 +32,18 @@ func NewConnConfig(config *ConnConfig) *Conn {
 		sequence:   1,
 		mailbox:    make(chan interface{}, 1),
 		requestbox: sync.Map{},
+		state:      Disconnected,
 	}
 }
+
+type ConnState int
+
+const (
+	Disconnected = iota
+	Connecting
+	Connected
+	Disconnecting
+)
 
 type ReceiveFunc func(msg interface{})
 type ClosedFunc func()
@@ -55,6 +65,8 @@ type Conn struct {
 
 	ping            uint64
 	kleepaliveError int32
+
+	state ConnState
 }
 
 func (rc *Conn) Dial(addr string, timeout time.Duration) error {
@@ -65,10 +77,13 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 
 	rc.address = address
 	rc.timeout = timeout
+	rc.state = Connecting
 	rc.conn, err = net.DialTimeout("tcp", address.AddrPort().String(), timeout)
 	if err != nil {
+		rc.state = Disconnected
 		return err
 	}
+	rc.state = Connected
 
 	//1.启动发送及接收
 	rc.done.Add(2)
@@ -101,6 +116,22 @@ func (rc *Conn) Redial() error {
 	go rc.guardian()
 
 	return nil
+}
+
+func (rc *Conn) IsConnected() bool {
+	if rc.state == Connected {
+		return true
+	}
+
+	return false
+}
+
+func (rc *Conn) ToAddress() string {
+	if rc.address == nil {
+		return "unknown"
+	}
+
+	return rc.address.AddrPort().String()
 }
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
@@ -190,32 +221,6 @@ func (rc *Conn) Close() {
 	rc.conn.Close()
 	rc.done.Wait()
 	rc.mailboxDone.Wait()
-
-	rc.requestbox.Range(func(key, value any) bool {
-		future := value.(*Future)
-		future.cond.L.Lock()
-		if future.done {
-			future.cond.L.Unlock()
-			return true
-		}
-
-		tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
-		if tp != nil {
-			tp.Stop()
-		}
-
-		future.done = true
-		future.result = nil
-		future.err = rpc.ErrorRpcClientClosed
-		future.done = true
-		future.cond.L.Unlock()
-		future.cond.Signal()
-
-		rc.removeFuture(key.(int32))
-
-		return true
-	})
-
 	close(rc.mailbox)
 	rc.sendbox = nil
 }
@@ -345,6 +350,7 @@ func (rc *Conn) sender() {
 		}
 	}
 exit_sender_lable:
+	rc.state = Disconnecting
 	rc.conn.Close()
 }
 
@@ -414,7 +420,7 @@ exit_reader_lable:
 	rc.conn.Close()
 	close(rc.stopper)
 	rc.sendcon.Signal()
-
+	rc.state = Disconnecting
 	rc.mailbox <- nil
 }
 
@@ -442,5 +448,25 @@ func (rc *Conn) guardian() {
 
 exit_guardian_lable:
 	rc.done.Wait() // 等待读写线程结束
+	rc.state = Disconnected
+	rc.requestbox.Range(func(key, value any) bool {
+		future := value.(*Future)
+		future.cond.L.Lock()
+		if future.done {
+			future.cond.L.Unlock()
+			return true
+		}
+
+		future.done = true
+		future.result = nil
+		future.err = rpc.ErrorRpcClientClosed
+		future.done = true
+		future.cond.L.Unlock()
+		future.cond.Signal()
+
+		rc.removeFuture(key.(int32))
+
+		return true
+	})
 	rc.Config.Closed()
 }
