@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package protocols;
+option go_package=".;protocols";
+
+message Error {
+    fixed32 ID   = 1;
+    string  Name = 2;
+    string  Err  = 3;
+}

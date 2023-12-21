@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package protocols;
+option go_package=".;protocols";
+
+message ClientRequestMessage {
+    fixed32 RequestID = 1;                     // 请求ID
+    google.protobuf.Any RequestMessage = 2;    // 请求消息
+    fixed64 RequestTimeout = 3;                // 请求等待超时时间(单位毫秒)
+    fixed64 RequestTime    = 4;                // 请求时间(单位毫秒)
+}

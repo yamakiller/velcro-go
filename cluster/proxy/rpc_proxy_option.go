@@ -45,6 +45,12 @@ func WithLogger(logger logs.LogAgent) RpcProxyConfigOption {
 	}
 }
 
+func WithConnectedCallback(f func(*RpcProxyConn)) RpcProxyConfigOption {
+	return func(opt *RpcProxyOption) {
+		opt.ConnectedCallback = f
+	}
+}
+
 // WithReceiveCallback 设置连接器消息回调函数
 func WithReceiveCallback(f func(interface{})) RpcProxyConfigOption {
 	return func(opt *RpcProxyOption) {
@@ -69,11 +75,12 @@ func WithAlgorithm(algorithm string) RpcProxyConfigOption {
 
 // RpcProxyOption
 type RpcProxyOption struct {
-	Kleepalive      int32         // 连接器保活时间(单位:毫秒)
-	DialTimeout     int32         // 连接器连接等待超时时间(单位:毫秒)
-	Frequency       int32         // 连接检查频率/自动重连频率(单位:毫秒)
-	Logger          logs.LogAgent // 日志代理
-	RecviceCallback func(interface{})
+	Kleepalive        int32         // 连接器保活时间(单位:毫秒)
+	DialTimeout       int32         // 连接器连接等待超时时间(单位:毫秒)
+	Frequency         int32         // 连接检查频率/自动重连频率(单位:毫秒)
+	Logger            logs.LogAgent // 日志代理
+	ConnectedCallback func(*RpcProxyConn)
+	RecviceCallback   func(interface{})
 
 	TargetHost []string
 	Algorithm  string

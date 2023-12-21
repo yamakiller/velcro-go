@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+
+package protocols;
+option go_package=".;protocols";
+
+message RegisterReq {
+    string vaddr = 1;
+    string tag   = 2; 
+}
+
+message RegisterResp {
+
+}

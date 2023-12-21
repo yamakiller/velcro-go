@@ -12,6 +12,8 @@ type ConnConfig struct {
 	MarshalPing    rpcmessage.MarshalPingFunc
 
 	UnMarshal rpcmessage.UnMarshalFunc
+
+	Connected ConnectedFunc
 	Receive   ReceiveFunc
 	Closed    ClosedFunc
 }

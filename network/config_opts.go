@@ -53,3 +53,9 @@ func WithNetworkTimeout(timeout int32) ConfigOption {
 		config.NetowkTimeout = timeout
 	}
 }
+
+func WithVAddr(vaddr string) ConfigOption {
+	return func(config *Config) {
+		config.VAddr = vaddr
+	}
+}

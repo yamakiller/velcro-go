@@ -46,6 +46,12 @@ func WithUnMarshal(f rpcmessage.UnMarshalFunc) ConnConfigOption {
 	}
 }
 
+func WithConnected(f ConnectedFunc) ConnConfigOption {
+	return func(config *ConnConfig) {
+		config.Connected = f
+	}
+}
+
 func WithReceive(f ReceiveFunc) ConnConfigOption {
 	return func(config *ConnConfig) {
 		config.Receive = f

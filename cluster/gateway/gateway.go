@@ -1,9 +1,13 @@
 package gateway
 
 import (
+	"reflect"
 	"sync"
 
+	"github.com/yamakiller/velcro-go/cluster/protocols"
+	"github.com/yamakiller/velcro-go/cluster/proxy"
 	"github.com/yamakiller/velcro-go/cluster/router"
+	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
 )
 
@@ -11,12 +15,15 @@ func New(options ...GatewayConfigOption) *Gateway {
 
 	config := Configure(options...)
 
-	g := &Gateway{clients: make(map[network.CIDKEY]Client)}
+	g := &Gateway{clients: make(map[network.CIDKEY]Client), logger: config.Logger}
 	g.system = config.NewNetworkSystem(
 		network.WithMetricProviders(config.MetricsProvider),
-		network.WithLoggerFactory(config.LoggerFactory),
+		network.WithLoggerFactory(func(system *network.NetworkSystem) logs.LogAgent {
+			return g.logger
+		}),
 		network.WithNetworkTimeout(config.NetowkTimeout),
 		network.WithProducer(g.newClient),
+		network.WithVAddr(config.VAddr),
 	)
 
 	if config.ClientPool == nil {
@@ -52,6 +59,7 @@ type Gateway struct {
 	routeProxyKleepalive  int32
 	routeProxyAlgorithm   string
 	routeGroup            *router.RouterGroup
+	logger                logs.LogAgent
 }
 
 func (g *Gateway) Start() error {
@@ -60,6 +68,7 @@ func (g *Gateway) Start() error {
 		router.WithAlgorithm(g.routeProxyAlgorithm),
 		router.WithDialTimeout(g.routeProxyDialTimeout),
 		router.WithKleepalive(g.routeProxyKleepalive),
+		router.WithConnectedCallback(g.onProxyConnected),
 		router.WithReceiveCallback(g.onProxyRecvice),
 	)
 
@@ -155,8 +164,62 @@ func (g *Gateway) ReleaseClient(c Client) {
 	}
 }
 
+func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
+	_, err := conn.RequestMessage(&protocols.RegisterReq{
+		Vaddr: g.vaddr,
+		Tag:   "Gateway",
+	}, 2000)
+	if err != nil {
+		g.logger.Error("[Gateway]", "proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
+		conn.Close()
+		return
+	}
+}
+
 func (g *Gateway) onProxyRecvice(message interface{}) {
-	// TODO: 代理推送过来的回调函数
+	switch msg := message.(type) {
+	case *protocols.Backward:
+		g.onBackwardClient(msg)
+	case *protocols.Closed:
+		g.onCloseClient(msg)
+	default:
+		g.logger.Error("[Gateway] Unknown %s message received from service", reflect.TypeOf(msg).Name())
+	}
+}
+
+func (g *Gateway) onBackwardClient(backward *protocols.Backward) {
+	if backward.Target == nil {
+		return
+	}
+
+	c := g.GetClient(backward.Target)
+	if c == nil {
+		return
+	}
+
+	defer g.ReleaseClient(c)
+	anyMsg := backward.Msg.ProtoReflect().New().Interface()
+
+	if err := backward.Msg.UnmarshalTo(anyMsg); err != nil {
+		g.logger.Error("[Gateway] forward %s message unmarshal fail[error:5s]",
+			string(backward.Msg.MessageName()),
+			err.Error())
+		return
+	}
+
+	c.Post(anyMsg)
+}
+
+func (g *Gateway) onCloseClient(closed *protocols.Closed) {
+	c := g.GetClient(closed.ClientID)
+	if c == nil {
+		return
+	}
+	defer g.ReleaseClient(c)
+
+	c.ClientID().UserClose()
+	// 广播所有
+	g.routeGroup.Broadcast(closed)
 }
 
 func (g *Gateway) newClient(system *network.NetworkSystem) network.Client {

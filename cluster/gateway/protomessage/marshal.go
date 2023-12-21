@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"strings"
 
+	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/encryption"
 	"google.golang.org/protobuf/proto"
 )
@@ -13,33 +14,52 @@ const (
 	HeaderSize = 2
 )
 
-func Marshal(buffer []byte, message proto.Message, secret []byte) (int32, error) {
+// 2 总长度
+// 总长度 == 1 + MessageNameLength + MessageLength
+
+func Marshal(message proto.Message, secret []byte) ([]byte, error) {
 	msgBytes, err := proto.Marshal(message)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
 	msgName := proto.MessageName(message)
 	msgNameLen := strings.Count(string(msgName), "")
 	dataLen := msgNameLen + len(msgBytes) + 1
 
+	packetLen := HeaderSize + dataLen
+
+	var buffer []byte
+
+	if secret != nil {
+		buffer = make([]byte, utils.AlignOf(uint32(packetLen), uint32(len(secret))))
+	} else {
+		buffer = make([]byte, utils.AlignOf(uint32(packetLen), AlignBit))
+	}
+	//
+
 	var offset int = HeaderSize
 	buffer[offset] = uint8(msgNameLen)
 	offset++
+
 	copy(buffer[offset:offset+msgNameLen], []byte(string(msgName)))
 	offset += msgNameLen
 	offset += copy(buffer[offset+msgNameLen:], msgBytes)
 	if secret != nil {
 		ebys, err := encryption.AesEncryptByGCM(buffer[HeaderSize:dataLen+HeaderSize], secret)
 		if err != nil {
-			return -1, err
+			return nil, err
 		}
-		binary.BigEndian.PutUint16(buffer[0:HeaderSize], uint16(len(ebys)))
-		copy(buffer[HeaderSize:len(ebys)+HeaderSize], ebys)
-		dataLen = len(ebys) + HeaderSize
-	} else {
-		dataLen += HeaderSize
+
+		dataLen = len(ebys)
+		packetLen = len(ebys) + HeaderSize
+		if packetLen > len(buffer) {
+			// 需要重新分配
+			buffer = make([]byte, utils.AlignOf(uint32(packetLen), AlignBit))
+		}
+		binary.BigEndian.PutUint16(buffer[0:HeaderSize], uint16(dataLen))
+		copy(buffer[HeaderSize:dataLen], ebys)
 	}
 
-	return int32(dataLen), nil
+	return buffer[:packetLen], nil
 }

@@ -45,6 +45,7 @@ const (
 	Disconnecting
 )
 
+type ConnectedFunc func()
 type ReceiveFunc func(msg interface{})
 type ClosedFunc func()
 
@@ -100,6 +101,9 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 func (rc *Conn) Redial() error {
 
 	var err error
+	if rc.mailbox == nil {
+
+	}
 	rc.conn, err = net.DialTimeout("tcp", rc.address.AddrPort().String(), rc.timeout)
 	if err != nil {
 		return err
@@ -217,10 +221,12 @@ func (rc *Conn) removeFuture(id int32) {
 }
 
 func (rc *Conn) Close() {
-
 	rc.conn.Close()
 	rc.done.Wait()
 	rc.mailboxDone.Wait()
+}
+
+func (rc *Conn) Destory() {
 	close(rc.mailbox)
 	rc.sendbox = nil
 }
@@ -427,6 +433,7 @@ exit_reader_lable:
 func (rc *Conn) guardian() {
 	defer rc.mailboxDone.Done()
 
+	rc.Config.Connected()
 	for {
 		msg, ok := <-rc.mailbox
 		if !ok {

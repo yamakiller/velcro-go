@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	localAddress = "nonhost"
+	LocalAddress = "nonhost"
 )
 
-func NewHandlerRegistry(system *NetworkSystem) *HandleRegistryValue {
+func NewHandlerRegistry(system *NetworkSystem, vaddr string) *HandleRegistryValue {
 
 	hrv := &HandleRegistryValue{
-		Address:    localAddress,
+		Address:    vaddr,
 		_system:    system,
 		_node:      snowflakealien.NewNode(&syncx.NoMutex{}),
 		_localCIDs: newSliceMap(),

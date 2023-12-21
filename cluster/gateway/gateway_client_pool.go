@@ -17,7 +17,6 @@ func NewDefaultGatewayClientPool(g *Gateway) GatewayClientPool {
 	return &defaultGatewayClientPool{pls: sync.Pool{
 		New: func() interface{} {
 			return &ClientConn{gateway: g,
-				secret:  make([]byte, 64),
 				recvice: circbuf.New(32768, &syncx.NoMutex{})}
 		},
 	}}

@@ -28,10 +28,11 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 			return nil, err
 		}
 
-		//1.创建连接
+		//创建连接
 		conn := &RpcProxyConn{}
 		conn.Conn = rpcclient.NewConn(
 			rpcclient.WithKleepalive(option.Kleepalive),
+			rpcclient.WithConnected(conn.Connected),
 			rpcclient.WithClosed(conn.Closed),
 			rpcclient.WithReceive(conn.Receive))
 
@@ -50,6 +51,7 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 		dialTimeouot: time.Millisecond * time.Duration(option.DialTimeout),
 		hostMap:      hostMap,
 		balancer:     lb,
+		connected:    option.ConnectedCallback,
 		recvice:      option.RecviceCallback,
 		alive:        alive,
 		logger:       option.Logger,
@@ -67,15 +69,16 @@ type RpcProxy struct {
 	hostMap map[string]*RpcProxyConn
 	// 均衡器
 	balancer balancer.Balancer
+	// 代理连接成功回调函数
+	connected func(*RpcProxyConn)
 	// 代理接收数据回调函数
 	recvice func(interface{})
 	// 活着的目标
 	sync.RWMutex
 	alive map[string]bool
-
-	//
+	// 日志代理
 	logger logs.LogAgent
-
+	// 停止器
 	stopper chan struct{}
 	done    sync.WaitGroup
 }
@@ -84,13 +87,13 @@ type RpcProxy struct {
 func (rpx *RpcProxy) Open() {
 	for host, conn := range rpx.hostMap {
 		conn.proxy = rpx
-		rpx.loginfo("%s connecting", host)
+		rpx.LogInfo("%s connecting", host)
 		if err := conn.Dial(host, rpx.dialTimeouot); err != nil {
-			rpx.logerror("%s connect fail[error:%s]", host, err.Error())
+			rpx.LogError("%s connect fail[error:%s]", host, err.Error())
 			continue
 		}
 
-		rpx.loginfo("%s connected", host)
+		rpx.LogInfo("%s connected", host)
 
 		rpx.alive[host] = true
 		rpx.balancer.Add(host)
@@ -103,7 +106,7 @@ func (rpx *RpcProxy) Open() {
 func (rpx *RpcProxy) RequestMessage(message interface{}, timeout int64) (interface{}, error) {
 	host, err := rpx.balancer.Balance("")
 	if err != nil {
-		rpx.logerror("RequestMessage %v fail[error:%s]", message, err.Error())
+		rpx.LogError("RequestMessage %v fail[error:%s]", message, err.Error())
 		return nil, err
 	}
 
@@ -132,6 +135,7 @@ func (rpx *RpcProxy) Shutdown() {
 	//释放资源
 	for _, conn := range rpx.hostMap {
 		conn.Close()
+		conn.Destory()
 	}
 	rpx.hostMap = make(map[string]*RpcProxyConn)
 	rpx.alive = make(map[string]bool)
@@ -161,14 +165,14 @@ func (rpx *RpcProxy) guardian() {
 				continue
 			}
 
-			rpx.loginfo("%s reconnecting", host)
+			rpx.LogInfo("%s reconnecting", host)
 			if err := rpx.hostMap[host].Dial(host, rpx.dialTimeouot); err != nil {
 				rpx.RUnlock()
-				rpx.loginfo("%s reconnect fail[error:%s]", host, err.Error())
+				rpx.LogInfo("%s reconnect fail[error:%s]", host, err.Error())
 				continue
 			}
 			rpx.RUnlock()
-			rpx.loginfo("%s reconnected", host)
+			rpx.LogInfo("%s reconnected", host)
 
 			rpx.Lock()
 			rpx.alive[host] = true
@@ -181,14 +185,14 @@ func (rpx *RpcProxy) guardian() {
 	}
 }
 
-func (rpx *RpcProxy) logerror(fmts string, args ...interface{}) {
+func (rpx *RpcProxy) LogError(fmts string, args ...interface{}) {
 	if rpx.logger == nil {
 		return
 	}
 	rpx.logger.Error("[RPCPROXY]", fmts, args...)
 }
 
-func (rpx *RpcProxy) loginfo(fmts string, args ...interface{}) {
+func (rpx *RpcProxy) LogInfo(fmts string, args ...interface{}) {
 	if rpx.logger == nil {
 		return
 	}
@@ -196,7 +200,7 @@ func (rpx *RpcProxy) loginfo(fmts string, args ...interface{}) {
 }
 
 // logdebug 内部调用debug日志
-func (rpx *RpcProxy) logdebug(fmts string, args ...interface{}) {
+func (rpx *RpcProxy) LogDebug(fmts string, args ...interface{}) {
 	if rpx.logger == nil {
 		return
 	}

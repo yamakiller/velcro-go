@@ -40,6 +40,13 @@ func (rg *RouterGroup) Push(router *Router) error {
 	return nil
 }
 
+// Broadcast 广播数据
+func (rg *RouterGroup) Broadcast(message interface{}) {
+	for _, router := range rg.routes {
+		router.Proxy.PostMessage(message)
+	}
+}
+
 // Get 获取一个路由器
 func (rg *RouterGroup) Get(command string) *Router {
 	r, ok := rg.cmaps.Get(command)

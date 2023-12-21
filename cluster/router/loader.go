@@ -37,6 +37,7 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 			proxy.WithDialTimeout(opt.DialTimeout),
 			proxy.WithFrequency(opt.Frequency),
 			proxy.WithLogger(opt.Logger),
+			proxy.WithConnectedCallback(opt.ConnectedCallback),
 			proxy.WithReceiveCallback(opt.RecviceCallback),
 			proxy.WithTargetHost(router.Endpoints))
 		if err != nil {
@@ -55,8 +56,8 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 		}
 
 		// 构建指令表
-		for _, scmd := range router.Commands {
-			r.commands[scmd] = struct{}{}
+		for _, cmd := range router.Commands {
+			r.commands[cmd] = struct{}{}
 		}
 	}
 

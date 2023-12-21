@@ -11,6 +11,14 @@ type RpcProxyConn struct {
 	*rpcclient.Conn
 }
 
+func (rpcx *RpcProxyConn) Connected() {
+	if rpcx.proxy == nil || rpcx.proxy.connected == nil {
+		return
+	}
+
+	rpcx.proxy.connected(rpcx)
+}
+
 func (rpcx *RpcProxyConn) Closed() {
 	if rpcx.proxy == nil {
 		return
@@ -20,7 +28,7 @@ func (rpcx *RpcProxyConn) Closed() {
 	rpcx.proxy.alive[rpcx.ToAddress()] = false
 	rpcx.proxy.Unlock()
 	rpcx.proxy.balancer.Remove(rpcx.ToAddress())
-	rpcx.proxy.logdebug("%s closed", rpcx.ToAddress())
+	rpcx.proxy.LogDebug("%s closed", rpcx.ToAddress())
 }
 
 func (rpcx *RpcProxyConn) Receive(msg interface{}) {
@@ -30,5 +38,5 @@ func (rpcx *RpcProxyConn) Receive(msg interface{}) {
 
 	rpcx.proxy.recvice(msg)
 
-	rpcx.proxy.logdebug("receive %s", reflect.TypeOf(msg))
+	rpcx.proxy.LogDebug("receive %s", reflect.TypeOf(msg))
 }

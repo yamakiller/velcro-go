@@ -19,7 +19,7 @@ func NewTCPServerNetworkSystemConfig(config *Config) *NetworkSystem {
 		ns.Config.meriicsKey = "tcpserver" + ns.ID
 	}
 	ns._producer = config.Producer
-	ns._handlers = NewHandlerRegistry(ns)
+	ns._handlers = NewHandlerRegistry(ns, config.VAddr)
 	ns._extensions = extensions.NewExtensions()
 	ns._extensionId = extensions.NextExtensionID()
 	ns._logger = config.LoggerFactory(ns)

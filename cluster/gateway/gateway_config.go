@@ -58,10 +58,10 @@ func WithRouterURI(uri string) GatewayConfigOption {
 	}
 }
 
-// WithLoggerFactory 设置日志仓库函数
-func WithLoggerFactory(factory func(system *network.NetworkSystem) logs.LogAgent) GatewayConfigOption {
+// WithLoggerFactory 设置日志委托对象
+func WithLoggerAgent(logger logs.LogAgent) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
-		opt.LoggerFactory = factory
+		opt.Logger = logger
 	}
 }
 
@@ -109,7 +109,7 @@ type GatewayConfig struct {
 	NewEncryption    func() *Encryption
 	RouterURI        string
 	MetricsProvider  metric.MeterProvider
-	LoggerFactory    func(system *network.NetworkSystem) logs.LogAgent
+	Logger           logs.LogAgent
 	NetowkTimeout    int32
 
 	RouteProxyFrequency   int32
@@ -120,12 +120,9 @@ type GatewayConfig struct {
 
 func defaultGatewayConfig() *GatewayConfig {
 	return &GatewayConfig{
-		NewNetworkSystem: network.NewTCPServerNetworkSystem,
-		NewEncryption:    defaultEncryption,
-		MetricsProvider:  nil,
-		LoggerFactory: func(system *network.NetworkSystem) logs.LogAgent {
-			return ProduceLogger()
-		},
+		NewNetworkSystem:      network.NewTCPServerNetworkSystem,
+		NewEncryption:         defaultEncryption,
+		MetricsProvider:       nil,
 		NetowkTimeout:         2000,
 		RouteProxyFrequency:   2000,
 		RouteProxyDialTimeout: 2000,
