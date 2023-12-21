@@ -1,0 +1,4 @@
+routes:
+  - virtual-address: "127.0.0.1:8810"
+    endpoints:
+      - "127.0.0.1:8810"
