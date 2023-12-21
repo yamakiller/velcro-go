@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "client_id.proto";
+
+package protocols;
+option go_package=".;protocols";
+
+// 要求关闭某客户端套接子
+message Closing {
+    network.ClientID ClientID = 1;
+}
+

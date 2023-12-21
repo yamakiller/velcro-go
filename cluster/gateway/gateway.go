@@ -180,7 +180,7 @@ func (g *Gateway) onProxyRecvice(message interface{}) {
 	switch msg := message.(type) {
 	case *protocols.Backward:
 		g.onBackwardClient(msg)
-	case *protocols.Closed:
+	case *protocols.Closing:
 		g.onCloseClient(msg)
 	default:
 		g.logger.Error("[Gateway] Unknown %s message received from service", reflect.TypeOf(msg).Name())
@@ -210,16 +210,16 @@ func (g *Gateway) onBackwardClient(backward *protocols.Backward) {
 	c.Post(anyMsg)
 }
 
-func (g *Gateway) onCloseClient(closed *protocols.Closed) {
-	c := g.GetClient(closed.ClientID)
+func (g *Gateway) onCloseClient(closing *protocols.Closing) {
+	c := g.GetClient(closing.ClientID)
 	if c == nil {
 		return
 	}
 	defer g.ReleaseClient(c)
 
 	c.ClientID().UserClose()
-	// 广播所有
-	g.routeGroup.Broadcast(closed)
+	// 广播所有服务器关闭套接字
+	g.routeGroup.Broadcast(&protocols.Closed{ClientID: closing.ClientID})
 }
 
 func (g *Gateway) newClient(system *network.NetworkSystem) network.Client {

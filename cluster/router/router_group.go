@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	cmap "github.com/orcaman/concurrent-map"
+	"google.golang.org/protobuf/proto"
 )
 
 type RouterGroup struct {
@@ -41,7 +42,7 @@ func (rg *RouterGroup) Push(router *Router) error {
 }
 
 // Broadcast 广播数据
-func (rg *RouterGroup) Broadcast(message interface{}) {
+func (rg *RouterGroup) Broadcast(message proto.Message) {
 	for _, router := range rg.routes {
 		router.Proxy.PostMessage(message)
 	}
