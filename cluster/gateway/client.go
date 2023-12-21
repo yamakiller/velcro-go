@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync/atomic"
+	"time"
 
 	"github.com/google/uuid"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
@@ -42,6 +43,7 @@ type ClientConn struct {
 	secret    []byte //密钥
 	recvice   *circbuf.RingBuffer
 	ping      uint64
+	message_max_timeout   int64 //最大超时时间 毫秒级
 	reference int32 //引用计数器
 }
 
@@ -222,6 +224,15 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.C
 	}
 
 	//TODO: 优化时间计算
+	if int64(message.RequestTimeout) > dl.message_max_timeout{
+		ctx.Warning("%s message timeout to long ,max timeout is %d", requestMessageName,dl.message_max_timeout)
+		return
+	}
+	timeout := int64(message.RequestTimeout)- (time.Now().UnixMilli() - int64(message.RequestTime))
+	if timeout <= 0 {
+		ctx.Warning("%s message timeout", requestMessageName)
+		return
+	}
 	result, err := r.Proxy.RequestMessage(message, int64(message.RequestTimeout))
 	if err != nil {
 		b, msge := protomessge.Marshal(&protocols.Error{
