@@ -27,7 +27,7 @@ func New(options ...GatewayConfigOption) *Gateway {
 	)
 
 	if config.ClientPool == nil {
-		config.ClientPool = NewDefaultGatewayClientPool(g)
+		config.ClientPool = NewDefaultGatewayClientPool(g,config.MessageMaxTimeout)
 	}
 
 	g.clientPool = config.ClientPool

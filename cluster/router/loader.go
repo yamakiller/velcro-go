@@ -59,6 +59,9 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 		for _, cmd := range router.Commands {
 			r.commands[cmd] = struct{}{}
 		}
+
+		result.Push(r)
+
 	}
 
 	return result, nil
