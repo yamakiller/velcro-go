@@ -1,13 +1,8 @@
 package service
 
-import (
-	"sync"
+import "github.com/yamakiller/velcro-go/rpc/rpcserver"
 
-	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/rpcserver"
-)
-
-func New(options ...ServiceConfigOption) *Service {
+/*func New(options ...ServiceConfigOption) *Service {
 	// config := Configure(options...)
 
 	s := &Service{
@@ -67,4 +62,8 @@ func (s *Service) UnRegister(cid *network.ClientID) {
 	}
 	delete(s._registrys, network.Key(cid))
 	s._mu.Unlock()
+}*/
+
+type Service struct {
+	*rpcserver.RpcServer
 }

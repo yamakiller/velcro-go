@@ -32,7 +32,7 @@ func (rg *RouterGroup) Shutdown() {
 // Push 插入路由器
 func (rg *RouterGroup) Push(router *Router) error {
 	rg.routes = append(rg.routes, router)
-	for scmd, _ := range router.commands {
+	for scmd := range router.commands {
 		if !rg.cmaps.SetIfAbsent(scmd, router) {
 			return fmt.Errorf("router group push fail %s existed", scmd)
 		}

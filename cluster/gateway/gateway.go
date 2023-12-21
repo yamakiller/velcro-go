@@ -27,7 +27,7 @@ func New(options ...GatewayConfigOption) *Gateway {
 	)
 
 	if config.ClientPool == nil {
-		config.ClientPool = NewDefaultGatewayClientPool(g,config.MessageMaxTimeout)
+		config.ClientPool = NewDefaultGatewayClientPool(g, config.MessageMaxTimeout)
 	}
 
 	g.clientPool = config.ClientPool
@@ -165,7 +165,7 @@ func (g *Gateway) ReleaseClient(c Client) {
 }
 
 func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
-	_, err := conn.RequestMessage(&protocols.RegisterReq{
+	_, err := conn.RequestMessage(&protocols.RegisterRequest{
 		Vaddr: g.vaddr,
 		Tag:   "Gateway",
 	}, 2000)

@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type RegisterReq struct {
+type RegisterRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -29,8 +29,8 @@ type RegisterReq struct {
 	Tag   string `protobuf:"bytes,2,opt,name=tag,proto3" json:"tag,omitempty"`
 }
 
-func (x *RegisterReq) Reset() {
-	*x = RegisterReq{}
+func (x *RegisterRequest) Reset() {
+	*x = RegisterRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_register_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -38,13 +38,13 @@ func (x *RegisterReq) Reset() {
 	}
 }
 
-func (x *RegisterReq) String() string {
+func (x *RegisterRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RegisterReq) ProtoMessage() {}
+func (*RegisterRequest) ProtoMessage() {}
 
-func (x *RegisterReq) ProtoReflect() protoreflect.Message {
+func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_register_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -56,33 +56,33 @@ func (x *RegisterReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RegisterReq.ProtoReflect.Descriptor instead.
-func (*RegisterReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
+func (*RegisterRequest) Descriptor() ([]byte, []int) {
 	return file_register_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *RegisterReq) GetVaddr() string {
+func (x *RegisterRequest) GetVaddr() string {
 	if x != nil {
 		return x.Vaddr
 	}
 	return ""
 }
 
-func (x *RegisterReq) GetTag() string {
+func (x *RegisterRequest) GetTag() string {
 	if x != nil {
 		return x.Tag
 	}
 	return ""
 }
 
-type RegisterResp struct {
+type RegisterResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *RegisterResp) Reset() {
-	*x = RegisterResp{}
+func (x *RegisterResponse) Reset() {
+	*x = RegisterResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_register_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -90,13 +90,13 @@ func (x *RegisterResp) Reset() {
 	}
 }
 
-func (x *RegisterResp) String() string {
+func (x *RegisterResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RegisterResp) ProtoMessage() {}
+func (*RegisterResponse) ProtoMessage() {}
 
-func (x *RegisterResp) ProtoReflect() protoreflect.Message {
+func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_register_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -108,8 +108,8 @@ func (x *RegisterResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RegisterResp.ProtoReflect.Descriptor instead.
-func (*RegisterResp) Descriptor() ([]byte, []int) {
+// Deprecated: Use RegisterResponse.ProtoReflect.Descriptor instead.
+func (*RegisterResponse) Descriptor() ([]byte, []int) {
 	return file_register_proto_rawDescGZIP(), []int{1}
 }
 
@@ -117,13 +117,14 @@ var File_register_proto protoreflect.FileDescriptor
 
 var file_register_proto_rawDesc = []byte{
 	0x0a, 0x0e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x12, 0x09, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x73, 0x22, 0x35, 0x0a, 0x0b, 0x52,
-	0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61,
-	0x64, 0x64, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x64, 0x64, 0x72,
-	0x12, 0x10, 0x0a, 0x03, 0x74, 0x61, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x74,
-	0x61, 0x67, 0x22, 0x0e, 0x0a, 0x0c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x42, 0x0d, 0x5a, 0x0b, 0x2e, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x09, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x73, 0x22, 0x39, 0x0a, 0x0f, 0x52,
+	0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14,
+	0x0a, 0x05, 0x76, 0x61, 0x64, 0x64, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76,
+	0x61, 0x64, 0x64, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x61, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x74, 0x61, 0x67, 0x22, 0x12, 0x0a, 0x10, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74,
+	0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0d, 0x5a, 0x0b, 0x2e, 0x3b,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -140,8 +141,8 @@ func file_register_proto_rawDescGZIP() []byte {
 
 var file_register_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_register_proto_goTypes = []interface{}{
-	(*RegisterReq)(nil),  // 0: protocols.RegisterReq
-	(*RegisterResp)(nil), // 1: protocols.RegisterResp
+	(*RegisterRequest)(nil),  // 0: protocols.RegisterRequest
+	(*RegisterResponse)(nil), // 1: protocols.RegisterResponse
 }
 var file_register_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -158,7 +159,7 @@ func file_register_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_register_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RegisterReq); i {
+			switch v := v.(*RegisterRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -170,7 +171,7 @@ func file_register_proto_init() {
 			}
 		}
 		file_register_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RegisterResp); i {
+			switch v := v.(*RegisterResponse); i {
 			case 0:
 				return &v.state
 			case 1:
