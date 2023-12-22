@@ -2,6 +2,7 @@ package service
 
 import (
 	cmap "github.com/orcaman/concurrent-map"
+	murmur32 "github.com/twmb/murmur3"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/rpcserver"
 )
@@ -71,27 +72,37 @@ func (s *Service) UnRegister(cid *network.ClientID) {
 func New(options ...ServiceConfigOption) *Service {
 	// config := Configure(options...)
 
-	s := &Service{groups: newGroupMap()}
+	s := &Service{groups: newSliceMap()}
 	s.RpcServer = rpcserver.New(rpcserver.WithPool(NewServiceClientPool(s)))
 
 	return s
 }
 
-func newGroupMap() *groupMap {
-	sm := &groupMap{}
-	sm.tags = make([]tagMap, 32)
+func newSliceMap() *sliceMap {
+	sm := &sliceMap{}
+	sm.bucker = make([]cmap.ConcurrentMap, 32)
 
-	for i := 0; i < len(sm.tags); i++ {
-		sm.tags[i].cmap = cmap.New()
+	for i := 0; i < len(sm.bucker); i++ {
+		sm.bucker[i] = cmap.New()
 	}
 
 	return sm
 }
 
+type sliceMap struct {
+	bucker []cmap.ConcurrentMap
+}
+
+func (s *sliceMap) getBucket(key string) cmap.ConcurrentMap {
+	hash := murmur32.Sum32([]byte(key))
+	index := uint32(hash) & (uint32(len(s.bucker)) - 1)
+	return s.bucker[index]
+}
+
 type Service struct {
 	*rpcserver.RpcServer
 	// ---- 成员变量----
-	groups *groupMap // 服务分组
+	groups *sliceMap
 }
 
 type tagMap struct {
@@ -99,27 +110,7 @@ type tagMap struct {
 	cmap cmap.ConcurrentMap
 }
 
-type groupMap struct {
-	tags []tagMap
-}
-
-func (gm *groupMap) getBucket(tag string) cmap.ConcurrentMap {
-	//hash := murmur32.Sum32([]byte(tag))
-	//index := uint32(hash) & (uint32(len(gm.tags)) - 1)
-	//return gm.tags[index]
-
-}
-
-func (s *Service) RegisetrGroup(vaddr, tag string, clientId *network.ClientID) {
-	bucket := s.groups.getBucket(tag)
-
-	bucket.SetIfAbsent(vaddr, clientId)
-}
-func (hr *HandleRegistryValue) Push(handler Handler, id string) (*ClientID, bool) {
-	bucket := hr._localCIDs.getBucket(id)
-
-	return &ClientID{
-		Address: hr.Address,
-		Id:      id,
-	}, bucket.SetIfAbsent(id, handler)
+func (s *Service) RegisetrGroup(key string, clientId *network.ClientID) {
+	bucket := s.groups.getBucket(key)
+	bucket.Set(key, clientId)
 }
