@@ -26,9 +26,10 @@ func New(options ...ConnConfigOption) *RpcServer {
 
 type RpcServer struct {
 	*network.NetworkSystem
-	sync.Mutex
+
 	clients    map[network.CIDKEY]RpcClient
 	clientPool RpcPool
+	climu      sync.Mutex
 
 	MarshalResponse rpcmessage.MarshalResponseFunc
 	MarshalMessage  rpcmessage.MarshalMessageFunc
@@ -46,18 +47,18 @@ func (s *RpcServer) Open(addr string) error {
 }
 
 func (s *RpcServer) Shutdown() {
-	s.Lock()
+	s.climu.Lock()
 	for _, c := range s.clients {
 		c.ClientID().UserClose()
 	}
-	s.Unlock()
+	s.climu.Unlock()
 
 	s.NetworkSystem.Shutdown()
 }
 
 func (s *RpcServer) Register(cid *network.ClientID, rc RpcClient) {
-	s.Lock()
-	defer s.Unlock()
+	s.climu.Lock()
+	defer s.climu.Unlock()
 
 	_, ok := s.clients[network.Key(cid)]
 	if ok {
@@ -70,17 +71,17 @@ func (s *RpcServer) Register(cid *network.ClientID, rc RpcClient) {
 
 func (s *RpcServer) UnRegister(cid *network.ClientID) {
 
-	s.Lock()
+	s.climu.Lock()
 	l, ok := s.clients[network.Key(cid)]
 	if !ok {
-		s.Unlock()
+		s.climu.Unlock()
 		return
 	}
 
 	ref := l.referenceDecrement()
 	delete(s.clients, network.Key(cid))
 
-	s.Unlock()
+	s.climu.Unlock()
 
 	if ref == 0 {
 		s.free(l)
@@ -88,8 +89,8 @@ func (s *RpcServer) UnRegister(cid *network.ClientID) {
 }
 
 func (s *RpcServer) GetClient(cid *network.ClientID) RpcClient {
-	s.Lock()
-	defer s.Unlock()
+	s.climu.Lock()
+	defer s.climu.Unlock()
 
 	l, ok := s.clients[network.Key(cid)]
 	if !ok {
@@ -101,9 +102,9 @@ func (s *RpcServer) GetClient(cid *network.ClientID) RpcClient {
 }
 
 func (s *RpcServer) ReleaseClient(client RpcClient) {
-	s.Lock()
+	s.climu.Lock()
 	ref := client.referenceDecrement()
-	s.Unlock()
+	s.climu.Unlock()
 
 	if ref == 0 {
 		s.free(client)

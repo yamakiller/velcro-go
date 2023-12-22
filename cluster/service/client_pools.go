@@ -27,7 +27,6 @@ func (drp *ServiceClientPool) Get() rpcserver.RpcClient {
 }
 
 func (drp *ServiceClientPool) Put(s rpcserver.RpcClient) {
-	// s.clientID = nil
-	// s.recvice.Reset()
+	s.Destory()
 	drp.pls.Put(s)
 }
