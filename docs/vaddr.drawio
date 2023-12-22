@@ -1,0 +1,19 @@
+<mxfile host="65bd71144e">
+    <diagram id="pySBB1AfDvzeatgzIZf1" name="第 1 页">
+        <mxGraphModel dx="1000" dy="475" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="4" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="2" target="3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="Gateway@IP:Port" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="190" y="155" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="&lt;h1&gt;虚拟地址编辑格式&lt;/h1&gt;&lt;p&gt;虚拟地址用于标记所属服务器: 服务器类型@虚拟IP地址 + 端口 如：Gateway@172.64.121.12:2000 其中Gateway表示网关服务器，172.64.121.12:2000表示具体是哪一台网关服务器.&lt;/p&gt;&lt;p&gt;注意:这里的虚拟地址适用于标识作用,不能用于实际通信.&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="110" width="290" height="150" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
