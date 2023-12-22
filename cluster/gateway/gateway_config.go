@@ -21,7 +21,7 @@ func Configure(options ...GatewayConfigOption) *GatewayConfig {
 
 func WithVAddr(vaddr string) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
-		opt.VAddr = "Gateway@" + vaddr
+		opt.VAddr = vaddr
 	}
 }
 
