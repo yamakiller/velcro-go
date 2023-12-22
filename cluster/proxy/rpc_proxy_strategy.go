@@ -1,5 +1,5 @@
 package proxy
 
 type RpcProxyStrategy interface {
-	RequestMessage(string, *RpcProxyConn, interface{}, int64) (interface{}, error)
+	RequestMessage(*RpcProxyConn, interface{}, int64) (interface{}, error)
 }

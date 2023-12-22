@@ -122,7 +122,7 @@ func (rpx *RpcProxy) RequestMessage(message interface{}, timeout int64) (interfa
 	rpx.balancer.Inc(host)
 	defer rpx.balancer.Done(host)
 
-	return rpx.strategy.RequestMessage(host, rpx.hostMap[host], message, timeout)
+	return rpx.strategy.RequestMessage(rpx.hostMap[host], message, timeout)
 }
 
 // PostMessage 集群推送消息
