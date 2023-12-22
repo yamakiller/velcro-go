@@ -94,7 +94,9 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
-	go rc.Config.Connected()
+
+	rc.Config.Connected()
+
 	return nil
 }
 
@@ -117,7 +119,9 @@ func (rc *Conn) Redial() error {
 
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
-	go rc.Config.Connected()
+
+	rc.Config.Connected()
+
 	return nil
 }
 
@@ -432,7 +436,6 @@ exit_reader_lable:
 func (rc *Conn) guardian() {
 	defer rc.mailboxDone.Done()
 
-	
 	for {
 		msg, ok := <-rc.mailbox
 		if !ok {
