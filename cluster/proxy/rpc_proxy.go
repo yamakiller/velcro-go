@@ -66,6 +66,8 @@ type RpcProxy struct {
 	dialTimeouot time.Duration
 	// 连接器
 	hostMap map[string]*RpcProxyConn
+	// 策略器
+	strategy RpcProxyStrategy
 	// 均衡器
 	balancer balancer.Balancer
 	// 代理连接成功回调函数
@@ -163,7 +165,7 @@ func (rpx *RpcProxy) guardian() {
 				// rpx.RUnlock()
 				continue
 			}
-			if _,ok := rpx.hostMap[host];!ok {
+			if _, ok := rpx.hostMap[host]; !ok {
 				// rpx.RUnlock()
 				continue
 			}
@@ -180,7 +182,6 @@ func (rpx *RpcProxy) guardian() {
 			rpx.alive[host] = true
 			rpx.Unlock()
 
-		
 			rpx.balancer.Add(host)
 
 			rpx.RLock()
