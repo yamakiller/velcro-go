@@ -166,7 +166,7 @@ func (g *Gateway) ReleaseClient(c Client) {
 
 func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
 	_, err := conn.RequestMessage(&protocols.RegisterRequest{
-		Vaddr: g.vaddr,
+		Vaddr: g.laddr,
 		Tag:   "Gateway",
 	}, 2000)
 	if err != nil {

@@ -73,7 +73,7 @@ func WithNetworkTimeout(timeout int32) GatewayConfigOption {
 }
 
 // WithMaxTimeout 设置消息最大超时时间
-func WithMessageMaxTimeout(timeout int64)GatewayConfigOption{
+func WithMessageMaxTimeout(timeout int64) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
 		opt.MessageMaxTimeout = timeout
 	}
@@ -118,7 +118,7 @@ type GatewayConfig struct {
 	MetricsProvider       metric.MeterProvider
 	Logger                logs.LogAgent
 	NetowkTimeout         int32
-	MessageMaxTimeout            int64
+	MessageMaxTimeout     int64
 	RouteProxyFrequency   int32
 	RouteProxyDialTimeout int32
 	RouteProxyKleepalive  int32
@@ -131,7 +131,7 @@ func defaultGatewayConfig() *GatewayConfig {
 		NewEncryption:         defaultEncryption,
 		MetricsProvider:       nil,
 		NetowkTimeout:         2000,
-		MessageMaxTimeout:            2000,
+		MessageMaxTimeout:     2000,
 		RouteProxyFrequency:   2000,
 		RouteProxyDialTimeout: 2000,
 		RouteProxyKleepalive:  4000,
