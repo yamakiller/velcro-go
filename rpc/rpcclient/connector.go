@@ -94,22 +94,21 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
-
+	go rc.Config.Connected()
 	return nil
 }
 
 func (rc *Conn) Redial() error {
 
 	var err error
-	if rc.mailbox == nil {
-
-	}
 	rc.conn, err = net.DialTimeout("tcp", rc.address.AddrPort().String(), rc.timeout)
 	if err != nil {
 		return err
 	}
 
 	rc.stopper = make(chan struct{})
+	rc.mailbox = make(chan interface{}, 1)
+
 	//1.启动发送及接收
 	rc.done.Add(2)
 
@@ -118,7 +117,7 @@ func (rc *Conn) Redial() error {
 
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
-
+	go rc.Config.Connected()
 	return nil
 }
 
@@ -191,7 +190,7 @@ func (rc *Conn) PostMessage(message interface{}) error {
 
 func (rc *Conn) pushSendBox(data interface{}, future *Future) error {
 	rc.sendcon.L.Lock()
-	if !rc.isStopped() {
+	if rc.isStopped() {
 		rc.sendcon.L.Unlock()
 		return errors.New("rpc connector: closed")
 	}
@@ -244,9 +243,9 @@ func (rc *Conn) nextID() int32 {
 func (rc *Conn) isStopped() bool {
 	select {
 	case <-rc.stopper:
-		return false
-	default:
 		return true
+	default:
+		return false
 	}
 }
 
@@ -293,7 +292,7 @@ func (rc *Conn) sender() {
 		rc.sendcon.L.Unlock()
 
 		for {
-			if !rc.isStopped() {
+			if rc.isStopped() {
 				goto exit_sender_lable
 			}
 
@@ -366,7 +365,7 @@ func (rc *Conn) reader() {
 	var readtemp [1024]byte
 	readbuffer := circbuf.New(32768, &syncx.NoMutex{})
 	for {
-		if !rc.isStopped() {
+		if rc.isStopped() {
 			goto exit_reader_lable
 		}
 
@@ -433,7 +432,7 @@ exit_reader_lable:
 func (rc *Conn) guardian() {
 	defer rc.mailboxDone.Done()
 
-	rc.Config.Connected()
+	
 	for {
 		msg, ok := <-rc.mailbox
 		if !ok {

@@ -29,7 +29,7 @@ func (p *Program) Start(s service.Service) error {
 
 	p.System = services.New()
 
-	if err := p.System.Start("127.0.0.1:8810"); err != nil {
+	if err := p.System.Open("127.0.0.1:8810"); err != nil {
 		p.logAgent.Error("","Listening 127.0.0.1:8810 fail[error:%s]", err.Error())
 		return err
 	}
@@ -42,7 +42,7 @@ func (p *Program) Start(s service.Service) error {
 func (p *Program) Stop(s service.Service) error {
 	if p.System != nil {
 		p.logAgent.Info("","Service Shutdown")
-		p.System.Stop()
+		p.System.Shutdown()
 		p.System = nil
 	}
 	return nil

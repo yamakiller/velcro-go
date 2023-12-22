@@ -161,6 +161,7 @@ func (c *tcpClientHandler) reader() {
 	c.sendcond.Signal()
 
 	c.mailbox <- &ClosedMessage{}
+	
 }
 
 func (c *tcpClientHandler) guardian() {

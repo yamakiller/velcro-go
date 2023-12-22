@@ -21,3 +21,5 @@ example/tcpserver/test-logs/
 
 # Go workspace file
 go.work
+*/test-logs/
+log.*

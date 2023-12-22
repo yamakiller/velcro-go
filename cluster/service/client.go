@@ -26,6 +26,7 @@ func (sc *ServiceClient) onRegister(ctx *rpcserver.RpcClientContext) interface{}
 }
 
 func (sc *ServiceClient) Closed(ctx network.Context) {
+
 	if sc.vaddr != "" {
 		sc.unregister(sc.vaddr, ctx.Self())
 	}
