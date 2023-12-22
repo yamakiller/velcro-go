@@ -11,7 +11,6 @@ type ServiceClient struct {
 	rpcserver.RpcClient
 
 	vaddr string
-	tag   string
 
 	register   func(key string, clientId *network.ClientID)
 	unregister func(key string, clientId *network.ClientID)
@@ -21,20 +20,15 @@ func (sc *ServiceClient) onRegister(ctx *rpcserver.RpcClientContext) interface{}
 	requst := ctx.Message().(*protocols.RegisterRequest)
 	utils.AssertEmpty(requst, "Service Client onRegister message error is nil")
 	sc.vaddr = requst.Vaddr
-	sc.tag = requst.Tag
-	sc.register(sc.toKey(), ctx.Context().Self())
+	sc.register(sc.vaddr, ctx.Context().Self())
 
 	return &protocols.RegisterResponse{}
 }
 
 func (sc *ServiceClient) Closed(ctx network.Context) {
-	if sc.vaddr != "" && sc.tag != "" {
-		sc.unregister(sc.toKey())
+	if sc.vaddr != "" {
+		sc.unregister(sc.vaddr, ctx.Self())
 	}
 
 	sc.RpcClient.Closed(ctx)
-}
-
-func (sc *ServiceClient) toKey() string {
-	return sc.tag + sc.vaddr
 }
