@@ -6,8 +6,8 @@ import (
 
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
-	"github.com/yamakiller/velcro-go/logs"
 	services "github.com/yamakiller/velcro-go/cluster/service"
+	"github.com/yamakiller/velcro-go/logs"
 )
 
 type Program struct {
@@ -29,20 +29,20 @@ func (p *Program) Start(s service.Service) error {
 
 	p.System = services.New()
 
-	if err := p.System.Start("127.0.0.1:8810"); err != nil {
-		p.logAgent.Error("","Listening 127.0.0.1:8810 fail[error:%s]", err.Error())
+	if err := p.System.Open("127.0.0.1:8810"); err != nil {
+		p.logAgent.Error("", "Listening 127.0.0.1:8810 fail[error:%s]", err.Error())
 		return err
 	}
 
-	p.logAgent.Info("","Listening 127.0.0.1:8810")
+	p.logAgent.Info("", "Listening 127.0.0.1:8810")
 
 	return nil
 }
 
 func (p *Program) Stop(s service.Service) error {
 	if p.System != nil {
-		p.logAgent.Info("","Service Shutdown")
-		p.System.Stop()
+		p.logAgent.Info("", "Service Shutdown")
+		p.System.Shutdown()
 		p.System = nil
 	}
 	return nil

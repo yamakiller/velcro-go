@@ -13,7 +13,6 @@ import (
 // NewRpcProxy 创建Rpc代理
 func NewRpcProxy(options ...RpcProxyConfigOption) (*RpcProxy, error) {
 	opt := Configure(options...)
-
 	return NewRpcProxyOption(opt)
 }
 
