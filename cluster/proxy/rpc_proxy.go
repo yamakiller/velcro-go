@@ -160,13 +160,16 @@ func (rpx *RpcProxy) guardian() {
 		rpx.RLock()
 		for host, isAlive := range rpx.alive {
 			if isAlive {
-				rpx.RUnlock()
+				// rpx.RUnlock()
 				continue
 			}
-
+			if _,ok := rpx.hostMap[host];!ok {
+				// rpx.RUnlock()
+				continue
+			}
 			rpx.LogInfo("%s reconnecting", host)
 			if err := rpx.hostMap[host].Dial(host, rpx.dialTimeouot); err != nil {
-				rpx.RUnlock()
+				// rpx.RUnlock()
 				rpx.LogInfo("%s reconnect fail[error:%s]", host, err.Error())
 				continue
 			}
@@ -177,9 +180,12 @@ func (rpx *RpcProxy) guardian() {
 			rpx.alive[host] = true
 			rpx.Unlock()
 
+		
 			rpx.balancer.Add(host)
-		}
 
+			rpx.RLock()
+		}
+		rpx.RUnlock()
 		time.Sleep(rpx.frequency)
 	}
 }
