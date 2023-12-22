@@ -45,11 +45,19 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 		return nil, err
 	}
 
+	var strategy RpcProxyStrategy
+	if option.Decided == DecidedOneToOne {
+		strategy = &RpcProxyStrategyOneToOne{}
+	} else {
+		strategy = &RpcProxyStrategyMoreToOne{}
+	}
+
 	return &RpcProxy{
 		frequency:    time.Millisecond * time.Duration(option.Frequency),
 		dialTimeouot: time.Millisecond * time.Duration(option.DialTimeout),
 		hostMap:      hostMap,
 		balancer:     lb,
+		strategy:     strategy,
 		connected:    option.ConnectedCallback,
 		recvice:      option.RecviceCallback,
 		alive:        alive,
@@ -113,7 +121,8 @@ func (rpx *RpcProxy) RequestMessage(message interface{}, timeout int64) (interfa
 
 	rpx.balancer.Inc(host)
 	defer rpx.balancer.Done(host)
-	return rpx.hostMap[host].RequestMessage(message, uint64(timeout))
+
+	return rpx.strategy.RequestMessage(host, rpx.hostMap[host], message, timeout)
 }
 
 // PostMessage 集群推送消息

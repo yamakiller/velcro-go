@@ -95,7 +95,9 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
 
-	rc.Config.Connected()
+	if rc.Config.Connected != nil {
+		rc.Config.Connected()
+	}
 
 	return nil
 }
@@ -120,7 +122,9 @@ func (rc *Conn) Redial() error {
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
 
-	rc.Config.Connected()
+	if rc.Config.Connected != nil {
+		rc.Config.Connected()
+	}
 
 	return nil
 }
