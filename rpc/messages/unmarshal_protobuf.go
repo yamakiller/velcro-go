@@ -28,8 +28,6 @@ func UnMarshalProtobuf(buffer circbuf.Buffer) (int, interface{}, error) {
 	default:
 		return 0, nil, errors.New("unknown message")
 	}
-
-	return -1, nil, nil
 }
 
 func unmarshalRequestProtobuf(buffer circbuf.Buffer) (int, *RpcRequestMessage, error) {
