@@ -127,7 +127,18 @@ func (gs *gatewayService) udpLoop() {
 		postMsg := &local_protocols.ReportNat{RoomID: msg.RoomID,
 			VerifiyCode: msg.VerifiyCode,
 			NatAddr:     addr.AddrPort().String()}
-		//推送消息
-		gs.gwy.PostMessageToRouter(postMsg)
+
+		// 查找目标路由
+		r := gs.gwy.FindRouter(postMsg)
+		if r == nil {
+			gs.gwy.System.Warning("protocols.ReportNat message unfound router")
+			continue
+		}
+
+		// 推送到目标服务
+		if err := r.Proxy.PostMessage(postMsg); err != nil {
+			gs.gwy.System.Error("protocols.ReportNat post message fail %s", err.Error())
+			continue
+		}
 	}
 }

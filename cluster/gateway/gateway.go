@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"sync"
 
@@ -175,22 +174,9 @@ func (g *Gateway) ReleaseClient(c Client) {
 	}
 }
 
-// PostMessageToRouter 第三方强行推送
-func (g *Gateway) PostMessageToRouter(message proto.Message) error {
-	msgName := proto.MessageName(message)
-	r := g.routeGroup.Get(string(msgName))
-	if r != nil {
-		g.System.Warning("%s message unfound router", msgName)
-		return fmt.Errorf("%s message unfound router", msgName)
-	}
-
-	err := r.Proxy.PostMessage(message)
-	if err != nil {
-		return err
-	}
-
-	g.System.Debug("post message %s to router %s", msgName, r.VAddress)
-	return nil
+// FindRouter 查询路由
+func (g *Gateway) FindRouter(message proto.Message) *router.Router {
+	return g.routeGroup.Get(string(proto.MessageName(message)))
 }
 
 // NewClientID 创建客户端连接者ID
