@@ -1,8 +1,6 @@
-package rpcclient
+package asyn
 
-import (
-	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
-)
+import rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 
 type ConnConfig struct {
 	Kleepalive int32

@@ -7,11 +7,11 @@ import (
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/velcro-go/logs"
-	"github.com/yamakiller/velcro-go/rpc/rpcserver"
+	"github.com/yamakiller/velcro-go/rpc/server"
 )
 
 type Program struct {
-	_s       *rpcserver.RpcServer
+	_s       *server.RpcServer
 	logAgent *logs.DefaultAgent
 }
 
@@ -27,7 +27,7 @@ func (p *Program) Start(s service.Service) error {
 	p.logAgent = &logs.DefaultAgent{}
 	p.logAgent.WithHandle(pLogHandle)
 
-	p._s = rpcserver.New()
+	p._s = server.New()
 	p._s.WithPool(NewClientPools(p._s))
 	if err := p._s.Open("127.0.0.1:9870"); err != nil {
 		p._s.Error("Listening 127.0.0.1:9870 fail[error:%s]", err.Error())

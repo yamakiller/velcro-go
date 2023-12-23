@@ -3,7 +3,7 @@ package proxy
 import (
 	"errors"
 
-	"github.com/yamakiller/velcro-go/rpc/rpcsynclient"
+	"github.com/yamakiller/velcro-go/rpc/client/sync"
 )
 
 // RpcProxyStrategyMoreToOne 多点请求
@@ -15,8 +15,8 @@ func (rpx *RpcProxyStrategyMoreToOne) RequestMessage(conn *RpcProxyConn, message
 		return nil, errors.New("The target service is not alive")
 	}
 
-	rpcc := rpcsynclient.NewConn(rpcsynclient.WithMarshalRequest(conn.Config.MarshalRequest),
-		rpcsynclient.WithUnMarshal(conn.Config.UnMarshal))
+	rpcc := sync.NewConn(sync.WithMarshalRequest(conn.Config.MarshalRequest),
+		sync.WithUnMarshal(conn.Config.UnMarshal))
 	if err := rpcc.Dial(conn.ToAddress(), conn.proxy.dialTimeouot); err != nil {
 		return nil, err
 	}

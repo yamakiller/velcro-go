@@ -3,12 +3,12 @@ package proxy
 import (
 	"reflect"
 
-	"github.com/yamakiller/velcro-go/rpc/rpcclient"
+	"github.com/yamakiller/velcro-go/rpc/client/asyn"
 )
 
 type RpcProxyConn struct {
 	proxy *RpcProxy
-	*rpcclient.Conn
+	*asyn.Conn
 }
 
 func (rpcx *RpcProxyConn) Connected() {

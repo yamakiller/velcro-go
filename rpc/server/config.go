@@ -1,8 +1,8 @@
-package rpcserver
+package server
 
 import (
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
+	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 )
 
 type ConnConfig struct {

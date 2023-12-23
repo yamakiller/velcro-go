@@ -1,4 +1,4 @@
-package rpcsynclient
+package sync
 
 import (
 	"net"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/yamakiller/velcro-go/rpc"
-	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
+	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/syncx"
 )

@@ -1,4 +1,4 @@
-package rpcmessage
+package messages
 
 const (
 	// Success 成功

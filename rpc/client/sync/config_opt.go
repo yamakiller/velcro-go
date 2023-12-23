@@ -1,6 +1,6 @@
-package rpcsynclient
+package sync
 
-import "github.com/yamakiller/velcro-go/rpc/rpcmessage"
+import rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 
 // ConnConfigOption 是一个配置rpc connector 的函数
 type ConnConfigOption func(config *ConnConfig)

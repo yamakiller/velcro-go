@@ -8,17 +8,18 @@ import (
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/velcro-go/envs"
+	"github.com/yamakiller/velcro-go/rpc/client/asyn"
+
 	"github.com/yamakiller/velcro-go/example/rpc/protos"
 	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/configs"
 	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/internet"
 	"github.com/yamakiller/velcro-go/logs"
-	"github.com/yamakiller/velcro-go/rpc/rpcclient"
 )
 
 var appName string = "test-rpc-client"
 
 type Program struct {
-	_c       *rpcclient.Conn
+	_c       *asyn.Conn
 	logAgent *logs.DefaultAgent
 }
 
@@ -46,9 +47,9 @@ func (p *Program) Start(s service.Service) error {
 		p.logAgent.Close()
 		return err
 	}
-	p._c = rpcclient.NewConn(
-		rpcclient.WithClosed(internet.Closed),
-		rpcclient.WithReceive(internet.Receive))
+	p._c = asyn.NewConn(
+		asyn.WithClosed(internet.Closed),
+		asyn.WithReceive(internet.Receive))
 	if err := p._c.Dial(config.TargetAddr, time.Duration(4)*time.Millisecond); err != nil {
 		p.logAgent.Error("Dial %s fail[error:%s]", config.TargetAddr, err.Error())
 		return err

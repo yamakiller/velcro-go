@@ -5,13 +5,13 @@ import (
 	"sync"
 
 	"github.com/yamakiller/velcro-go/example/rpc/protos"
-	"github.com/yamakiller/velcro-go/rpc/rpcserver"
+	"github.com/yamakiller/velcro-go/rpc/server"
 )
 
-func NewClientPools(s *rpcserver.RpcServer) rpcserver.RpcPool {
+func NewClientPools(s *server.RpcServer) server.RpcPool {
 	return &ClientPools{pls: sync.Pool{
 		New: func() interface{} {
-			c := &TestClient{RpcClient: rpcserver.NewRpcClient(s)}
+			c := &TestClient{RpcClient: server.NewRpcClient(s)}
 			c.Register(reflect.TypeOf(&protos.Auth{}), c.OnAuth)
 			return c
 		},
@@ -22,11 +22,11 @@ type ClientPools struct {
 	pls sync.Pool
 }
 
-func (drp *ClientPools) Get() rpcserver.RpcClient {
-	return drp.pls.Get().(rpcserver.RpcClient)
+func (drp *ClientPools) Get() server.RpcClient {
+	return drp.pls.Get().(server.RpcClient)
 }
 
-func (drp *ClientPools) Put(s rpcserver.RpcClient) {
+func (drp *ClientPools) Put(s server.RpcClient) {
 	s.Destory()
 	drp.pls.Put(s)
 }

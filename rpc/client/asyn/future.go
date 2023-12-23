@@ -1,4 +1,4 @@
-package rpcclient
+package asyn
 
 import (
 	"sync"

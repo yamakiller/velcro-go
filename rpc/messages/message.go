@@ -1,4 +1,4 @@
-package rpcmessage
+package messages
 
 type RpcDirect int
 

@@ -4,15 +4,14 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	murmur32 "github.com/twmb/murmur3"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/rpcserver"
+	"github.com/yamakiller/velcro-go/rpc/server"
 )
-
 
 func New(options ...ServiceConfigOption) *Service {
 	// config := Configure(options...)
 
 	s := &Service{groups: newSliceMap()}
-	s.RpcServer = rpcserver.New(rpcserver.WithPool(NewServiceClientPool(s,s.RegisetrGroup,s.UnregisterGroup)))
+	s.RpcServer = server.New(server.WithPool(NewServiceClientPool(s, s.RegisetrGroup, s.UnregisterGroup)))
 
 	return s
 }
@@ -39,7 +38,7 @@ func (s *sliceMap) getBucket(key string) cmap.ConcurrentMap {
 }
 
 type Service struct {
-	*rpcserver.RpcServer
+	*server.RpcServer
 	// ---- 成员变量----
 	groups *sliceMap
 }

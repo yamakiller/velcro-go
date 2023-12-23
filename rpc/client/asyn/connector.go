@@ -1,4 +1,4 @@
-package rpcclient
+package asyn
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/yamakiller/velcro-go/containers"
 	"github.com/yamakiller/velcro-go/rpc"
-	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
+	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/syncx"
 )

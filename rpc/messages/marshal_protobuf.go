@@ -1,4 +1,4 @@
-package rpcmessage
+package messages
 
 import (
 	"github.com/yamakiller/velcro-go/utils"

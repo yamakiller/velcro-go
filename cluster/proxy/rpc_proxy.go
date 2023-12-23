@@ -6,7 +6,7 @@ import (
 
 	"github.com/yamakiller/velcro-go/cluster/balancer"
 	"github.com/yamakiller/velcro-go/logs"
-	"github.com/yamakiller/velcro-go/rpc/rpcclient"
+	"github.com/yamakiller/velcro-go/rpc/client/asyn"
 	"github.com/yamakiller/velcro-go/utils/host"
 )
 
@@ -29,11 +29,11 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 
 		//创建连接
 		conn := &RpcProxyConn{}
-		conn.Conn = rpcclient.NewConn(
-			rpcclient.WithKleepalive(option.Kleepalive),
-			rpcclient.WithConnected(conn.Connected),
-			rpcclient.WithClosed(conn.Closed),
-			rpcclient.WithReceive(conn.Receive))
+		conn.Conn = asyn.NewConn(
+			asyn.WithKleepalive(option.Kleepalive),
+			asyn.WithConnected(conn.Connected),
+			asyn.WithClosed(conn.Closed),
+			asyn.WithReceive(conn.Receive))
 
 		// 初始化时, 未处于活动状态
 		alive[targetHost] = false

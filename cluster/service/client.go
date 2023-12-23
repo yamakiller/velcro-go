@@ -3,12 +3,12 @@ package service
 import (
 	"github.com/yamakiller/velcro-go/cluster/protocols"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/rpcserver"
+	"github.com/yamakiller/velcro-go/rpc/server"
 	"github.com/yamakiller/velcro-go/utils"
 )
 
 type ServiceClient struct {
-	rpcserver.RpcClient
+	server.RpcClient
 
 	vaddr string
 
@@ -16,7 +16,7 @@ type ServiceClient struct {
 	unregister func(key string, clientId *network.ClientID)
 }
 
-func (sc *ServiceClient) onRegister(ctx *rpcserver.RpcClientContext) interface{} {
+func (sc *ServiceClient) onRegister(ctx *server.RpcClientContext) interface{} {
 	requst := ctx.Message().(*protocols.RegisterRequest)
 	utils.AssertEmpty(requst, "Service Client onRegister message error is nil")
 	sc.vaddr = requst.Vaddr

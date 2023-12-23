@@ -1,10 +1,10 @@
-package rpcserver
+package server
 
 import (
 	"sync"
 
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/rpcmessage"
+	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 )
 
 func New(options ...ConnConfigOption) *RpcServer {
