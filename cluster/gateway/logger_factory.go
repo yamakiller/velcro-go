@@ -3,10 +3,10 @@ package gateway
 import (
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/utils/files"
 )
 
 // ProduceLogger 产生日志对象
@@ -28,24 +28,12 @@ func ProduceLogger() logs.LogAgent {
 }
 
 func getLogDir() string {
-	ex, _ := os.Executable()
-
-	exPath := filepath.Dir(ex)
-	logDir := filepath.Join(exPath, "monitor/logs")
-
-	if !isDirExits(logDir) {
+	logDir := files.NewLocalPathFull("monitor/logs")
+	if !files.IsDirExits(logDir) {
 		if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
 			return ""
 		}
 	}
 
 	return logDir
-}
-
-func isDirExits(dir string) bool {
-	_, err := os.Stat(dir)
-	if err != nil {
-		return os.IsExist(err)
-	}
-	return true
 }

@@ -1,6 +1,8 @@
 package gateway
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 	"sync"
 
@@ -9,6 +11,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
+	"google.golang.org/protobuf/proto"
 )
 
 func New(options ...GatewayConfigOption) *Gateway {
@@ -16,9 +19,9 @@ func New(options ...GatewayConfigOption) *Gateway {
 	config := Configure(options...)
 
 	g := &Gateway{clients: make(map[network.CIDKEY]Client), logger: config.Logger}
-	g.system = config.NewNetworkSystem(
+	g.System = config.NewNetworkSystem(
 		network.WithMetricProviders(config.MetricsProvider),
-		network.WithLoggerFactory(func(system *network.NetworkSystem) logs.LogAgent {
+		network.WithLoggerFactory(func(System *network.NetworkSystem) logs.LogAgent {
 			return g.logger
 		}),
 		network.WithNetworkTimeout(config.NetowkTimeout),
@@ -31,6 +34,7 @@ func New(options ...GatewayConfigOption) *Gateway {
 	}
 
 	g.clientPool = config.ClientPool
+	g.onlineOfNumber = config.OnlineOfNumber
 	g.routeURI = config.RouterURI
 	g.routeProxyFrequency = config.RouteProxyFrequency
 	g.routeProxyDialTimeout = config.RouteProxyDialTimeout
@@ -45,11 +49,12 @@ func New(options ...GatewayConfigOption) *Gateway {
 type Gateway struct {
 	vaddr  string // 网关局域网虚拟地址
 	laddr  string // 网关监听地址
-	system *network.NetworkSystem
+	System *network.NetworkSystem
 	// 连接客户端
-	clients    map[network.CIDKEY]Client
-	mu         sync.Mutex
-	clientPool GatewayClientPool
+	clients        map[network.CIDKEY]Client
+	onlineOfNumber int
+	mu             sync.Mutex
+	clientPool     GatewayClientPool
 	// 编码
 	encryption *Encryption
 	// 路由
@@ -80,7 +85,7 @@ func (g *Gateway) Start() error {
 	g.routeGroup = r
 	g.routeGroup.Open()
 	// 打开监听
-	if err := g.system.Open(g.laddr); err != nil {
+	if err := g.System.Open(g.laddr); err != nil {
 		return err
 	}
 
@@ -89,18 +94,18 @@ func (g *Gateway) Start() error {
 
 func (g *Gateway) Stop() error {
 
-	if g.system != nil {
-		g.system.Info("Gateway Shutdown Closing client")
+	if g.System != nil {
+		g.System.Info("Gateway Shutdown Closing client")
 
 		g.mu.Lock()
 		for _, c := range g.clients {
 			c.ClientID().UserClose()
 		}
 		g.mu.Unlock()
-		g.system.Info("Gateway Shutdown Closed client")
-		g.system.Shutdown()
-		g.system.Info("Gateway Shutdown")
-		g.system = nil
+		g.System.Info("Gateway Shutdown Closed client")
+		g.System.Shutdown()
+		g.System.Info("Gateway Shutdown")
+		g.System = nil
 	}
 
 	if g.routeGroup != nil {
@@ -109,9 +114,13 @@ func (g *Gateway) Stop() error {
 	return nil
 }
 
-func (g *Gateway) Register(cid *network.ClientID, l Client) {
+func (g *Gateway) Register(cid *network.ClientID, l Client) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
+
+	if len(g.clients) >= g.onlineOfNumber {
+		return errors.New("gateway: client fulled")
+	}
 
 	_, ok := g.clients[network.Key(cid)]
 	if ok {
@@ -120,6 +129,8 @@ func (g *Gateway) Register(cid *network.ClientID, l Client) {
 
 	l.referenceIncrement()
 	g.clients[network.Key(cid)] = l
+
+	return nil
 }
 
 func (g *Gateway) UnRegister(cid *network.ClientID) {
@@ -164,12 +175,35 @@ func (g *Gateway) ReleaseClient(c Client) {
 	}
 }
 
+// PostMessageToRouter 第三方强行推送
+func (g *Gateway) PostMessageToRouter(message proto.Message) error {
+	msgName := proto.MessageName(message)
+	r := g.routeGroup.Get(string(msgName))
+	if r != nil {
+		g.System.Warning("%s message unfound router", msgName)
+		return fmt.Errorf("%s message unfound router", msgName)
+	}
+
+	err := r.Proxy.PostMessage(message)
+	if err != nil {
+		return err
+	}
+
+	g.System.Debug("post message %s to router %s", msgName, r.VAddress)
+	return nil
+}
+
+// NewClientID 创建客户端连接者ID
+func (g *Gateway) NewClientID(id string) *network.ClientID {
+	return g.System.NewClientID(id)
+}
+
 func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
 	_, err := conn.RequestMessage(&protocols.RegisterRequest{
 		Vaddr: g.vaddr,
 	}, 2000)
 	if err != nil {
-		g.system.Error("proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
+		g.System.Error("proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
 		conn.Close()
 		return
 	}
@@ -184,7 +218,7 @@ func (g *Gateway) onProxyRecvice(message interface{}) {
 	case *protocols.Closing:
 		g.onCloseClient(msg)
 	default:
-		g.system.Error("Unknown %s message received from service", reflect.TypeOf(msg).Name())
+		g.System.Error("Unknown %s message received from service", reflect.TypeOf(msg).Name())
 	}
 }
 
@@ -202,7 +236,7 @@ func (g *Gateway) onBackwardClient(backward *protocols.Backward) {
 	anyMsg := backward.Msg.ProtoReflect().New().Interface()
 
 	if err := backward.Msg.UnmarshalTo(anyMsg); err != nil {
-		g.system.Error("forward %s message unmarshal fail[error: %s]",
+		g.System.Error("forward %s message unmarshal fail[error: %s]",
 			string(backward.Msg.MessageName()),
 			err.Error())
 		return
@@ -214,7 +248,7 @@ func (g *Gateway) onBackwardClient(backward *protocols.Backward) {
 func (g *Gateway) onUpdateRuleClient(updateRule *protocols.UpdateRule) {
 	c := g.GetClient(updateRule.Target)
 	if c == nil {
-		g.system.Debug("update rule fail unfound client id[%+v]", updateRule.Target)
+		g.System.Debug("update rule fail unfound client id[%+v]", updateRule.Target)
 		return
 	}
 	defer g.ReleaseClient(c)
@@ -233,7 +267,7 @@ func (g *Gateway) onCloseClient(closing *protocols.Closing) {
 	g.routeGroup.Broadcast(&protocols.Closed{ClientID: closing.ClientID})
 }
 
-func (g *Gateway) newClient(system *network.NetworkSystem) network.Client {
+func (g *Gateway) newClient(System *network.NetworkSystem) network.Client {
 	return g.clientPool.Get()
 }
 

@@ -17,6 +17,10 @@ type NetworkSystem struct {
 	_logger      logs.LogAgent // 日志代理接口
 }
 
+func (ns *NetworkSystem) NewClientID(id string) *ClientID {
+	return &ClientID{Address: ns._handlers.Address, Id: id}
+}
+
 func (ns *NetworkSystem) Address() string {
 	return ns._handlers.Address
 }

@@ -79,6 +79,13 @@ func WithMessageMaxTimeout(timeout int64) GatewayConfigOption {
 	}
 }
 
+// WithOnlineOfNumber 设置最大在线人数
+func WithOnlineOfNumber(number int) GatewayConfigOption {
+	return func(opt *GatewayConfig) {
+		opt.OnlineOfNumber = number
+	}
+}
+
 // WithRouteProxyFrequency 设置路由代理检测频率
 func WithRouteProxyFrequency(frequency int32) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
@@ -119,6 +126,7 @@ type GatewayConfig struct {
 	Logger                logs.LogAgent
 	NetowkTimeout         int32
 	MessageMaxTimeout     int64
+	OnlineOfNumber        int
 	RouteProxyFrequency   int32
 	RouteProxyDialTimeout int32
 	RouteProxyKleepalive  int32
@@ -132,6 +140,7 @@ func defaultGatewayConfig() *GatewayConfig {
 		MetricsProvider:       nil,
 		NetowkTimeout:         2000,
 		MessageMaxTimeout:     2000,
+		OnlineOfNumber:        2000,
 		RouteProxyFrequency:   2000,
 		RouteProxyDialTimeout: 2000,
 		RouteProxyKleepalive:  4000,

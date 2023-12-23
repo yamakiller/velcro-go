@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package protocols;
+option go_package=".;protocols";
+
+// 报告Nat信息
+message ReportNatClient {
+    fixed32 RoomID = 1;      // 房间ID
+    string  VerifiyCode = 2; // 房间验证码
+}
+
+message ReportNat {
+    fixed32 RoomID = 1;      // 房间ID
+    string  VerifiyCode = 2; // 房间验证码
+    string  NatAddr = 3;     // Nat地址
+}

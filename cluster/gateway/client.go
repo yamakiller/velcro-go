@@ -20,6 +20,7 @@ import (
 
 type Client interface {
 	ClientID() *network.ClientID
+	Secret() []byte
 	Accept(ctx network.Context)
 	Ping(ctx network.Context)
 	Post(message interface{}) error
@@ -52,10 +53,18 @@ func (dl *ClientConn) ClientID() *network.ClientID {
 	return dl.clientID
 }
 
+func (dl *ClientConn) Secret() []byte {
+	return dl.secret
+}
+
 func (dl *ClientConn) Accept(ctx network.Context) {
 	dl.clientID = ctx.Self()
 	dl.ruleID = router.NONE_RULE_ID
-	dl.gateway.Register(dl.clientID, dl)
+	if err := dl.gateway.Register(dl.clientID, dl); err != nil {
+		// 在线满
+		ctx.Close(ctx.Self())
+		return
+	}
 }
 
 func (dl *ClientConn) Ping(ctx network.Context) {

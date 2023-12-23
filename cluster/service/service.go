@@ -39,8 +39,7 @@ func (s *sliceMap) getBucket(key string) cmap.ConcurrentMap {
 
 type Service struct {
 	*server.RpcServer
-	// ---- 成员变量----
-	groups *sliceMap
+	groups *sliceMap // ---- 成员变量----
 }
 
 func (s *Service) RegisetrGroup(key string, clientId *network.ClientID) {
