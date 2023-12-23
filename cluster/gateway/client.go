@@ -31,6 +31,7 @@ type Client interface {
 	onPubkeyReply(ctx network.Context, message *protocols.PubkeyMsg)
 	onRequestMessage(ctx network.Context, message *protocols.ClientRequestMessage)
 	onPostMessage(ctx network.Context, message proto.Message)
+	onUpdateRule(rule int32)
 
 	referenceIncrement() int32
 	referenceDecrement() int32
@@ -293,6 +294,11 @@ func (dl *ClientConn) onPostMessage(ctx network.Context, message proto.Message) 
 	}
 
 	ctx.Debug("post message %s", msgName)
+}
+
+// onUpdateRule 更改角色等级信息
+func (dl *ClientConn) onUpdateRule(rule int32) {
+	dl.ruleID = rule
 }
 
 // RefInc 引用计数器+1

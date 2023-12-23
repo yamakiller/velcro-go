@@ -15,8 +15,8 @@ del .\cluster\protocols\*.pb.go /f /s /q
 ::%GO_COMPILER_PATH% --go_out=.\network --proto_path=.\network\proto client_id.proto
 
 ::生成cluster proto
-echo %GO_COMPILER_PATH% --go_out=.\cluster\protocols --proto_path=.\cluster\proto --proto_path=.\network\proto ping.proto pubkey.proto forward.proto register.proto closing.proto closed.proto backward.proto error.proto client_request_message.proto
-%GO_COMPILER_PATH% --go_out=.\cluster\protocols --proto_path=.\cluster\proto --proto_path=./network/proto ping.proto pubkey.proto forward.proto register.proto closing.proto closed.proto backward.proto error.proto client_request_message.proto
+echo %GO_COMPILER_PATH% --go_out=.\cluster\protocols --proto_path=.\cluster\proto --proto_path=.\network\proto ping.proto pubkey.proto forward.proto register.proto closing.proto closed.proto backward.proto error.proto client_request_message.proto update_rule.proto
+%GO_COMPILER_PATH% --go_out=.\cluster\protocols --proto_path=.\cluster\proto --proto_path=./network/proto ping.proto pubkey.proto forward.proto register.proto closing.proto closed.proto backward.proto error.proto client_request_message.proto update_rule.proto
 
 ::protoc -I="../actor" --go_out=. --go_opt=paths=source_relative --proto_path=. routercontracts.proto
 ::pubkey.proto forward_message.proto

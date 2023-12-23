@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "client_id.proto";
+
+package protocols;
+option go_package=".;protocols";
+
+// Service -> post message 修改网关连接者角色等级
+message UpdateRule {
+    network.ClientID target = 1;  // 目标(可为空)  
+    int32            Rule   = 2;
+}

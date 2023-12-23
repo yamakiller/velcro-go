@@ -35,25 +35,25 @@ func (ns *NetworkSystem) logger() logs.LogAgent {
 
 // 日志
 func (ns *NetworkSystem) Info(sfmt string, args ...interface{}) {
-	ns._logger.Info("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
+	ns._logger.Info("["+ns.Config.VAddr+"/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Debug(sfmt string, args ...interface{}) {
-	ns._logger.Debug("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
+	ns._logger.Debug("["+ns.Config.VAddr+"/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Error(sfmt string, args ...interface{}) {
-	ns._logger.Error("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
+	ns._logger.Error("["+ns.Config.VAddr+"/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Warning(sfmt string, args ...interface{}) {
-	ns._logger.Warning("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
+	ns._logger.Warning("["+ns.Config.VAddr+"/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Fatal(sfmt string, args ...interface{}) {
-	ns._logger.Fatal("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
+	ns._logger.Fatal("["+ns.Config.VAddr+"/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }
 
 func (ns *NetworkSystem) Panic(sfmt string, args ...interface{}) {
-	ns._logger.Panic("[NETWORKSYSTEM/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
+	ns._logger.Panic("["+ns.Config.VAddr+"/"+ns._module.Network()+"]("+ns.ID+")", sfmt, args...)
 }

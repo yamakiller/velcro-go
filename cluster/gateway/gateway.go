@@ -169,7 +169,7 @@ func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
 		Vaddr: g.vaddr,
 	}, 2000)
 	if err != nil {
-		g.logger.Error("[Gateway]", "proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
+		g.system.Error("proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
 		conn.Close()
 		return
 	}
@@ -179,10 +179,12 @@ func (g *Gateway) onProxyRecvice(message interface{}) {
 	switch msg := message.(type) {
 	case *protocols.Backward:
 		g.onBackwardClient(msg)
+	case *protocols.UpdateRule:
+		g.onUpdateRuleClient(msg)
 	case *protocols.Closing:
 		g.onCloseClient(msg)
 	default:
-		g.logger.Error("[Gateway] Unknown %s message received from service", reflect.TypeOf(msg).Name())
+		g.system.Error("Unknown %s message received from service", reflect.TypeOf(msg).Name())
 	}
 }
 
@@ -200,13 +202,23 @@ func (g *Gateway) onBackwardClient(backward *protocols.Backward) {
 	anyMsg := backward.Msg.ProtoReflect().New().Interface()
 
 	if err := backward.Msg.UnmarshalTo(anyMsg); err != nil {
-		g.logger.Error("[Gateway] forward %s message unmarshal fail[error:5s]",
+		g.system.Error("forward %s message unmarshal fail[error: %s]",
 			string(backward.Msg.MessageName()),
 			err.Error())
 		return
 	}
 
 	c.Post(anyMsg)
+}
+
+func (g *Gateway) onUpdateRuleClient(updateRule *protocols.UpdateRule) {
+	c := g.GetClient(updateRule.Target)
+	if c == nil {
+		g.system.Debug("update rule fail unfound client id[%+v]", updateRule.Target)
+		return
+	}
+	defer g.ReleaseClient(c)
+	c.onUpdateRule(updateRule.Rule)
 }
 
 func (g *Gateway) onCloseClient(closing *protocols.Closing) {
