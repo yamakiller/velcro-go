@@ -14,6 +14,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/protocols"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"google.golang.org/protobuf/proto"
 )
@@ -286,7 +287,7 @@ func (dl *ClientConn) onPostMessage(ctx network.Context, message proto.Message) 
 		return
 	}
 
-	err := r.Proxy.PostMessage(message)
+	err := r.Proxy.PostMessage(message, messages.RpcQosDiscard)
 	if err != nil {
 		b, msge := protomessge.Marshal(&protocols.Error{
 			Name: string(msgName),

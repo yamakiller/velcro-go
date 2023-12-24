@@ -42,6 +42,12 @@ func (qe *Queue) Push(item interface{}) {
 	qe.unpush(item)
 }
 
+func (qe *Queue) Next() (interface{}, bool) {
+	qe._mu.Lock()
+	defer qe._mu.Unlock()
+	return qe.unnext()
+}
+
 // Pop doc
 // @Method Pop @Summary Take an object, If empty return nil
 // @Return (interface{}) return object
@@ -116,6 +122,17 @@ func (qe *Queue) unpop() (interface{}, bool) {
 			qe._overload = length
 			qe._overloadThreshold *= 2
 		}
+	}
+
+	return result, resultSucces
+}
+
+func (qe *Queue) unnext() (interface{}, bool) {
+	var resultSucces bool
+	var result interface{}
+	if qe._head != qe._tail {
+		result = qe._buffer[qe._head]
+		resultSucces = true
 	}
 
 	return result, resultSucces

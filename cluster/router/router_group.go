@@ -5,6 +5,8 @@ import (
 
 	cmap "github.com/orcaman/concurrent-map"
 	"google.golang.org/protobuf/proto"
+
+	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 )
 
 type RouterGroup struct {
@@ -42,9 +44,9 @@ func (rg *RouterGroup) Push(router *Router) error {
 }
 
 // Broadcast 广播数据
-func (rg *RouterGroup) Broadcast(message proto.Message) {
+func (rg *RouterGroup) Broadcast(message proto.Message, qos rpcmessage.RpcQos) {
 	for _, router := range rg.routes {
-		router.Proxy.PostMessage(message)
+		router.Proxy.PostMessage(message, qos)
 	}
 }
 

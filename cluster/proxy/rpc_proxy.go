@@ -8,6 +8,8 @@ import (
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/rpc/client/asyn"
 	"github.com/yamakiller/velcro-go/utils/host"
+
+	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 )
 
 // NewRpcProxy 创建Rpc代理
@@ -126,7 +128,7 @@ func (rpx *RpcProxy) RequestMessage(message interface{}, timeout int64) (interfa
 }
 
 // PostMessage 集群推送消息
-func (rpx *RpcProxy) PostMessage(message interface{}) error {
+func (rpx *RpcProxy) PostMessage(message interface{}, qos rpcmessage.RpcQos) error {
 	host, err := rpx.balancer.Balance("")
 	if err != nil {
 
@@ -134,7 +136,7 @@ func (rpx *RpcProxy) PostMessage(message interface{}) error {
 	}
 	rpx.balancer.Inc(host)
 	defer rpx.balancer.Done(host)
-	return rpx.hostMap[host].PostMessage(message)
+	return rpx.hostMap[host].PostMessage(message, qos)
 }
 
 // Shutdown 关闭代理

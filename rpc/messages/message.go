@@ -1,12 +1,19 @@
 package messages
 
 type RpcDirect int
+type RpcQos int
 
 const (
 	RpcRequest = iota
 	RpcResponse
 	RpcMessage
 	RpcPing
+)
+
+const (
+	RpcQosDiscard = iota // 数据可丢弃
+	RpcQosRetry          // 数据可重试
+	RpcQosMust           // 数据必须达
 )
 
 const (
@@ -49,6 +56,7 @@ type RpcResponseMessage struct {
 
 type RpcMsgMessage struct {
 	SequenceID int32
+	Qos        RpcQos
 	Message    interface{}
 }
 

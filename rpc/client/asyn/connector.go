@@ -50,16 +50,18 @@ type ReceiveFunc func(msg interface{})
 type ClosedFunc func()
 
 type Conn struct {
-	Config     *ConnConfig
-	conn       net.Conn
-	address    *net.TCPAddr
-	timeout    time.Duration
-	sendbox    *containers.Queue
-	sendcon    *sync.Cond
-	requestbox sync.Map
-	stopper    chan struct{}
-	sequence   int32
-	done       sync.WaitGroup
+	Config      *ConnConfig
+	conn        net.Conn
+	address     *net.TCPAddr
+	timeout     time.Duration
+	sendwait    *rpcmessage.RpcMsgMessage
+	sendwaitErr int
+	sendbox     *containers.Queue
+	sendcon     *sync.Cond
+	requestbox  sync.Map
+	stopper     chan struct{}
+	sequence    int32
+	done        sync.WaitGroup
 
 	mailbox     chan interface{}
 	mailboxDone sync.WaitGroup
@@ -189,9 +191,10 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 }
 
 // 推送消息
-func (rc *Conn) PostMessage(message interface{}) error {
+func (rc *Conn) PostMessage(message interface{}, qos rpcmessage.RpcQos) error {
 	return rc.pushSendBox(&rpcmessage.RpcMsgMessage{
 		SequenceID: rc.nextID(),
+		Qos:        qos,
 		Message:    message,
 	}, nil)
 }
@@ -294,7 +297,7 @@ func (rc *Conn) sender() {
 
 	for {
 		rc.sendcon.L.Lock()
-		if !rc.isStopped() {
+		if !rc.isStopped() && rc.sendwait == nil {
 			rc.sendcon.Wait()
 		}
 		rc.sendcon.L.Unlock()
@@ -304,13 +307,24 @@ func (rc *Conn) sender() {
 				goto exit_sender_lable
 			}
 
-			msg, ok := rc.sendbox.Pop()
-			if ok && msg == nil {
-				goto exit_sender_lable
-			}
+			var ok bool
+			var msg interface{}
+			if rc.sendwait != nil {
+				if msg, ok = rc.sendbox.Next(); msg == nil && ok {
+					rc.sendbox.Pop()
+					goto exit_sender_lable
+				}
 
-			if !ok {
-				break
+				msg = rc.sendwait
+			} else {
+				msg, ok = rc.sendbox.Pop()
+				if ok && msg == nil {
+					goto exit_sender_lable
+				}
+
+				if !ok {
+					break
+				}
 			}
 
 			var b []byte
@@ -340,26 +354,51 @@ func (rc *Conn) sender() {
 				future.cond.L.Unlock()
 
 				b, err = rc.Config.MarshalRequest(message.SequenceID, message.Timeout, message.Message)
+				if err != nil {
+					goto exit_sender_lable
+				}
+				_, err = rc.conn.Write(b)
+				if err != nil {
+					goto exit_sender_lable
+				}
 			case *rpcmessage.RpcMsgMessage:
+				if message.Qos == rpcmessage.RpcQosDiscard {
+					rc.sendwait = nil
+					rc.sendwaitErr = 0
+				}
+
 				b, err = rc.Config.MarshalMessage(message.SequenceID, message.Message)
+				if err != nil {
+					goto exit_sender_lable
+				}
+
+				_, err = rc.conn.Write(b)
+				if err != nil {
+					if message.Qos != rpcmessage.RpcQosDiscard {
+						rc.sendwaitErr++
+						if message.Qos == rpcmessage.RpcQosRetry && rc.sendwaitErr > 3 {
+							rc.sendwait = nil
+							rc.sendwaitErr = 0
+						}
+					}
+					goto exit_sender_lable
+				}
+
+				rc.sendwait = nil
+				rc.sendwaitErr = 0
 			case *rpcmessage.RpcPingMessage:
 				b, err = rc.Config.MarshalPing(message.VerifyKey)
 				if err != nil {
 					goto exit_sender_lable
 				}
-
+				_, err = rc.conn.Write(b)
+				if err != nil {
+					goto exit_sender_lable
+				}
 			default:
 				panic("sender: unknown rpc message")
 			}
 
-			if err != nil {
-				goto exit_sender_lable
-			}
-
-			_, err = rc.conn.Write(b)
-			if err != nil {
-				goto exit_sender_lable
-			}
 		}
 	}
 exit_sender_lable:

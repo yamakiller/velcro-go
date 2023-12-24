@@ -10,6 +10,7 @@ import (
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
 	local_protocols "github.com/yamakiller/velcro-go/example/monopoly/gateway.service/protocols"
 	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/encryption"
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"
 	"github.com/yamakiller/velcro-go/utils/files"
@@ -136,7 +137,7 @@ func (gs *gatewayService) udpLoop() {
 		}
 
 		// 推送到目标服务
-		if err := r.Proxy.PostMessage(postMsg); err != nil {
+		if err := r.Proxy.PostMessage(postMsg, messages.RpcQosDiscard); err != nil {
 			gs.gwy.System.Error("protocols.ReportNat post message fail %s", err.Error())
 			continue
 		}
