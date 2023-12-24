@@ -25,14 +25,15 @@ func NewConn(options ...ConnConfigOption) *Conn {
 
 func NewConnConfig(config *ConnConfig) *Conn {
 	return &Conn{
-		Config:     config,
-		sendbox:    containers.NewQueue(8, &syncx.NoMutex{}),
-		sendcon:    sync.NewCond(&sync.Mutex{}),
-		stopper:    make(chan struct{}),
-		sequence:   1,
-		mailbox:    make(chan interface{}, 1),
-		requestbox: sync.Map{},
-		state:      Disconnected,
+		Config:        config,
+		sendbox:       containers.NewQueue(8, &syncx.NoMutex{}),
+		sendcon:       sync.NewCond(&sync.Mutex{}),
+		stopper:       make(chan struct{}),
+		sequence:      1,
+		mailbox:       make(chan interface{}, 1),
+		requestbox:    sync.Map{},
+		activelyClose: false,
+		state:         Disconnected,
 	}
 }
 
@@ -69,7 +70,8 @@ type Conn struct {
 	ping            uint64
 	kleepaliveError int32
 
-	state ConnState
+	activelyClose bool //是否是主动关闭
+	state         ConnState
 }
 
 func (rc *Conn) Dial(addr string, timeout time.Duration) error {
@@ -201,7 +203,7 @@ func (rc *Conn) PostMessage(message interface{}, qos rpcmessage.RpcQos) error {
 
 func (rc *Conn) pushSendBox(data interface{}, future *Future) error {
 	rc.sendcon.L.Lock()
-	if rc.isStopped() {
+	if rc.activelyClose {
 		rc.sendcon.L.Unlock()
 		return errors.New("rpc connector: closed")
 	}
@@ -231,7 +233,11 @@ func (rc *Conn) removeFuture(id int32) {
 }
 
 func (rc *Conn) Close() {
-	rc.conn.Close()
+	rc.activelyClose = true
+	rc.sendcon.L.Lock()
+	rc.sendbox.Push(nil)
+	rc.sendcon.L.Unlock()
+	rc.sendcon.Signal()
 	rc.done.Wait()
 	rc.mailboxDone.Wait()
 }
