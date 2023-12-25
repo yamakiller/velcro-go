@@ -143,7 +143,13 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 }
 
 func (dl *ClientConn) Closed(ctx network.Context) {
+	// 广播给所有服务,客户端连接已被关闭
+	dl.gateway.routeGroup.Broadcast(&protocols.Closed{ClientID: network.NewClientID(ctx.Self().Address,
+		ctx.Self().Id)}, messages.RpcQosRetry)
+
 	dl.gateway.UnRegister(ctx.Self()) //关闭释放对象
+	// 广播连接已关闭
+
 }
 
 func (dl *ClientConn) Destory() {
