@@ -30,7 +30,7 @@ func UnMarshal(in *circbuf.RingBuffer, secret []byte) (proto.Message, error) {
 		return nil, fmt.Errorf("message data overflow %d/%d", readDataLen, uint16(float64(in.Capacity())*0.5))
 	}
 
-	in.Read(HeaderByte[:])
+	in.Peek(HeaderSize)
 	b := make([]byte, utils.AlignOf(uint32(readDataLen), AlignBit))
 	in.Read(b)
 
