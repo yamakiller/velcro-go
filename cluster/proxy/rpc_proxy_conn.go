@@ -14,7 +14,6 @@ type RpcProxyConn struct {
 
 func (rcc *RpcProxyConn) Close() {
 	rcc.repe.stop()
-	rcc.repe = nil
 	rcc.Conn.Close()
 }
 
@@ -38,7 +37,7 @@ func (rpcx *RpcProxyConn) Closed() {
 	rpcx.proxy.Unlock()
 	rpcx.proxy.balancer.Remove(host)
 	// 如果重连器不为空,说明需要启动重连器.
-	if rpcx.repe != nil {
+	if !rpcx.proxy.isStopped() {
 		rpcx.repe.start()
 	}
 

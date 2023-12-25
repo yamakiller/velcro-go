@@ -14,12 +14,13 @@ type RpcProxyConnRepeat struct {
 	dialTimeouot time.Duration
 	printError   func(fmts string, args ...interface{})
 	stopper      chan struct{}
+	mu           sync.Mutex
 	wg           sync.WaitGroup
 }
 
 func (rpcr *RpcProxyConnRepeat) start() {
-	rpcr.wg.Add(1)
 	rpcr.stopper = make(chan struct{})
+	rpcr.wg.Add(1)
 	go func() {
 		defer rpcr.wg.Done()
 		repeat.Repeat(repeat.FnWithCounter(rpcr.reconnect),
@@ -27,21 +28,21 @@ func (rpcr *RpcProxyConnRepeat) start() {
 			repeat.StopOnSuccess(),
 			repeat.WithDelay(repeat.ExponentialBackoff(500*time.Millisecond).Set()))
 
-		select {
-		case <-rpcr.stopper:
-		default:
+		rpcr.mu.Lock()
+		if !rpcr.isStopped() {
 			close(rpcr.stopper)
 		}
+		rpcr.mu.Unlock()
 	}()
 }
 
 func (rpcr *RpcProxyConnRepeat) stop() {
 
-	select {
-	case <-rpcr.stopper:
-	default:
+	rpcr.mu.Lock()
+	if !rpcr.isStopped() {
 		close(rpcr.stopper)
 	}
+	rpcr.mu.Unlock()
 	rpcr.wg.Wait()
 	rpcr.conn = nil
 	rpcr.stopper = nil

@@ -63,6 +63,7 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 		recvice:      option.RecviceCallback,
 		alive:        alive,
 		logger:       option.Logger,
+		stopper:      make(chan struct{}),
 	}, nil
 }
 
@@ -84,7 +85,8 @@ type RpcProxy struct {
 	sync.RWMutex
 	alive map[string]bool
 	// 日志代理
-	logger logs.LogAgent
+	logger  logs.LogAgent
+	stopper chan struct{}
 }
 
 // Shutdown 打开代理
@@ -145,6 +147,7 @@ func (rpx *RpcProxy) PostMessage(message interface{}, qos rpcmessage.RpcQos) err
 // Shutdown 关闭代理
 func (rpx *RpcProxy) Shutdown() {
 	//释放资源
+	close(rpx.stopper)
 	for _, conn := range rpx.hostMap {
 		conn.Close()
 		conn.Destory()
@@ -174,4 +177,13 @@ func (rpx *RpcProxy) LogDebug(fmts string, args ...interface{}) {
 		return
 	}
 	rpx.logger.Debug("[RPCPROXY]", fmts, args...)
+}
+
+func (rpx *RpcProxy) isStopped() bool {
+	select {
+	case <-rpx.stopper:
+		return true
+	default:
+		return false
+	}
 }
