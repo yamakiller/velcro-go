@@ -98,14 +98,34 @@ func (dl *ClientConn) Post(message interface{}) error {
 func (dl *ClientConn) Recvice(ctx network.Context) {
 	offset := 0
 	for {
-		n, _ := dl.recvice.Write(ctx.Message()[offset:])
-		offset += n
+		var (
+			n    int   = 0
+			werr error = nil
+		)
+
+		if offset < len(ctx.Message()) {
+			n, werr = dl.recvice.Write(ctx.Message()[offset:])
+			offset += n
+		}
 
 		msg, err := protomessge.UnMarshal(dl.recvice, dl.secret)
 		if err != nil {
 			ctx.Error("unmarshal message error:%v", err.Error())
 			ctx.Close(ctx.Self())
 			return
+		}
+
+		if msg == nil {
+			if werr != nil {
+				ctx.Error("unmarshal message error:%v", err.Error())
+				ctx.Close(ctx.Self())
+				return
+			}
+
+			if offset == len(ctx.Message()) {
+				return
+			}
+			continue
 		}
 
 		switch message := msg.(type) {
