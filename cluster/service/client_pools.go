@@ -14,7 +14,7 @@ func NewServiceClientPool(s *Service,
 	unreg func(key string, clientId *network.ClientID)) server.RpcPool {
 	return &ServiceClientPool{pls: sync.Pool{
 		New: func() interface{} {
-			c := &ServiceClient{RpcClient: server.NewRpcClient(s.RpcServer)}
+			c := &ServiceClient{RpcClient: server.NewRpcClientConn(s.RpcServer)}
 			c.register = reg
 			c.unregister = unreg
 			c.Register(reflect.TypeOf(&protocols.RegisterRequest{}), c.onRegister)

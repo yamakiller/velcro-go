@@ -12,7 +12,7 @@ import (
 	"github.com/yamakiller/velcro-go/utils/syncx"
 )
 
-func NewRpcClient(s *RpcServer) RpcClient {
+func NewRpcClientConn(s *RpcServer) RpcClient {
 	return &RpcClientConn{
 		recvice:         circbuf.New(32768, &syncx.NoMutex{}),
 		methods:         make(map[interface{}]func(*RpcClientContext) interface{}),

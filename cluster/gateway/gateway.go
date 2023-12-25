@@ -47,9 +47,9 @@ func New(options ...GatewayConfigOption) *Gateway {
 
 // Gateway 网关
 type Gateway struct {
+	System *network.NetworkSystem
 	vaddr  string // 网关局域网虚拟地址
 	laddr  string // 网关监听地址
-	System *network.NetworkSystem
 	// 连接客户端
 	clients        map[network.CIDKEY]Client
 	onlineOfNumber int

@@ -136,6 +136,7 @@ func (rpx *RpcProxy) PostMessage(message interface{}, qos rpcmessage.RpcQos) err
 	}
 	rpx.balancer.Inc(host)
 	defer rpx.balancer.Done(host)
+
 	return rpx.hostMap[host].PostMessage(message, qos)
 }
 
@@ -173,16 +174,13 @@ func (rpx *RpcProxy) guardian() {
 		rpx.RLock()
 		for host, isAlive := range rpx.alive {
 			if isAlive {
-				// rpx.RUnlock()
 				continue
 			}
 			if _, ok := rpx.hostMap[host]; !ok {
-				// rpx.RUnlock()
 				continue
 			}
 			rpx.LogInfo("%s reconnecting", host)
 			if err := rpx.hostMap[host].Dial(host, rpx.dialTimeouot); err != nil {
-				// rpx.RUnlock()
 				rpx.LogInfo("%s reconnect fail[error:%s]", host, err.Error())
 				continue
 			}
