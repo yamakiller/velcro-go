@@ -32,13 +32,6 @@ func WithDialTimeout(timeout int32) RouterRpcProxyConfigOption {
 	}
 }
 
-// WithFrequency 设置连接器重连频率(时间-单位:毫秒)
-func WithFrequency(frequency int32) RouterRpcProxyConfigOption {
-	return func(opt *RouterRpcProxyOption) {
-		opt.Frequency = frequency
-	}
-}
-
 // WithLogger 设置日志代理
 func WithLogger(logger logs.LogAgent) RouterRpcProxyConfigOption {
 	return func(opt *RouterRpcProxyOption) {
@@ -72,7 +65,6 @@ func WithAlgorithm(algorithm string) RouterRpcProxyConfigOption {
 type RouterRpcProxyOption struct {
 	Kleepalive        int32         // 连接器保活时间(单位:毫秒)
 	DialTimeout       int32         // 连接器连接等待超时时间(单位:毫秒)
-	Frequency         int32         // 连接检查频率/自动重连频率(单位:毫秒)
 	Logger            logs.LogAgent // 日志代理
 	ConnectedCallback func(*proxy.RpcProxyConn)
 	RecviceCallback   func(interface{})
@@ -82,8 +74,7 @@ type RouterRpcProxyOption struct {
 func defaultRouterRpcProxyOption() *RouterRpcProxyOption {
 	return &RouterRpcProxyOption{
 		Kleepalive:  10 * 1000,
-		DialTimeout: 1 * 1000,
-		Frequency:   2 * 1000,
+		DialTimeout: 2 * 1000,
 		Algorithm:   "p2c",
 	}
 }

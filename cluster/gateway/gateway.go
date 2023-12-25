@@ -36,7 +36,6 @@ func New(options ...GatewayConfigOption) *Gateway {
 	g.clientPool = config.ClientPool
 	g.onlineOfNumber = config.OnlineOfNumber
 	g.routeURI = config.RouterURI
-	g.routeProxyFrequency = config.RouteProxyFrequency
 	g.routeProxyDialTimeout = config.RouteProxyDialTimeout
 	g.routeProxyKleepalive = config.RouteProxyKleepalive
 	g.routeProxyAlgorithm = config.RouteProxyAlgorithm
@@ -59,7 +58,6 @@ type Gateway struct {
 	encryption *Encryption
 	// 路由
 	routeURI              string
-	routeProxyFrequency   int32
 	routeProxyDialTimeout int32
 	routeProxyKleepalive  int32
 	routeProxyAlgorithm   string
@@ -69,7 +67,6 @@ type Gateway struct {
 
 func (g *Gateway) Start() error {
 	r, err := router.Loader(g.routeURI,
-		router.WithFrequency(g.routeProxyFrequency),
 		router.WithAlgorithm(g.routeProxyAlgorithm),
 		router.WithDialTimeout(g.routeProxyDialTimeout),
 		router.WithKleepalive(g.routeProxyKleepalive),

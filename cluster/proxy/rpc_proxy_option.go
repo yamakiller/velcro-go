@@ -31,13 +31,6 @@ func WithDialTimeout(timeout int32) RpcProxyConfigOption {
 	}
 }
 
-// WithFrequency 设置连接器重连频率(时间-单位:毫秒)
-func WithFrequency(frequency int32) RpcProxyConfigOption {
-	return func(opt *RpcProxyOption) {
-		opt.Frequency = frequency
-	}
-}
-
 // WithDecided 设置策略决策
 func WithDecided(decided Decided) RpcProxyConfigOption {
 	return func(opt *RpcProxyOption) {
@@ -84,7 +77,6 @@ func WithAlgorithm(algorithm string) RpcProxyConfigOption {
 type RpcProxyOption struct {
 	Kleepalive        int32         // 连接器保活时间(单位:毫秒)
 	DialTimeout       int32         // 连接器连接等待超时时间(单位:毫秒)
-	Frequency         int32         // 连接检查频率/自动重连频率(单位:毫秒)
 	Decided           Decided       // 决定
 	Logger            logs.LogAgent // 日志代理
 	ConnectedCallback func(*RpcProxyConn)
@@ -97,8 +89,7 @@ type RpcProxyOption struct {
 func defaultRpcProxyOption() *RpcProxyOption {
 	return &RpcProxyOption{
 		Kleepalive:  10 * 1000,
-		DialTimeout: 1 * 1000,
-		Frequency:   2 * 1000,
+		DialTimeout: 2 * 1000,
 		Decided:     DecidedOneToOne,
 		Algorithm:   "p2c",
 	}

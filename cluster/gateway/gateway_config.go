@@ -86,13 +86,6 @@ func WithOnlineOfNumber(number int) GatewayConfigOption {
 	}
 }
 
-// WithRouteProxyFrequency 设置路由代理检测频率
-func WithRouteProxyFrequency(frequency int32) GatewayConfigOption {
-	return func(opt *GatewayConfig) {
-		opt.RouteProxyFrequency = frequency
-	}
-}
-
 // WithRouteProxyFrequency 设置路由代理连接超时时间
 func WithRouteProxyDialTimeout(dialTimeout int32) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
@@ -127,7 +120,6 @@ type GatewayConfig struct {
 	NetowkTimeout         int32
 	MessageMaxTimeout     int64
 	OnlineOfNumber        int
-	RouteProxyFrequency   int32
 	RouteProxyDialTimeout int32
 	RouteProxyKleepalive  int32
 	RouteProxyAlgorithm   string
@@ -141,7 +133,6 @@ func defaultGatewayConfig() *GatewayConfig {
 		NetowkTimeout:         2000,
 		MessageMaxTimeout:     2000,
 		OnlineOfNumber:        2000,
-		RouteProxyFrequency:   2000,
 		RouteProxyDialTimeout: 2000,
 		RouteProxyKleepalive:  4000,
 		RouteProxyAlgorithm:   "p2c",

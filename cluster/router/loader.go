@@ -35,7 +35,6 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 			proxy.WithAlgorithm(opt.Algorithm),
 			proxy.WithKleepalive(opt.Kleepalive),
 			proxy.WithDialTimeout(opt.DialTimeout),
-			proxy.WithFrequency(opt.Frequency),
 			proxy.WithDecided(router.Decided),
 			proxy.WithLogger(opt.Logger),
 			proxy.WithConnectedCallback(opt.ConnectedCallback),

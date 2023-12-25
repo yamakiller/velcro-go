@@ -55,7 +55,6 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 	}
 
 	return &RpcProxy{
-		frequency:    time.Millisecond * time.Duration(option.Frequency),
 		dialTimeouot: time.Millisecond * time.Duration(option.DialTimeout),
 		hostMap:      hostMap,
 		balancer:     lb,
@@ -64,14 +63,11 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 		recvice:      option.RecviceCallback,
 		alive:        alive,
 		logger:       option.Logger,
-		stopper:      make(chan struct{}),
 	}, nil
 }
 
 // RpcProxy rpc 代理
 type RpcProxy struct {
-	// 重连尝试频率
-	frequency time.Duration
 	// 连接等待超时
 	dialTimeouot time.Duration
 	// 连接器
@@ -89,15 +85,19 @@ type RpcProxy struct {
 	alive map[string]bool
 	// 日志代理
 	logger logs.LogAgent
-	// 停止器
-	stopper chan struct{}
-	done    sync.WaitGroup
 }
 
 // Shutdown 打开代理
 func (rpx *RpcProxy) Open() {
 	for host, conn := range rpx.hostMap {
 		conn.proxy = rpx
+		conn.repe = &RpcProxyConnRepeat{
+			host:         host,
+			conn:         conn,
+			dialTimeouot: rpx.dialTimeouot,
+			printError:   rpx.LogError,
+		}
+
 		rpx.LogInfo("%s connecting", host)
 		if err := conn.Dial(host, rpx.dialTimeouot); err != nil {
 			rpx.LogError("%s connect fail[error:%s]", host, err.Error())
@@ -110,7 +110,7 @@ func (rpx *RpcProxy) Open() {
 		rpx.balancer.Add(host)
 	}
 
-	go rpx.guardian()
+	//延迟n秒后启动
 }
 
 // RequestMessage 集群请求消息
@@ -142,9 +142,6 @@ func (rpx *RpcProxy) PostMessage(message interface{}, qos rpcmessage.RpcQos) err
 
 // Shutdown 关闭代理
 func (rpx *RpcProxy) Shutdown() {
-	close(rpx.stopper)
-	rpx.done.Wait()
-
 	//释放资源
 	for _, conn := range rpx.hostMap {
 		conn.Close()
@@ -153,51 +150,6 @@ func (rpx *RpcProxy) Shutdown() {
 	rpx.hostMap = make(map[string]*RpcProxyConn)
 	rpx.alive = make(map[string]bool)
 	rpx.balancer = nil
-}
-
-func (rpx *RpcProxy) isStopped() bool {
-	select {
-	case <-rpx.stopper:
-		return true
-	default:
-		return false
-	}
-}
-
-func (rpx *RpcProxy) guardian() {
-	defer rpx.done.Done()
-	for {
-		if rpx.isStopped() {
-			break
-		}
-
-		rpx.RLock()
-		for host, isAlive := range rpx.alive {
-			if isAlive {
-				continue
-			}
-			if _, ok := rpx.hostMap[host]; !ok {
-				continue
-			}
-			rpx.LogInfo("%s reconnecting", host)
-			if err := rpx.hostMap[host].Dial(host, rpx.dialTimeouot); err != nil {
-				rpx.LogInfo("%s reconnect fail[error:%s]", host, err.Error())
-				continue
-			}
-			rpx.RUnlock()
-			rpx.LogInfo("%s reconnected", host)
-
-			rpx.Lock()
-			rpx.alive[host] = true
-			rpx.Unlock()
-
-			rpx.balancer.Add(host)
-
-			rpx.RLock()
-		}
-		rpx.RUnlock()
-		time.Sleep(rpx.frequency)
-	}
 }
 
 func (rpx *RpcProxy) LogError(fmts string, args ...interface{}) {
