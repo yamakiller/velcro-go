@@ -101,6 +101,8 @@ func (rpx *RpcProxy) Open() {
 		rpx.LogInfo("%s connecting", host)
 		if err := conn.Dial(host, rpx.dialTimeouot); err != nil {
 			rpx.LogError("%s connect fail[error:%s]", host, err.Error())
+			//启动延迟重试器
+			conn.repe.start()
 			continue
 		}
 
