@@ -10,6 +10,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/messages"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -241,13 +242,13 @@ func (g *Gateway) onUpdateRuleClient(updateRule *protocols.UpdateRule) {
 func (g *Gateway) onCloseClient(closing *protocols.Closing) {
 	c := g.GetClient(closing.ClientID)
 	if c == nil {
+		// 如果没有找到目标连接, 哪说明目标连接已关闭.
+		g.routeGroup.Broadcast(&protocols.Closed{ClientID: closing.ClientID}, messages.RpcQosRetry)
 		return
 	}
 	defer g.ReleaseClient(c)
 
 	c.ClientID().UserClose()
-	// 广播所有服务器关闭套接字
-	// g.routeGroup.Broadcast(&protocols.Closed{ClientID: closing.ClientID}, messages.RpcQosRetry)
 }
 
 func (g *Gateway) newClient(System *network.NetworkSystem) network.Client {
