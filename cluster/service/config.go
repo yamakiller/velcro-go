@@ -1,5 +1,7 @@
 package service
 
+import "github.com/yamakiller/velcro-go/rpc/server"
+
 type ServiceConfigOption func(option *ServiceConfig)
 
 func Configure(options ...ServiceConfigOption) *ServiceConfig {
@@ -13,16 +15,20 @@ func Configure(options ...ServiceConfigOption) *ServiceConfig {
 
 type ServiceConfig struct {
 	Addr string
+	Pool server.RpcPool
 }
 
-func WithAddr(addr string)ServiceConfigOption{
+func WithAddr(addr string) ServiceConfigOption {
 	return func(option *ServiceConfig) {
 		option.Addr = addr
 	}
 }
 
-func defaultServiceConfig() * ServiceConfig{
-	return &ServiceConfig{
+func WithPool(pool server.RpcPool) ServiceConfigOption {
+	return func(option *ServiceConfig) {
+		option.Pool = pool}
+}
 
-	}
+func defaultServiceConfig() *ServiceConfig {
+	return &ServiceConfig{}
 }

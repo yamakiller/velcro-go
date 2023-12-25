@@ -1,0 +1,6 @@
+target-addr: 127.0.0.1:8800
+client-connection-timeout: 200000
+client-number: 1
+interval-second: 5
+screen-refresh-frequency: 4000
+post-data: 85763048192393845kdkfhg+0fgfgjdff

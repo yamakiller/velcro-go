@@ -44,7 +44,7 @@ func Marshal(message proto.Message, secret []byte) ([]byte, error) {
 
 	copy(buffer[offset:offset+msgNameLen], []byte(string(msgName)))
 	offset += msgNameLen
-	offset += copy(buffer[offset+msgNameLen:], msgBytes)
+	offset += copy(buffer[offset:], msgBytes)
 	if secret != nil {
 		ebys, err := encryption.AesEncryptByGCM(buffer[HeaderSize:dataLen+HeaderSize], secret)
 		if err != nil {
@@ -59,6 +59,8 @@ func Marshal(message proto.Message, secret []byte) ([]byte, error) {
 		}
 		binary.BigEndian.PutUint16(buffer[0:HeaderSize], uint16(dataLen))
 		copy(buffer[HeaderSize:dataLen], ebys)
+	}else{
+		binary.BigEndian.PutUint16(buffer[0:HeaderSize], uint16(dataLen))
 	}
 
 	return buffer[:packetLen], nil

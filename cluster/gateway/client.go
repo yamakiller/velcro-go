@@ -17,6 +17,7 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type Client interface {
@@ -234,7 +235,13 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *protocols.Pubk
 
 func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.ClientRequestMessage) {
 	requestMessageName := string(message.RequestMessage.MessageName())
-	requestMessage := message.RequestMessage.ProtoReflect().New().Interface()
+	messageType, err := protoregistry.GlobalTypes.FindMessageByName(message.RequestMessage.MessageName())
+	if err != nil{
+		ctx.Error("requesting unfound fail[error:%s]", requestMessageName, err.Error())
+		ctx.Close(ctx.Self())
+		return
+	}
+	requestMessage := messageType.New().Interface()
 	if err := message.RequestMessage.UnmarshalTo(requestMessage); err != nil {
 		ctx.Error("requesting unmarshal fail[error:%s]", requestMessageName, err.Error())
 		ctx.Close(ctx.Self())
@@ -242,7 +249,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.C
 	}
 
 	r := dl.gateway.routeGroup.Get(requestMessageName)
-	if r != nil {
+	if r == nil {
 		ctx.Warning("%s message unfound router", requestMessageName)
 		ctx.Close(ctx.Self())
 		return
@@ -264,7 +271,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.C
 		ctx.Warning("%s message timeout", requestMessageName)
 		return
 	}
-	result, err := r.Proxy.RequestMessage(message, int64(message.RequestTimeout))
+	result, err := r.Proxy.RequestMessage(requestMessage, int64(message.RequestTimeout))
 	if err != nil {
 		b, msge := protomessge.Marshal(&protocols.Error{
 			ID:   message.RequestID,
@@ -295,7 +302,7 @@ func (dl *ClientConn) onPostMessage(ctx network.Context, message proto.Message) 
 
 	msgName := proto.MessageName(message)
 	r := dl.gateway.routeGroup.Get(string(msgName))
-	if r != nil {
+	if r == nil {
 		ctx.Warning("%s message unfound router", msgName)
 		ctx.Close(ctx.Self())
 		return

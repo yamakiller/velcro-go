@@ -8,7 +8,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/gateway"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
-	local_protocols "github.com/yamakiller/velcro-go/example/monopoly/gateway.service/protocols"
+	local_protocols "github.com/yamakiller/velcro-go/example/monopoly/generate/protocols"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/encryption"

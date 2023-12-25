@@ -39,13 +39,13 @@ func (rpcr *RpcProxyConnRepeat) start() {
 func (rpcr *RpcProxyConnRepeat) stop() {
 
 	rpcr.mu.Lock()
-	if !rpcr.isStopped() {
+	if rpcr.isStopped() {
 		close(rpcr.stopper)
+		rpcr.conn = nil
+		rpcr.stopper = nil
 	}
 	rpcr.mu.Unlock()
 	rpcr.wg.Wait()
-	rpcr.conn = nil
-	rpcr.stopper = nil
 }
 
 func (rpcr *RpcProxyConnRepeat) isStopped() bool {
@@ -62,13 +62,13 @@ func (rpcr *RpcProxyConnRepeat) reconnect(counter int) error {
 		return nil
 	}
 
-	if err := rpcr.conn.Dial(rpcr.host, rpcr.dialTimeouot); err != nil {
+	if err := rpcr.conn.Redial(); err != nil {
 		rpcr.printError("%s connect fail[error:%s]", rpcr.host, err.Error())
 		return err
 	}
 
 	rpcr.conn.proxy.Lock()
-	rpcr.conn.proxy.alive[rpcr.host] = false
+	rpcr.conn.proxy.alive[rpcr.host] = true
 	rpcr.conn.proxy.Unlock()
 
 	rpcr.conn.proxy.balancer.Add(rpcr.host)

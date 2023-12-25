@@ -1,0 +1,8 @@
+server:
+  Address: 0.0.0.0:8860
+redis:
+  addr: 0.0.0.0:6379
+  pwd: yqXaWje245RPbsn*
+  dial-timeout: 5000
+  read-timeout: 2000
+  write-timeout: 2000

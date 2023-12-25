@@ -52,7 +52,7 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 
 		// 构建角色表
 		for _, rule := range router.Rules {
-			r.rules &= rule
+			r.rules |= rule
 		}
 
 		// 构建指令表

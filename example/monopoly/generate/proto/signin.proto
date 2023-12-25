@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package protocols;
+option go_package=".;protocols";
+
+message SigninRequest{
+    string account = 1;
+    string pass =2;
+}
+
+message SigninResponse{
+    int32 res = 1;
+}
