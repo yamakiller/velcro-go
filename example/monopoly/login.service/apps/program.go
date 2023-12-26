@@ -7,6 +7,7 @@ import (
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/velcro-go/envs"
+	"github.com/yamakiller/velcro-go/example/monopoly/login.service/accounts"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/client"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/dba/rds"
@@ -61,7 +62,12 @@ func (p *Program) Start(s service.Service) error {
 	}
 
 	p.logAgent.Info(appName, "redis is connected")
-
+	if err := accounts.Init();err != nil{
+		p.logAgent.Error(appName, "accounts init fail-%s",err.Error())
+		p.logAgent.Close()
+		return err
+	}
+	
 	p.System = client.New()
 	if err := p.System.Open("127.0.0.1:8860"); err != nil {
 		p.System.Error("Listening 127.0.0.1:8860 fail[error:%s]", err.Error())

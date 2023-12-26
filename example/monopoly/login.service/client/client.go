@@ -15,10 +15,11 @@ func NewLoginClient(system *network.NetworkSystem) network.Client {
 type LoginClient struct {
 	
 	*service.ServiceClient
-	playerid uint32
+	name string
+
 }
 
 func (lc *LoginClient) Closed(ctx network.Context){
-	rds.RemUser(lc.playerid)
+	rds.RemUser(lc.name)
 	lc.ServiceClient.Closed(ctx)
 }

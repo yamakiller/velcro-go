@@ -2,6 +2,8 @@ package rds
 
 import (
 	"context"
+	"fmt"
+
 )
 
 // 房间在Redis中的存储关系
@@ -39,14 +41,15 @@ import (
 	return nil
 }*/
 
-func PushUser(uid uint32) error {
+func PushUser(uid string,player interface{}) error {
+
 	ctx, cancel := context.WithTimeout(context.Background(), setTimeout)
 	defer cancel()
 
 	pipe := _client.TxPipeline()
 	defer pipe.Close()
 
-	pipe.RPush(ctx, getUserArrayKey(), uid)
+	pipe.RPush(ctx, getUserArrayKey(uid), player)
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
@@ -61,7 +64,7 @@ func GetUserCount() (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), setTimeout)
 	defer cancel()
 
-	val, err := _client.LLen(ctx, getUserArrayKey()).Result()
+	val, err := _client.LLen(ctx, getUserArrayKey("")).Result()
 	if err != nil {
 		return 0, err
 	}
@@ -73,7 +76,7 @@ func GetUserRange(startIndex, endIndex int64) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), setTimeout)
 	defer cancel()
 
-	val, err := _client.LRange(ctx, getUserArrayKey(), startIndex, endIndex).Result()
+	val, err := _client.LRange(ctx, getUserArrayKey(""), startIndex, endIndex).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +84,14 @@ func GetUserRange(startIndex, endIndex int64) ([]string, error) {
 	return val, nil
 }
 
-func RemUser(uid uint32) error {
+func RemUser(uid string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), setTimeout)
 	defer cancel()
 
 	pipe := _client.TxPipeline()
 	defer pipe.Close()
 
-	pipe.LRem(ctx, getUserArrayKey(), 0, uid)
+	pipe.LRem(ctx, getUserArrayKey(uid), 0, uid)
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
@@ -99,6 +102,6 @@ func RemUser(uid uint32) error {
 	return nil
 }
 
-func getUserArrayKey() string {
-	return "user_array"
+func getUserArrayKey(uid string) string {
+	return fmt.Sprintf("user_array:%s",uid) 
 }
