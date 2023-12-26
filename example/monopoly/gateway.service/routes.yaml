@@ -1,0 +1,10 @@
+routes:
+  - virtual-address: login.service
+    endpoints:
+      - "127.0.0.1:8860"
+    commands:
+      - protocols.RegisterAccountRequest
+      - protocols.SigninRequest
+      - protocols.SignoutRequest
+    rules:
+      - 1

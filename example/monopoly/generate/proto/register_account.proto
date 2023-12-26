@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package protocols;
+option go_package=".;protocols";
+
+message RegisterAccountRequest {
+    string account = 1;//账号
+    string pass = 2;//密码
+}
+message RegisterAccountResponse{
+    int32 res = 1;
+}

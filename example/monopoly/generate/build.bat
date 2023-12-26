@@ -10,8 +10,8 @@ set GO_COMPILER_PATH=..\..\..\tools\proto\bin\protoc.exe
 del .\protocols\*.pb.go /f /s /q
 
 ::生成client_id.proto
-echo %GO_COMPILER_PATH% --go_out=.\protocols --proto_path=%SOURCE_FOLDER% report_nat.proto require_nat.proto
-%GO_COMPILER_PATH% --go_out=.\protocols --proto_path=%SOURCE_FOLDER% report_nat.proto require_nat.proto
+echo %GO_COMPILER_PATH% --go_out=.\protocols --proto_path=%SOURCE_FOLDER% report_nat.proto require_nat.proto signin.proto signout.proto register_account.proto
+%GO_COMPILER_PATH% --go_out=.\protocols --proto_path=%SOURCE_FOLDER% report_nat.proto require_nat.proto signin.proto signout.proto register_account.proto
 
 ::protoc -I="../actor" --go_out=. --go_opt=paths=source_relative --proto_path=. routercontracts.proto
 ::pubkey.proto forward_message.proto

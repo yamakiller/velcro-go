@@ -4,14 +4,14 @@ import (
 	"log"
 
 	"github.com/yamakiller/velcro-go/application"
-	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/apps"
+	"github.com/yamakiller/velcro-go/example/monopoly/login.service/apps"
 )
 
 func main() {
 	guard := application.Guardian{
-		Name:        "gateway.service",
-		Display:     "gateway.service",
-		Description: "网络系统gateway.service服务系统测试",
+		Name:        "login.service",
+		Display:     "login.service",
+		Description: "login.service服务系统测试",
 	}
 
 	p := &apps.Program{}

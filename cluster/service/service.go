@@ -8,10 +8,12 @@ import (
 )
 
 func New(options ...ServiceConfigOption) *Service {
-	// config := Configure(options...)
-
+	config := Configure(options...)
 	s := &Service{groups: newSliceMap()}
-	s.RpcServer = server.New(server.WithPool(NewServiceClientPool(s, s.RegisetrGroup, s.UnregisterGroup)))
+	if config.Pool == nil{
+		config.Pool = NewServiceClientPool(s, s.RegisetrGroup, s.UnregisterGroup)
+	}
+	s.RpcServer = server.New(server.WithPool(config.Pool))
 
 	return s
 }

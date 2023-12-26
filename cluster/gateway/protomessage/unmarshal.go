@@ -49,7 +49,7 @@ func UnMarshal(in *circbuf.RingBuffer, secret []byte) (proto.Message, error) {
 		return nil, fmt.Errorf("message name length error %d", msgNameLen)
 	}
 
-	proName := string(b[1 : msgNameLen+1])
+	proName := string(b[1 : msgNameLen])
 	//2.解析Protobuf
 	msgName := protoreflect.FullName(proName)
 	msgType, err := protoregistry.GlobalTypes.FindMessageByName(msgName)
