@@ -1,6 +1,7 @@
 package locals
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -17,7 +18,7 @@ func (ls *LocalSign) Init() error {
 }
 
 // In token username&password
-func (ls *LocalSign) In(token string) (*sign.Account, error) {
+func (ls *LocalSign) In(ctx context.Context, token string) (*sign.Account, error) {
 	inarray := strings.Split(token, "&")
 	if len(inarray) != 2 {
 		return nil, errs.ErrSignAccountOrPass
@@ -29,19 +30,19 @@ func (ls *LocalSign) In(token string) (*sign.Account, error) {
 		return nil, errs.ErrSignAccountOrPass
 	}
 
-	sn, err  := strconv.ParseInt(accounts[1], 10, 32)
+	sn, err := strconv.ParseInt(accounts[1], 10, 32)
 	if err != nil {
 		return nil, errs.ErrSignAccountOrPass
 	}
 
 	result := &sign.Account{
-		Name: fmt.Sprintf("t%d", sn),
-		Externs: map[string] string{},
+		UID:     fmt.Sprintf("t%d", sn),
+		Externs: map[string]string{},
 	}
 
-	return result, nil 
+	return result, nil
 }
 
-func (ls *LocalSign) Out()error{
+func (ls *LocalSign) Out() error {
 	return nil
 }

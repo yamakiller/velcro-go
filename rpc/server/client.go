@@ -30,6 +30,7 @@ type RpcClient interface {
 	Accept(ctx network.Context)
 	Ping(ctx network.Context)
 	Recvice(ctx network.Context)
+	PostMessage(ctx network.Context, message interface{}) error
 	Closed(ctx network.Context)
 	Destory()
 	onRpcPing(ctx network.Context, message *rpcmessage.RpcPingMessage)
@@ -48,6 +49,7 @@ type RpcClientConn struct {
 	unmarshal       rpcmessage.UnMarshalFunc
 	marshalping     rpcmessage.MarshalPingFunc
 	marshalresponse rpcmessage.MarshalResponseFunc
+	marshalMessage  rpcmessage.MarshalMessageFunc
 }
 
 func (rcc *RpcClientConn) ClientID() *network.ClientID {
@@ -55,7 +57,7 @@ func (rcc *RpcClientConn) ClientID() *network.ClientID {
 }
 
 func (rcc *RpcClientConn) Register(key interface{}, f func(*RpcClientContext) interface{}) {
-	rcc.methods[key] = f
+	rcc.methods[reflect.TypeOf(key)] = f
 }
 
 func (rcc *RpcClientConn) Accept(ctx network.Context) {
@@ -141,6 +143,18 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 			break
 		}
 	}
+}
+
+func (rcc *RpcClientConn) PostMessage(ctx network.Context, message interface{}) error {
+	b, err := rcc.marshalMessage(0, message)
+	if err != nil {
+		ctx.Close(ctx.Self())
+		return err
+	}
+
+	ctx.PostMessage(ctx.Self(), b)
+
+	return nil
 }
 
 func (rcc *RpcClientConn) Closed(ctx network.Context) {

@@ -17,7 +17,7 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type Client interface {
@@ -241,18 +241,6 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *protocols.Pubk
 
 func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.ClientRequestMessage) {
 	requestMessageName := string(message.RequestMessage.MessageName())
-	messageType, err := protoregistry.GlobalTypes.FindMessageByName(message.RequestMessage.MessageName())
-	if err != nil{
-		ctx.Error("requesting unfound fail[error:%s]", requestMessageName, err.Error())
-		ctx.Close(ctx.Self())
-		return
-	}
-	requestMessage := messageType.New().Interface()
-	if err := message.RequestMessage.UnmarshalTo(requestMessage); err != nil {
-		ctx.Error("requesting unmarshal fail[error:%s]", requestMessageName, err.Error())
-		ctx.Close(ctx.Self())
-		return
-	}
 
 	r := dl.gateway.routeGroup.Get(requestMessageName)
 	if r == nil {
@@ -267,7 +255,11 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.C
 		return
 	}
 
-	//TODO: 优化时间计算
+	forward := &protocols.Forward{
+		Sender: dl.clientID,
+		Msg:    message.RequestMessage,
+	}
+
 	if int64(message.RequestTimeout) > dl.message_max_timeout {
 		ctx.Warning("%s message timeout to long ,max timeout is %d", requestMessageName, dl.message_max_timeout)
 		return
@@ -277,7 +269,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.C
 		ctx.Warning("%s message timeout", requestMessageName)
 		return
 	}
-	result, err := r.Proxy.RequestMessage(requestMessage, int64(message.RequestTimeout))
+	result, err := r.Proxy.RequestMessage(forward, int64(message.RequestTimeout))
 	if err != nil {
 		b, msge := protomessge.Marshal(&protocols.Error{
 			ID:   message.RequestID,
@@ -320,7 +312,18 @@ func (dl *ClientConn) onPostMessage(ctx network.Context, message proto.Message) 
 		return
 	}
 
-	err := r.Proxy.PostMessage(message, messages.RpcQosDiscard)
+	anyMsg, err := anypb.New(message)
+	if err != nil {
+		ctx.Warning("%s message serialization error %s", err.Error())
+		ctx.Close(ctx.Self())
+	}
+
+	forward := &protocols.Forward{
+		Sender: dl.clientID,
+		Msg:    anyMsg,
+	}
+
+	err = r.Proxy.PostMessage(forward, messages.RpcQosDiscard)
 	if err != nil {
 		b, msge := protomessge.Marshal(&protocols.Error{
 			Name: string(msgName),

@@ -13,10 +13,9 @@ func NewLoginServiceClientPool(s *LoginService) server.RpcPool {
 	return &LoginServiceClientPool{pls: sync.Pool{
 		New: func() interface{} {
 			c := &LoginClient{}
-			c.ServiceClient = service.NewServiceClient(s.Service,s.RegisetrGroup,s.UnregisterGroup)
-			c.Register(reflect.TypeOf(&protocols.RegisterAccountRequest{}), c.onRegisterAccountRequest)
-			c.Register(reflect.TypeOf(&protocols.SigninRequest{}), c.onSigninRequest)
-			c.Register(reflect.TypeOf(&protocols.SignoutRequest{}), c.onSignoutRequest)
+			c.ServiceClient = service.NewServiceClient(s.Service, s.RegisetrGroup, s.UnregisterGroup)
+			c.RegisterForward(reflect.TypeOf(&protocols.SigninRequest{}), c.onSignIn)
+			c.RegisterForward(reflect.TypeOf(&protocols.SignoutRequest{}), c.onSignOut)
 			// c.Register(reflect.TypeOf(&protocols.RegisterRequest{}), c.onRegister)
 			return c
 		},

@@ -12,7 +12,7 @@ type MarshalMessageFunc func(sequenceID int32, message interface{}) ([]byte, err
 type MarshalPingFunc func(value uint64) ([]byte, error)
 
 // MarshalRequest 构建 Request 消息
-func marshalRequest(buffer []byte, sequenceID int32, timeout uint64, message []byte /*包括消息名*/) (int, error) {
+func marshalRequest(buffer []byte, sequenceID int32, timeout uint64, message []byte) (int, error) {
 	//1.计算总长度
 	if len(buffer) < (RpcRequestHeaderLength + len(message)) {
 		return 0, errors.New("buffer: overflow")

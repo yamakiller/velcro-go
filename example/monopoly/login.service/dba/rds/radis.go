@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	_client       *redis.Client    = nil
-	_sync         *redsync.Redsync = nil
-	_addr         string
-	_password     string = ""
-	_dialTimeout  int    = 10000
-	_readTimeout  int    = 10000
-	_writeTimeout int    = 10000
+	client       *redis.Client    = nil
+	sync         *redsync.Redsync = nil
+	addr         string
+	password     string = ""
+	dialTimeout  int    = 10000
+	readTimeout  int    = 10000
+	writeTimeout int    = 10000
 )
 
 var (
@@ -41,61 +41,61 @@ const (
 
 // WithAddr 集群地址表 addr:port
 func WithAddr(addr string) {
-	_addr = addr
+	addr = addr
 }
 
 // WithPwd 连接验证密码
 func WithPwd(pwd string) {
-	_password = pwd
+	password = pwd
 }
 
 // WithDialTimeout 连接超时时间(单位毫秒)
 func WithDialTimeout(millisec int) {
-	_dialTimeout = millisec
+	dialTimeout = millisec
 }
 
 // WithReadTimeout 读取超时时间(单位毫秒)
 func WithReadTimeout(millisec int) {
-	_readTimeout = millisec
+	readTimeout = millisec
 }
 
 // WithWriteTimeout 写入超时时间(单位毫秒)
 func WithWriteTimeout(millisec int) {
-	_writeTimeout = millisec
+	writeTimeout = millisec
 }
 
 func Connection() error {
 
-	_client = redis.NewClient(&redis.Options{
-		Addr:         _addr,
+	client = redis.NewClient(&redis.Options{
+		Addr:         addr,
 		DB:           0,
-		Password:     _password,
+		Password:     password,
 		PoolSize:     runtime.NumCPU() * maxOfCoefficient,
 		MinIdleConns: runtime.NumCPU() * idleOfCoefficient,
 		IdleTimeout:  time.Minute * time.Duration(15),
-		DialTimeout:  time.Duration(_dialTimeout) * time.Millisecond,
-		ReadTimeout:  time.Duration(_readTimeout) * time.Millisecond,
-		WriteTimeout: time.Duration(_writeTimeout) * time.Millisecond,
+		DialTimeout:  time.Duration(dialTimeout) * time.Millisecond,
+		ReadTimeout:  time.Duration(readTimeout) * time.Millisecond,
+		WriteTimeout: time.Duration(writeTimeout) * time.Millisecond,
 	})
 
 	// 检测是否连接畅通
-	if _, err := _client.Ping(context.TODO()).Result(); err != nil {
+	if _, err := client.Ping(context.TODO()).Result(); err != nil {
 		return err
 	}
 
-	pool := goredis.NewPool(_client)
-	_sync = redsync.New(pool)
+	pool := goredis.NewPool(client)
+	sync = redsync.New(pool)
 
 	return nil
 }
 
 func Disconnect() {
-	if _sync != nil {
-		_sync = nil
+	if sync != nil {
+		sync = nil
 	}
 
-	if _client != nil {
-		_client.Close()
-		_client = nil
+	if client != nil {
+		client.Close()
+		client = nil
 	}
 }

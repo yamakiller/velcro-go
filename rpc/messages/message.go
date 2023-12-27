@@ -17,7 +17,7 @@ const (
 )
 
 const (
-	RpcRequestHeaderLength  int = 23
+	RpcRequestHeaderLength  int = 25
 	RpcResponseHeaderLength int = 8
 	RpcMessageHeaderLength  int = 7
 	RpcPingMessageLength    int = 8
