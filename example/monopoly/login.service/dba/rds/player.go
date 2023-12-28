@@ -122,6 +122,58 @@ func RegisterPlayer(ctx context.Context,
 }
 
 func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID) error {
+	uid, err := client.Get(ctx, getPlayerClientIDKey(clientId.ToString())).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil
+		}
+
+		return err
+	}
+
+	mutex := sync.NewMutex(getPlayerLockKey(uid))
+	if err := mutex.Lock(); err != nil {
+		return err
+	}
+
+	n, err := client.Exists(ctx, getPlayerUidKey(uid)).Result()
+	if err != nil {
+		mutex.Unlock()
+		return err
+	}
+
+	oldClientID := ""
+	if n > 0 {
+		oldClientID, err = client.Get(ctx, getPlayerUidKey(uid)).Result()
+		if err != nil {
+			mutex.Unlock()
+			return err
+		}
+	}
+
+	pipe := client.TxPipeline()
+	defer pipe.Close()
+
+	pipe.Do(ctx, "MULTI")
+	if oldClientID != clientId.ToString() && oldClientID != "" {
+		pipe.Del(ctx, getPlayerClientIDKey(oldClientID))
+	}else{
+		pipe.Del(ctx, getPlayerClientIDKey(clientId.ToString()))
+	}
+	
+	pipe.Del(ctx, getPlayerOnlineDataKey(uid))
+	pipe.Del(ctx, getPlayerUidKey(uid))
+
+	pipe.Do(ctx, "exec")
+
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		pipe.Discard()
+		mutex.Unlock()
+		return err
+	}
+
+	mutex.Unlock()
 	return nil
 }
 

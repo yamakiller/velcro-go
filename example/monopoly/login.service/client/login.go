@@ -67,7 +67,7 @@ func (lc *LoginClient) onSignOut(ctx *server.RpcClientContext, msg interface{}, 
 		return &protocols.SignoutResponse{Res: -3}
 	}
 
-	if err := rds.UnRegisterPlayer(ctx.Background(), sender); err != nil {
+	if err := rds.UnRegisterPlayer(ctx.Background(),sender); err != nil {
 		ctx.Context().Error("client %s SignOut fail %s", sender.ToString(), err.Error())
 	}
 
