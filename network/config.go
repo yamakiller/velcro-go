@@ -22,7 +22,7 @@ type Config struct {
 	meriicsKey      string
 	LoggerFactory   func(system *NetworkSystem) logs.LogAgent // 日志仓库
 	Producer        ProducerWidthClientSystem
-	NetowkTimeout   int32  //网络超时(单位毫秒)
+	Kleepalive      int32  //网络超时(单位毫秒)
 	VAddr           string // 虚地址标记
 }
 
@@ -35,8 +35,8 @@ func defaultConfig() *Config {
 			logAgent.WithHandle(pLogHandle)
 			return logAgent
 		},
-		NetowkTimeout: 2000,
-		VAddr:         localAddress,
+		Kleepalive: 2000,
+		VAddr:      localAddress,
 	}
 }
 

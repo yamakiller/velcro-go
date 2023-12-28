@@ -1,9 +1,11 @@
 package internet
 
-func Closed(){
+import "google.golang.org/protobuf/proto"
+
+func Closed() {
 
 }
 
-func Receive(msg interface{}){
-	
+func Receive(msg proto.Message) {
+
 }

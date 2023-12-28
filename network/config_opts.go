@@ -48,9 +48,10 @@ func WithProducer(producer ProducerWidthClientSystem) ConfigOption {
 	}
 }
 
-func WithNetworkTimeout(timeout int32) ConfigOption {
+// WithKleepalive 保活时间
+func WithKleepalive(timeout int32) ConfigOption {
 	return func(config *Config) {
-		config.NetowkTimeout = timeout
+		config.Kleepalive = timeout
 	}
 }
 

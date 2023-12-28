@@ -5,18 +5,18 @@ import (
 	"github.com/yamakiller/velcro-go/extensions"
 )
 
-func NewTCPServerNetworkSystem(options ...ConfigOption) *NetworkSystem {
+func NewTCPSyncServerNetworkSystem(options ...ConfigOption) *NetworkSystem {
 	config := Configure(options...)
 
 	return NewTCPServerNetworkSystemConfig(config)
 }
 
-func NewTCPServerNetworkSystemConfig(config *Config) *NetworkSystem {
+func NewTCPSyncServerNetworkSystemConfig(config *Config) *NetworkSystem {
 	ns := &NetworkSystem{}
 	ns.ID = shortuuid.New()
 	ns.Config = config
 	if ns.Config.MetricsProvider != nil {
-		ns.Config.meriicsKey = "tcpserver" + ns.ID
+		ns.Config.meriicsKey = "tcp-sync-server" + ns.ID
 	}
 	ns.producer = config.Producer
 	ns.handlers = NewHandlerRegistry(ns, config.VAddr)

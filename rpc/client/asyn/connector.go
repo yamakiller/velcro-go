@@ -11,10 +11,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/yamakiller/velcro-go/containers"
-	"github.com/yamakiller/velcro-go/rpc"
-	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
+	"github.com/yamakiller/velcro-go/rpc/errs"
+	"github.com/yamakiller/velcro-go/rpc/messages"
+	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/syncx"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func NewConn(options ...ConnConfigOption) *Conn {
@@ -46,16 +49,12 @@ const (
 	Disconnecting
 )
 
-type ConnectedFunc func()
-type ReceiveFunc func(msg interface{})
-type ClosedFunc func()
-
 type Conn struct {
 	Config      *ConnConfig
 	conn        net.Conn
 	address     *net.TCPAddr
 	timeout     time.Duration
-	sendwait    *rpcmessage.RpcMsgMessage
+	sendwait    *messages.RpcMsgMessage
 	sendwaitErr int
 	sendbox     *containers.Queue
 	sendcon     *sync.Cond
@@ -70,8 +69,9 @@ type Conn struct {
 	ping            uint64
 	kleepaliveError int32
 
-	activelyClose bool //是否是主动关闭
-	state         ConnState
+	activelyClose      bool //是否是主动关闭
+	currentGoroutineId int
+	state              ConnState
 }
 
 func (rc *Conn) Dial(addr string, timeout time.Duration) error {
@@ -99,10 +99,6 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
 
-	if rc.Config.Connected != nil {
-		rc.Config.Connected()
-	}
-
 	return nil
 }
 
@@ -126,10 +122,6 @@ func (rc *Conn) Redial() error {
 	rc.mailboxDone.Add(1)
 	go rc.guardian()
 
-	if rc.Config.Connected != nil {
-		rc.Config.Connected()
-	}
-
 	return nil
 }
 
@@ -150,13 +142,22 @@ func (rc *Conn) ToAddress() string {
 }
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
-func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}, error) {
+func (rc *Conn) RequestMessage(message proto.Message, timeout uint64) (proto.Message, error) {
+	if rc.currentGoroutineId == utils.GetCurrentGoroutineID() {
+		panic("RequestMessage cannot block calls in its own thread")
+	}
+
+	msgAny, err := anypb.New(message)
+	if err != nil {
+		panic(err)
+	}
+
 	seq := rc.nextID()
-	req := &rpcmessage.RpcRequestMessage{
+	req := &messages.RpcRequestMessage{
 		SequenceID:  seq,
 		ForwardTime: uint64(time.Now().UnixMilli()),
 		Timeout:     timeout,
-		Message:     message,
+		Message:     msgAny,
 	}
 
 	future := &Future{
@@ -180,7 +181,7 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 
 				return
 			}
-			future.err = rpc.ErrorRequestTimeout
+			future.err = errs.ErrorRequestTimeout
 			future.cond.L.Unlock()
 			future.Stop(rc)
 		})
@@ -193,11 +194,16 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 }
 
 // 推送消息
-func (rc *Conn) PostMessage(message interface{}, qos rpcmessage.RpcQos) error {
-	return rc.pushSendBox(&rpcmessage.RpcMsgMessage{
+func (rc *Conn) PostMessage(message proto.Message, qos messages.RpcQos) error {
+	msgAny, err := anypb.New(message)
+	if err != nil {
+		panic(err)
+	}
+
+	return rc.pushSendBox(&messages.RpcMsgMessage{
 		SequenceID: rc.nextID(),
-		Qos:        qos,
-		Message:    message,
+		Qos:        int32(qos),
+		Message:    msgAny,
 	}, nil)
 }
 
@@ -205,7 +211,7 @@ func (rc *Conn) pushSendBox(data interface{}, future *Future) error {
 	rc.sendcon.L.Lock()
 	if rc.activelyClose {
 		rc.sendcon.L.Unlock()
-		return errors.New("rpc connector: closed")
+		return errs.ErrorRpcConnectorClosed
 	}
 
 	rc.sendbox.Push(data)
@@ -266,7 +272,7 @@ func (rc *Conn) isStopped() bool {
 	}
 }
 
-func (rc *Conn) onResponse(msg *rpcmessage.RpcResponseMessage) {
+func (rc *Conn) onResponse(msg *messages.RpcResponseMessage) {
 	future := rc.getFuture(msg.SequenceID)
 	if future == nil {
 		return
@@ -278,10 +284,27 @@ func (rc *Conn) onResponse(msg *rpcmessage.RpcResponseMessage) {
 		return
 	}
 
-	future.result = msg.Message
-	if msg.Result == -1 {
-		future.err = rpc.ErrorRequestTimeout
-	} else {
+	result, err := msg.Result.UnmarshalNew()
+	if err != nil {
+		future.result = nil
+		future.err = err
+		future.done = true
+		tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
+		if tp != nil {
+			tp.Stop()
+		}
+		rc.removeFuture(msg.SequenceID)
+		future.cond.L.Unlock()
+
+		future.cond.Signal()
+		return
+	}
+
+	future.result = result
+	switch resultType := result.(type) {
+	case *messages.RpcError:
+		future.err = errors.New(resultType.Err)
+	default:
 		future.err = nil
 	}
 
@@ -336,10 +359,8 @@ func (rc *Conn) sender() {
 			var b []byte
 			var err error
 			switch message := msg.(type) {
-			case *rpcmessage.RpcRequestMessage:
-				// TODO: 检测是否超时
+			case *messages.RpcRequestMessage:
 				future := rc.getFuture(message.SequenceID)
-				// 这个请求已失败,不需要再执行
 				if future == nil {
 					continue
 				}
@@ -359,7 +380,7 @@ func (rc *Conn) sender() {
 				}
 				future.cond.L.Unlock()
 
-				b, err = rc.Config.MarshalRequest(message.SequenceID, message.Timeout, message.Message)
+				b, err = messages.MarshalRequestProtobuf(message.SequenceID, message.Timeout, message.Message)
 				if err != nil {
 					goto exit_sender_lable
 				}
@@ -367,22 +388,22 @@ func (rc *Conn) sender() {
 				if err != nil {
 					goto exit_sender_lable
 				}
-			case *rpcmessage.RpcMsgMessage:
-				if message.Qos == rpcmessage.RpcQosDiscard {
+			case *messages.RpcMsgMessage:
+				if message.Qos == messages.RpcQosDiscard {
 					rc.sendwait = nil
 					rc.sendwaitErr = 0
 				}
 
-				b, err = rc.Config.MarshalMessage(message.SequenceID, message.Message)
+				b, err = messages.MarshalMessageProtobuf(message.SequenceID, message.Message)
 				if err != nil {
 					goto exit_sender_lable
 				}
 
 				_, err = rc.conn.Write(b)
 				if err != nil {
-					if message.Qos != rpcmessage.RpcQosDiscard {
+					if message.Qos != messages.RpcQosDiscard {
 						rc.sendwaitErr++
-						if message.Qos == rpcmessage.RpcQosRetry && rc.sendwaitErr > 3 {
+						if message.Qos == messages.RpcQosRetry && rc.sendwaitErr > 3 {
 							rc.sendwait = nil
 							rc.sendwaitErr = 0
 						}
@@ -392,8 +413,8 @@ func (rc *Conn) sender() {
 
 				rc.sendwait = nil
 				rc.sendwaitErr = 0
-			case *rpcmessage.RpcPingMessage:
-				b, err = rc.Config.MarshalPing(message.VerifyKey)
+			case *messages.RpcPingMessage:
+				b, err = messages.MarshalPingProtobuf(message.VerifyKey)
 				if err != nil {
 					goto exit_sender_lable
 				}
@@ -437,7 +458,7 @@ func (rc *Conn) reader() {
 				//发送心跳
 				uid := uuid.New()
 				rc.ping, _ = strconv.ParseUint(uid.String(), 10, 64)
-				pingMessage := &rpcmessage.RpcPingMessage{VerifyKey: rc.ping}
+				pingMessage := &messages.RpcPingMessage{VerifyKey: rc.ping}
 				rc.pushSendBox(pingMessage, nil)
 				continue
 			}
@@ -450,7 +471,7 @@ func (rc *Conn) reader() {
 			nw, err := readbuffer.Write(readtemp[offset:nr])
 			offset += nw
 
-			_, msg, uerr := rc.Config.UnMarshal(readbuffer)
+			_, msg, uerr := messages.UnMarshalProtobuf(readbuffer)
 			if uerr != nil {
 				goto exit_reader_lable
 			}
@@ -462,7 +483,7 @@ func (rc *Conn) reader() {
 
 			if msg != nil {
 				switch message := msg.(type) {
-				case *rpcmessage.RpcPingMessage:
+				case *messages.RpcPingMessage:
 				default:
 					rc.mailbox <- message
 				}
@@ -485,6 +506,11 @@ exit_reader_lable:
 func (rc *Conn) guardian() {
 	defer rc.mailboxDone.Done()
 
+	rc.currentGoroutineId = utils.GetCurrentGoroutineID()
+	if rc.Config.Connected != nil {
+		rc.Config.Connected()
+	}
+
 	for {
 		msg, ok := <-rc.mailbox
 		if !ok {
@@ -497,10 +523,14 @@ func (rc *Conn) guardian() {
 		}
 
 		switch message := msg.(type) {
-		case *rpcmessage.RpcResponseMessage:
+		case *messages.RpcResponseMessage:
 			rc.onResponse(message)
-		case *rpcmessage.RpcMsgMessage:
-			rc.Config.Receive(message.Message)
+		case *messages.RpcMsgMessage:
+			msgMessage, err := message.Message.UnmarshalNew()
+			if err != nil {
+				panic(err)
+			}
+			rc.Config.Receive(msgMessage)
 		}
 	}
 
@@ -517,7 +547,7 @@ exit_guardian_lable:
 
 		future.done = true
 		future.result = nil
-		future.err = rpc.ErrorRpcClientClosed
+		future.err = errs.ErrorRpcConnectorClosed
 		future.done = true
 		future.cond.L.Unlock()
 		future.cond.Signal()

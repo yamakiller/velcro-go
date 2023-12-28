@@ -20,8 +20,8 @@ func NewServiceClient(s *Service, register FRegister, unregister FUnRegister) *S
 		unregister:     unregister,
 	}
 
-	c.Register(&protocols.RegisterRequest{}, c.onRegister)
-	c.Register(&protocols.Forward{}, c.onForward)
+	//c.Register(&protocols.RegisterRequest{}, c.onRegister)
+	//c.Register(&protocols.Forward{}, c.onForward)
 
 	return c
 }

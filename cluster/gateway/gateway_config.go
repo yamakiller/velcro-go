@@ -66,9 +66,9 @@ func WithLoggerAgent(logger logs.LogAgent) GatewayConfigOption {
 }
 
 // WithNetworkTimeout 设置网络超时时间
-func WithNetworkTimeout(timeout int32) GatewayConfigOption {
+func WithKleepalive(timeout int32) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
-		opt.NetowkTimeout = timeout
+		opt.Kleepalive = timeout
 	}
 }
 
@@ -117,7 +117,7 @@ type GatewayConfig struct {
 	RouterURI             string
 	MetricsProvider       metric.MeterProvider
 	Logger                logs.LogAgent
-	NetowkTimeout         int32
+	Kleepalive            int32
 	MessageMaxTimeout     int64
 	OnlineOfNumber        int
 	RouteProxyDialTimeout int32
@@ -130,7 +130,7 @@ func defaultGatewayConfig() *GatewayConfig {
 		NewNetworkSystem:      network.NewTCPServerNetworkSystem,
 		NewEncryption:         defaultEncryption,
 		MetricsProvider:       nil,
-		NetowkTimeout:         2000,
+		Kleepalive:            2000,
 		MessageMaxTimeout:     2000,
 		OnlineOfNumber:        2000,
 		RouteProxyDialTimeout: 2000,

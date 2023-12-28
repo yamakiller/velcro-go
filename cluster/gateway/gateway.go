@@ -24,7 +24,7 @@ func New(options ...GatewayConfigOption) *Gateway {
 		network.WithLoggerFactory(func(System *network.NetworkSystem) logs.LogAgent {
 			return g.logger
 		}),
-		network.WithNetworkTimeout(config.NetowkTimeout),
+		network.WithKleepalive(config.Kleepalive),
 		network.WithProducer(g.newClient),
 		network.WithVAddr(config.VAddr),
 	)

@@ -1,6 +1,6 @@
 package asyn
 
-import rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
+import "google.golang.org/protobuf/proto"
 
 // ConnConfigOption 是一个配置rpc connector 的函数
 type ConnConfigOption func(config *ConnConfig)
@@ -22,43 +22,19 @@ func WithKleepalive(kleepalive int32) ConnConfigOption {
 	}
 }
 
-func WithMarshalRequest(f rpcmessage.MarshalRequestFunc) ConnConfigOption {
-	return func(config *ConnConfig) {
-		config.MarshalRequest = f
-	}
-}
-
-func WithMarshalMessage(f rpcmessage.MarshalMessageFunc) ConnConfigOption {
-	return func(config *ConnConfig) {
-		config.MarshalMessage = f
-	}
-}
-
-func WithMarshalPing(f rpcmessage.MarshalPingFunc) ConnConfigOption {
-	return func(config *ConnConfig) {
-		config.MarshalPing = f
-	}
-}
-
-func WithUnMarshal(f rpcmessage.UnMarshalFunc) ConnConfigOption {
-	return func(config *ConnConfig) {
-		config.UnMarshal = f
-	}
-}
-
-func WithConnected(f ConnectedFunc) ConnConfigOption {
+func WithConnected(f func()) ConnConfigOption {
 	return func(config *ConnConfig) {
 		config.Connected = f
 	}
 }
 
-func WithReceive(f ReceiveFunc) ConnConfigOption {
+func WithReceive(f func(proto.Message)) ConnConfigOption {
 	return func(config *ConnConfig) {
 		config.Receive = f
 	}
 }
 
-func WithClosed(f ClosedFunc) ConnConfigOption {
+func WithClosed(f func()) ConnConfigOption {
 	return func(config *ConnConfig) {
 		config.Closed = f
 	}

@@ -5,6 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 	"unsafe"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // 请求器
@@ -12,7 +14,7 @@ type Future struct {
 	sequenceID int32
 	cond       *sync.Cond
 	done       bool
-	result     interface{}
+	result     proto.Message
 	err        error
 	t          *time.Timer
 }

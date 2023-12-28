@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"net"
 	sync "sync"
 
@@ -34,26 +35,28 @@ func (u *udpClientHandler) start() {
 	go u.guardian()
 }
 
-func (u *udpClientHandler) PostMessage(b []byte) {
-	panic("udp undefine post message")
+func (u *udpClientHandler) PostMessage(b []byte) error {
+	return errors.New("udp client: undefine post message")
 }
 
-func (u *udpClientHandler) PostToMessage(b []byte, target net.Addr) {
+func (u *udpClientHandler) PostToMessage(b []byte, target net.Addr) error {
 
 	udpTarget, ok := target.(*net.UDPAddr)
 	if !ok {
-		panic("udp post to message Please enter net.UDPAddr")
+		return errors.New("udp post to message Please enter net.UDPAddr")
 	}
 
 	u.sendcond.L.Lock()
 	if u.isStopped() {
 		u.sendcond.L.Unlock()
-		return
+		return errors.New("client: closed")
 	}
 
 	u.sendbox.Push(&udpMsg{data: b, addr: udpTarget})
 	u.sendcond.L.Unlock()
 	u.sendcond.Signal()
+
+	return nil
 }
 
 func (u *udpClientHandler) Close() {

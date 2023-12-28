@@ -17,7 +17,7 @@ func (cid *ClientID) ref(system *NetworkSystem) Handler {
 		}
 	}
 
-	ref, exists := system._handlers.Get(cid)
+	ref, exists := system.handlers.Get(cid)
 	if exists {
 		atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&cid.h)), unsafe.Pointer(&ref))
 	}
@@ -53,12 +53,12 @@ func (cid *ClientID) UserClose() error {
 	return nil
 }
 
-func (cid *ClientID) postMessage(system *NetworkSystem, message []byte) {
-	cid.ref(system).PostMessage(message)
+func (cid *ClientID) postMessage(system *NetworkSystem, message []byte) error {
+	return cid.ref(system).PostMessage(message)
 }
 
-func (cid *ClientID) postToMessage(system *NetworkSystem, message []byte, target net.Addr) {
-	cid.ref(system).PostToMessage(message, target)
+func (cid *ClientID) postToMessage(system *NetworkSystem, message []byte, target net.Addr) error {
+	return cid.ref(system).PostToMessage(message, target)
 }
 
 func (cid *ClientID) close(system *NetworkSystem) {

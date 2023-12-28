@@ -17,6 +17,15 @@ const (
 )
 
 const (
+	RpcHeaderLength int = 3
+)
+
+type RpcHeader struct {
+	Direct RpcDirect
+	Length uint16
+}
+
+/*const (
 	RpcRequestHeaderLength  int = 25
 	RpcResponseHeaderLength int = 8
 	RpcMessageHeaderLength  int = 7
@@ -39,9 +48,9 @@ type RpcResonseHeader struct {
 type RpcMessageHeader struct {
 	SequenceID int32
 	BodyLength uint16
-}
+}*/
 
-type RpcRequestMessage struct {
+/*type RpcRequestMessage struct {
 	SequenceID  int32
 	ForwardTime uint64
 	Timeout     uint64
@@ -62,4 +71,4 @@ type RpcMsgMessage struct {
 
 type RpcPingMessage struct {
 	VerifyKey uint64
-}
+}*/

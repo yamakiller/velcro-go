@@ -14,10 +14,10 @@ func (c *ClientHandler) Close() {
 
 }
 
-func (c *ClientHandler) PostMessage(b []byte) {
-
+func (c *ClientHandler) PostMessage(b []byte) error {
+	return nil
 }
 
-func (c *ClientHandler) PostToMessage(b []byte, target net.Addr) {
-
+func (c *ClientHandler) PostToMessage(b []byte, target net.Addr) error {
+	return nil
 }

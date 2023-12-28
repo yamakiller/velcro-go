@@ -1,23 +1,18 @@
 package proxy
 
 import (
-	"errors"
-
 	"github.com/yamakiller/velcro-go/rpc/client/sync"
+	"google.golang.org/protobuf/proto"
 )
 
 // RpcProxyStrategyMoreToOne 多点请求
 type RpcProxyStrategyMoreToOne struct {
+	proxy *RpcProxy
 }
 
-func (rpx *RpcProxyStrategyMoreToOne) RequestMessage(conn *RpcProxyConn, message interface{}, timeout int64) (interface{}, error) {
-	if !conn.IsConnected() {
-		return nil, errors.New("The target service is not alive")
-	}
-
-	rpcc := sync.NewConn(sync.WithMarshalRequest(conn.Config.MarshalRequest),
-		sync.WithUnMarshal(conn.Config.UnMarshal))
-	if err := rpcc.Dial(conn.ToAddress(), conn.proxy.dialTimeouot); err != nil {
+func (rpx *RpcProxyStrategyMoreToOne) RequestMessage(host string, message proto.Message, timeout int64) (proto.Message, error) {
+	rpcc := sync.NewConn()
+	if err := rpcc.Dial(host, rpx.proxy.dialTimeouot); err != nil {
 		return nil, err
 	}
 	defer rpcc.Close()

@@ -8,6 +8,7 @@ import (
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/rpc/client/asyn"
 	"github.com/yamakiller/velcro-go/utils/host"
+	"google.golang.org/protobuf/proto"
 
 	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 )
@@ -103,7 +104,7 @@ func (rpx *RpcProxy) Open() {
 		rpx.LogInfo("%s connecting", host)
 		if err := conn.Dial(host, rpx.dialTimeouot); err != nil {
 			rpx.LogError("%s connect fail[error:%s]", host, err.Error())
-			//启动延迟重试器
+			// 启动退避启动器
 			conn.repe.start()
 			continue
 		}
@@ -113,12 +114,10 @@ func (rpx *RpcProxy) Open() {
 		rpx.alive[host] = true
 		rpx.balancer.Add(host)
 	}
-
-	//延迟n秒后启动
 }
 
 // RequestMessage 集群请求消息
-func (rpx *RpcProxy) RequestMessage(message interface{}, timeout int64) (interface{}, error) {
+func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
 	host, err := rpx.balancer.Balance("")
 	if err != nil {
 		rpx.LogError("RequestMessage %v fail[error:%s]", message, err.Error())
@@ -128,11 +127,11 @@ func (rpx *RpcProxy) RequestMessage(message interface{}, timeout int64) (interfa
 	rpx.balancer.Inc(host)
 	defer rpx.balancer.Done(host)
 
-	return rpx.strategy.RequestMessage(rpx.hostMap[host], message, timeout)
+	return rpx.strategy.RequestMessage(host, message, timeout)
 }
 
 // PostMessage 集群推送消息
-func (rpx *RpcProxy) PostMessage(message interface{}, qos rpcmessage.RpcQos) error {
+func (rpx *RpcProxy) PostMessage(message proto.Message, qos rpcmessage.RpcQos) error {
 	host, err := rpx.balancer.Balance("")
 	if err != nil {
 
