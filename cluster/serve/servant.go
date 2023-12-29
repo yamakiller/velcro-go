@@ -93,20 +93,32 @@ func (s *Servant) PostMessage(addr string, msg proto.Message) error {
 		panic(err)
 	}
 
+	bucket := s.vaddrs.getBucket(addr)
+	clientId, ok := bucket.Get(addr)
+	if !ok {
+		goto repeat_label
+	}
+
+	if err := clientId.(*network.ClientID).PostUserMessage(b); err != nil {
+		goto repeat_label
+	}
+
+	return nil
+repeat_label:
 	var resultErr error = nil
 	repeat.Repeat(repeat.FnWithCounter(func(n int) error {
-		if n >= 3 {
+		if n >= 2 {
 			return nil
 		}
 
-		bucket := s.vaddrs.getBucket(addr)
-		clientId, ok := bucket.Get(addr)
+		bucket = s.vaddrs.getBucket(addr)
+		clientId, ok = bucket.Get(addr)
 		if !ok {
 			resultErr = fmt.Errorf("post addr %s %s message unfound target", addr, reflect.TypeOf(msg))
 			return resultErr
 		}
 
-		if err := clientId.(*network.ClientID).PostUserMessage(b); err != nil {
+		if err = clientId.(*network.ClientID).PostUserMessage(b); err != nil {
 			resultErr = err
 			return resultErr
 		}
