@@ -1,6 +1,7 @@
 package serve
 
 import (
+	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/logs"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -12,11 +13,15 @@ func defaultConfig() *ServantConfig {
 }
 
 type ServantConfig struct {
-	MetricsProvider metric.MeterProvider
-	LoggerAgent     logs.LogAgent
-	Producer        func(*ServantClientConn) ServantClientActor
-	Kleepalive      int32
-	VAddr           string
+	MetricsProvider   metric.MeterProvider
+	Producer          func(*ServantClientConn) ServantClientActor
+	FromRouterRecvice func(interface{})
+	Name              string
+	LAddr             string
+	VAddr             string
+	Kleepalive        int32
+	Logger            logs.LogAgent
+	Router            *router.RouterConfig
 }
 
 type ServantConfigOption func(config *ServantConfig)
@@ -52,6 +57,27 @@ func WithProducerActor(f func(*ServantClientConn) ServantClientActor) ServantCon
 	}
 }
 
+// WithFromRouterRecvice 设置来至于路由器推送的数据
+func WithFromRouterRecvice(f func(interface{})) ServantConfigOption {
+	return func(config *ServantConfig) {
+		config.FromRouterRecvice = f
+	}
+}
+
+// WithName 设置服务名称
+func WithName(name string) ServantConfigOption {
+	return func(config *ServantConfig) {
+		config.Name = name
+	}
+}
+
+// WithLAddr 设置本服务的监听地址
+func WithLAddr(laddr string) ServantConfigOption {
+	return func(config *ServantConfig) {
+		config.LAddr = laddr
+	}
+}
+
 // WithVAddr 设置本服务的虚地址
 func WithVAddr(vaddr string) ServantConfigOption {
 	return func(config *ServantConfig) {
@@ -59,9 +85,16 @@ func WithVAddr(vaddr string) ServantConfigOption {
 	}
 }
 
-// WithLogger 设置关联日志文件
-func WithLogger(agent logs.LogAgent) ServantConfigOption {
+// WithLoggerAgent 设置关联日志文件
+func WithLoggerAgent(agent logs.LogAgent) ServantConfigOption {
 	return func(config *ServantConfig) {
-		config.LoggerAgent = agent
+		config.Logger = agent
+	}
+}
+
+// WithRoute 设置路由配置
+func WithRoute(router *router.RouterConfig) ServantConfigOption {
+	return func(opt *ServantConfig) {
+		opt.Router = router
 	}
 }

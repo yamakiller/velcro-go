@@ -203,5 +203,5 @@ func (c *ServantClientConn) onRpcPing(ctx network.Context, message *messages.Rpc
 }
 
 func (c *ServantClientConn) incarnateActor() {
-	c.actor = c.Servant.producer(c)
+	c.actor = c.Servant.Config.Producer(c)
 }

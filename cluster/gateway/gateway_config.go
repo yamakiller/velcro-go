@@ -1,9 +1,11 @@
 package gateway
 
 import (
+	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"
+	"github.com/yamakiller/velcro-go/utils/files"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -51,13 +53,6 @@ func WithNewEncryption(newFunc func() *Encryption) GatewayConfigOption {
 	}
 }
 
-// WithRouterURI 设置路由配置文件地址
-func WithRouterURI(uri string) GatewayConfigOption {
-	return func(opt *GatewayConfig) {
-		opt.RouterURI = uri
-	}
-}
-
 // WithLoggerFactory 设置日志委托对象
 func WithLoggerAgent(logger logs.LogAgent) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
@@ -86,56 +81,42 @@ func WithOnlineOfNumber(number int) GatewayConfigOption {
 	}
 }
 
-// WithRouteProxyFrequency 设置路由代理连接超时时间
-func WithRouteProxyDialTimeout(dialTimeout int32) GatewayConfigOption {
+// WithRoute 设置路由配置
+func WithRoute(router *router.RouterConfig) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
-		opt.RouteProxyDialTimeout = dialTimeout
-	}
-}
-
-// WithRouteProxyKleepalive 设置路由代理保活时间
-func WithRouteProxyKleepalive(kleepalive int32) GatewayConfigOption {
-	return func(opt *GatewayConfig) {
-		opt.RouteProxyKleepalive = kleepalive
-	}
-}
-
-// WithRouteProxyAlgorithm 设置路由代理平衡器算法s
-func WithRouteProxyAlgorithm(algorithm string) GatewayConfigOption {
-	return func(opt *GatewayConfig) {
-		opt.RouteProxyAlgorithm = algorithm
+		opt.Router = router
 	}
 }
 
 // GatewayConfig 网关配置信息
 type GatewayConfig struct {
-	VAddr                 string
-	LAddr                 string
-	NewNetworkSystem      func(options ...network.ConfigOption) *network.NetworkSystem
-	ClientPool            GatewayClientPool
-	NewEncryption         func() *Encryption
-	RouterURI             string
-	MetricsProvider       metric.MeterProvider
-	Logger                logs.LogAgent
-	Kleepalive            int32
-	MessageMaxTimeout     int64
-	OnlineOfNumber        int
-	RouteProxyDialTimeout int32
-	RouteProxyKleepalive  int32
-	RouteProxyAlgorithm   string
+	VAddr             string
+	LAddr             string
+	NewNetworkSystem  func(options ...network.ConfigOption) *network.NetworkSystem
+	ClientPool        GatewayClientPool
+	NewEncryption     func() *Encryption
+	MetricsProvider   metric.MeterProvider
+	Logger            logs.LogAgent
+	Kleepalive        int32
+	MessageMaxTimeout int64
+	OnlineOfNumber    int
+	Router            *router.RouterConfig
 }
 
 func defaultGatewayConfig() *GatewayConfig {
 	return &GatewayConfig{
-		NewNetworkSystem:      network.NewTCPServerNetworkSystem,
-		NewEncryption:         defaultEncryption,
-		MetricsProvider:       nil,
-		Kleepalive:            2000,
-		MessageMaxTimeout:     2000,
-		OnlineOfNumber:        2000,
-		RouteProxyDialTimeout: 2000,
-		RouteProxyKleepalive:  4000,
-		RouteProxyAlgorithm:   "p2c",
+		NewNetworkSystem:  network.NewTCPServerNetworkSystem,
+		NewEncryption:     defaultEncryption,
+		MetricsProvider:   nil,
+		Kleepalive:        2000,
+		MessageMaxTimeout: 2000,
+		OnlineOfNumber:    2000,
+		Router: &router.RouterConfig{
+			URI:              files.NewLocalPathFull("routes.yaml"),
+			ProxyDialTimeout: 2000,
+			ProxyKleepalive:  4000,
+			ProxyAlgorithm:   "p2c",
+		},
 	}
 }
 

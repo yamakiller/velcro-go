@@ -1,29 +1,9 @@
 package configs
 
-import (
-	"os"
-	"path/filepath"
-)
+import "github.com/yamakiller/velcro-go/cluster/router"
 
-func GetLocalConfigFilePath() (string, error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-
-	exPath := filepath.Dir(ex)
-	cfgFilePath := filepath.Join(exPath, "config.yml")
-
-	return cfgFilePath, nil
-}
-
-func GetLogDir() (string, error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	exPath := filepath.Dir(ex)
-	logDir := filepath.Join(exPath, "logs")
-
-	return logDir, nil
+type Config struct {
+	Server Server              `yaml:"server"`
+	Router router.RouterConfig `yaml:"router"` // 路由文件地址
+	Redis  Redis               `yaml:"redis"`  //redis配置
 }

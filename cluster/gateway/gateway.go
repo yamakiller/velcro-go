@@ -26,50 +26,32 @@ func New(options ...GatewayConfigOption) *Gateway {
 		}),
 		network.WithKleepalive(config.Kleepalive),
 		network.WithProducer(g.newClient),
-		network.WithVAddr(config.VAddr),
+		network.WithVAddr("Gateway@"+config.VAddr),
 	)
 
 	if config.ClientPool == nil {
 		config.ClientPool = NewDefaultGatewayClientPool(g, config.MessageMaxTimeout)
 	}
 
-	g.clientPool = config.ClientPool
-	g.onlineOfNumber = config.OnlineOfNumber
-	g.routeURI = config.RouterURI
-	g.routeProxyDialTimeout = config.RouteProxyDialTimeout
-	g.routeProxyKleepalive = config.RouteProxyKleepalive
-	g.routeProxyAlgorithm = config.RouteProxyAlgorithm
-	g.vaddr = config.VAddr
-	g.laddr = config.LAddr
 	return g
 }
 
 // Gateway 网关
 type Gateway struct {
-	System *network.NetworkSystem
-	vaddr  string // 网关局域网虚拟地址
-	laddr  string // 网关监听地址
-	// 连接客户端
-	clients        map[network.CIDKEY]Client
-	onlineOfNumber int
-	mu             sync.Mutex
-	clientPool     GatewayClientPool
-	// 编码
+	System     *network.NetworkSystem
+	Config     *GatewayConfig
+	clients    map[network.CIDKEY]Client // 连接客户端
+	mu         sync.Mutex
 	encryption *Encryption
-	// 路由
-	routeURI              string
-	routeProxyDialTimeout int32
-	routeProxyKleepalive  int32
-	routeProxyAlgorithm   string
-	routeGroup            *router.RouterGroup
-	logger                logs.LogAgent
+	routeGroup *router.RouterGroup // 路由
+	logger     logs.LogAgent
 }
 
 func (g *Gateway) Start() error {
-	r, err := router.Loader(g.routeURI,
-		router.WithAlgorithm(g.routeProxyAlgorithm),
-		router.WithDialTimeout(g.routeProxyDialTimeout),
-		router.WithKleepalive(g.routeProxyKleepalive),
+	r, err := router.Loader(g.Config.Router.URI,
+		router.WithAlgorithm(g.Config.Router.ProxyAlgorithm),
+		router.WithDialTimeout(g.Config.Router.ProxyDialTimeout),
+		router.WithKleepalive(g.Config.Router.ProxyKleepalive),
 		router.WithConnectedCallback(g.onProxyConnected),
 		router.WithReceiveCallback(g.onProxyRecvice),
 	)
@@ -82,7 +64,7 @@ func (g *Gateway) Start() error {
 	g.routeGroup = r
 	g.routeGroup.Open()
 	// 打开监听
-	if err := g.System.Open(g.laddr); err != nil {
+	if err := g.System.Open(g.Config.LAddr); err != nil {
 		return err
 	}
 
@@ -115,7 +97,7 @@ func (g *Gateway) Register(cid *network.ClientID, l Client) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	if len(g.clients) >= g.onlineOfNumber {
+	if len(g.clients) >= g.Config.OnlineOfNumber {
 		return errors.New("gateway: client fulled")
 	}
 
@@ -184,8 +166,9 @@ func (g *Gateway) NewClientID(id string) *network.ClientID {
 
 func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
 	_, err := conn.RequestMessage(&protocols.RegisterRequest{
-		Vaddr: g.vaddr,
+		Vaddr: "Gateway@" + g.Config.VAddr,
 	}, 2000)
+
 	if err != nil {
 		g.System.Error("proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
 		conn.Close()
@@ -252,10 +235,10 @@ func (g *Gateway) onCloseClient(closing *protocols.Closing) {
 }
 
 func (g *Gateway) newClient(System *network.NetworkSystem) network.Client {
-	return g.clientPool.Get()
+	return g.Config.ClientPool.Get()
 }
 
 func (g *Gateway) free(l Client) {
 	l.Destory()
-	g.clientPool.Put(l)
+	g.Config.ClientPool.Put(l)
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/encryption"
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"
-	"github.com/yamakiller/velcro-go/utils/files"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -25,7 +24,7 @@ type gatewayService struct {
 
 func (gs *gatewayService) Start(logAgent logs.LogAgent) error {
 
-	udpAddr, err := net.ResolveUDPAddr("udp", envs.Instance().Get("configs").(*configs.Config).LAddr)
+	udpAddr, err := net.ResolveUDPAddr("udp", envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
 	if err != nil {
 		return err
 	}
@@ -38,9 +37,9 @@ func (gs *gatewayService) Start(logAgent logs.LogAgent) error {
 
 	gs.gwy = gateway.New(
 		gateway.WithLoggerAgent(logAgent),
-		gateway.WithLAddr(envs.Instance().Get("configs").(*configs.Config).LAddr),
-		gateway.WithVAddr(envs.Instance().Get("configs").(*configs.Config).VAddr),
-		gateway.WithRouterURI(files.NewLocalPathFull("routes.yaml")),
+		gateway.WithLAddr(envs.Instance().Get("configs").(*configs.Config).Server.LAddr),
+		gateway.WithVAddr(envs.Instance().Get("configs").(*configs.Config).Server.VAddr),
+		gateway.WithRoute(&envs.Instance().Get("configs").(*configs.Config).Router),
 		gateway.WithNewEncryption(gs.newEncryption),
 	)
 
@@ -72,7 +71,7 @@ func (gs *gatewayService) Stop() error {
 }
 
 func (gs *gatewayService) newEncryption() *gateway.Encryption {
-	if !envs.Instance().Get("configs").(*configs.Config).EncryptionEnabled {
+	if !envs.Instance().Get("configs").(*configs.Config).Server.EncryptionEnabled {
 		return nil
 	}
 
