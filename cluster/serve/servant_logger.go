@@ -1,23 +1,23 @@
-package service
+package serve
 
 import (
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/utils/files"
 )
 
 // ProduceLogger 产生日志对象
-func ProduceLogger() logs.LogAgent {
+func ProduceLogger(name string) logs.LogAgent {
 	logLevel := logrus.DebugLevel
 	if os.Getenv("DEBUG") != "" {
 		logLevel = logrus.InfoLevel
 	}
 
 	logDir := getLogDir()
-	pLogHandle := logs.SpawnFileLogrus(logLevel, logDir, "service")
+	pLogHandle := logs.SpawnFileLogrus(logLevel, logDir, name+"Service")
 
 	//丢弃屏幕输出
 	pLogHandle.SetOutput(io.Discard)
@@ -28,24 +28,12 @@ func ProduceLogger() logs.LogAgent {
 }
 
 func getLogDir() string {
-	ex, _ := os.Executable()
-
-	exPath := filepath.Dir(ex)
-	logDir := filepath.Join(exPath, "service/logs")
-
-	if !isDirExits(logDir) {
+	logDir := files.NewLocalPathFull("monitor/logs")
+	if !files.IsDirExits(logDir) {
 		if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
 			return ""
 		}
 	}
 
 	return logDir
-}
-
-func isDirExits(dir string) bool {
-	_, err := os.Stat(dir)
-	if err != nil {
-		return os.IsExist(err)
-	}
-	return true
 }

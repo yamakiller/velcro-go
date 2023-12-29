@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/yamakiller/velcro-go/cluster/repeat"
+	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
@@ -14,15 +15,19 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func New(options ...ConnConfigOption) *Servant {
+func New(options ...ServantConfigOption) *Servant {
 	config := configure(options...)
 	s := &Servant{producer: config.Producer,
 		clients: make(map[network.CIDKEY]*network.ClientID),
 		vaddrs:  newSliceMap()}
 	s.NetworkSystem = network.NewTCPSyncServerNetworkSystem(
+		network.WithLoggerFactory(func(system *network.NetworkSystem) logs.LogAgent {
+			return config.LoggerAgent
+		}),
 		network.WithMetricProviders(config.MetricsProvider),
 		network.WithKleepalive(config.Kleepalive),
-		network.WithProducer(s.spawConn))
+		network.WithProducer(s.spawConn),
+		network.WithVAddr(config.VAddr))
 	return s
 }
 

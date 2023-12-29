@@ -1,22 +1,27 @@
 package serve
 
-import "go.opentelemetry.io/otel/metric"
+import (
+	"github.com/yamakiller/velcro-go/logs"
+	"go.opentelemetry.io/otel/metric"
+)
 
-func defaultConfig() *ConnConfig {
-	return &ConnConfig{
+func defaultConfig() *ServantConfig {
+	return &ServantConfig{
 		Kleepalive: 10 * 1000,
 	}
 }
 
-type ConnConfig struct {
+type ServantConfig struct {
 	MetricsProvider metric.MeterProvider
+	LoggerAgent     logs.LogAgent
 	Producer        func(*ServantClientConn) ServantClientActor
 	Kleepalive      int32
+	VAddr           string
 }
 
-type ConnConfigOption func(config *ConnConfig)
+type ServantConfigOption func(config *ServantConfig)
 
-func configure(options ...ConnConfigOption) *ConnConfig {
+func configure(options ...ServantConfigOption) *ServantConfig {
 	config := defaultConfig()
 	for _, option := range options {
 		option(config)
@@ -26,23 +31,37 @@ func configure(options ...ConnConfigOption) *ConnConfig {
 }
 
 // WithKleepalive 设置心跳时间
-func WithKleepalive(kleepalive int32) ConnConfigOption {
+func WithKleepalive(kleepalive int32) ServantConfigOption {
 
-	return func(config *ConnConfig) {
+	return func(config *ServantConfig) {
 		config.Kleepalive = kleepalive
 	}
 }
 
 // WithMetricsProvider ...
-func WithMetricsProvider(provider metric.MeterProvider) ConnConfigOption {
-	return func(config *ConnConfig) {
+func WithMetricsProvider(provider metric.MeterProvider) ServantConfigOption {
+	return func(config *ServantConfig) {
 		config.MetricsProvider = provider
 	}
 }
 
 // WithProducerActor actor 创建器
-func WithProducerActor(f func(*ServantClientConn) ServantClientActor) ConnConfigOption {
-	return func(config *ConnConfig) {
+func WithProducerActor(f func(*ServantClientConn) ServantClientActor) ServantConfigOption {
+	return func(config *ServantConfig) {
 		config.Producer = f
+	}
+}
+
+// WithVAddr 设置本服务的虚地址
+func WithVAddr(vaddr string) ServantConfigOption {
+	return func(config *ServantConfig) {
+		config.VAddr = vaddr
+	}
+}
+
+// WithLogger 设置关联日志文件
+func WithLogger(agent logs.LogAgent) ServantConfigOption {
+	return func(config *ServantConfig) {
+		config.LoggerAgent = agent
 	}
 }

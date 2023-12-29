@@ -183,7 +183,7 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 	delete(c.Servant.clients, network.Key(ctx.Self()))
 	c.Servant.clientMutex.Unlock()
 
-	c.actor.onClosed(&ServantClientContext{Context: ctx})
+	c.actor.Closed(&ServantClientContext{Context: ctx})
 	c.recvice = nil
 }
 

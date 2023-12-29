@@ -1,5 +1,6 @@
 package configs
 
-type Server struct{
-	Address  string `yaml:"addrss"`
+type Server struct {
+	LAddr string `yaml:"laddr"`
+	VAddr string `yaml:"vaddr"`
 }

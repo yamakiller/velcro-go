@@ -12,7 +12,8 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
-func testPrometheusProvider(port int) metric.MeterProvider {
+// 用于本地调试用，后面可以注释掉
+func localPrometheusProvider(port int) metric.MeterProvider {
 	exporter, err := prometheus.New()
 	if err != nil {
 		err = fmt.Errorf("failed to initialize prometheus exporter: %w", err)
