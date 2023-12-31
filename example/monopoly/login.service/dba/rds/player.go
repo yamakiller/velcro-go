@@ -12,39 +12,6 @@ import (
 
 // 房间在Redis中的存储关系
 
-/*func MakeRoom(room datas.Room) error {
-	idRoomKey := getRoomKey(room.Id)
-
-	ctx, cancel := context.WithTimeout(context.Background(), setTimeout)
-	defer cancel()
-
-	pipe := _client.TxPipeline()
-	defer pipe.Close()
-
-	pipe.RPush(ctx, getRoomListKey(), room.Id)
-
-	roomess := map[string]interface{}{
-		"RoomId":           room.Id,
-		"RoomMap":          room.Map,
-		"RoomOwner":        room.Owner,
-		"RoomOwnerNatAddr": room.OwnerNatAddr,
-		"RoomMembers":      room.Members,
-		"RoomData":         room.Data,
-		"RoomCreate":       room.Create,
-	}
-	pipe.HSet(ctx, idRoomKey, roomess)
-
-	pipe.HSet(ctx, getPlayerIdKey(room.Members[0].Id), "RoomAddr", room.Id)
-
-	_, err := pipe.Exec(ctx)
-	if err != nil {
-		pipe.Discard()
-		return err
-	}
-
-	return nil
-}*/
-
 func RegisterPlayer(ctx context.Context,
 	clientId *network.ClientID,
 	uid string,
@@ -122,15 +89,7 @@ func RegisterPlayer(ctx context.Context,
 	return nil
 }
 
-func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID) (map[string]string, error) {
-
-	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return nil, nil
-		}
-		return nil, err
-	}
+func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID, uid string) (map[string]string, error) {
 
 	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
 	if err := mutex.Lock(); err != nil {
@@ -216,6 +175,20 @@ func IsAuth(ctx context.Context, clientId *network.ClientID) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// GetPlayerUID 获取客户端绑定的UID
+func GetPlayerUID(ctx context.Context, clientId *network.ClientID) (string, error) {
+	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", nil
+		}
+
+		return "", err
+	}
+
+	return uid, nil
 }
 
 /*func GetUserCount(ctx context.Context) (int64, error) {

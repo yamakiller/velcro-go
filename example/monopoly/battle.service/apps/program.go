@@ -15,7 +15,7 @@ type Program struct {
 }
 
 func (p *Program) Start(s service.Service) error {
-	p.logAgent = serve.ProduceLogger("login")
+	p.logAgent = serve.ProduceLogger("battle")
 	p.logAgent.Info("[PROGRAM]", "BattleService Start loading environment variables")
 
 	envs.With(&envs.YAMLEnv{})
@@ -31,8 +31,8 @@ func (p *Program) Start(s service.Service) error {
 func (p *Program) Stop(s service.Service) error {
 	if p.service != nil {
 		p.logAgent.Info("[PROGRAM]", "BattleService service terminating")
-		//p.service.Stop()
-		//p.service = nil
+		p.service.Stop()
+		p.service = nil
 
 		p.logAgent.Info("[PROGRAM]", "BattleService service terminated")
 		p.logAgent.Close()

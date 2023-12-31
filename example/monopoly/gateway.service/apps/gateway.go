@@ -105,7 +105,7 @@ func (gs *gatewayService) udpLoop() {
 			continue
 		}
 
-		msg := mpubs.ReportNatClient{}
+		request := mpubs.ReportNatClient{}
 		// 设定生存周期
 		{
 			defer gs.gwy.ReleaseClient(client)
@@ -118,25 +118,25 @@ func (gs *gatewayService) udpLoop() {
 				dLen = copy(temp[:len(decrypt)], decrypt)
 			}
 
-			if err := proto.Unmarshal(temp[:dLen], &msg); err != nil {
+			if err := proto.Unmarshal(temp[:dLen], &request); err != nil {
 				gs.gwy.System.Error("udp unmarshal protobuff fail[error:%s]", err.Error())
 				continue
 			}
 		}
 
-		postMsg := &mprvs.ReportNat{RoomID: msg.RoomID,
-			VerifiyCode: msg.VerifiyCode,
+		postRequest := &mprvs.ReportNat{BattleSpaceID: request.BattleSpaceID,
+			VerifiyCode: request.VerifiyCode,
 			NatAddr:     addr.AddrPort().String()}
 
 		// 查找目标路由
-		r := gs.gwy.FindRouter(postMsg)
+		r := gs.gwy.FindRouter(postRequest)
 		if r == nil {
 			gs.gwy.System.Warning("protocols.ReportNat message unfound router")
 			continue
 		}
 
 		// 推送到目标服务
-		if _, err := r.Proxy.RequestMessage(postMsg, 2000); err != nil {
+		if _, err := r.Proxy.RequestMessage(postRequest, 2000); err != nil {
 			gs.gwy.System.Error("protocols.ReportNat post message fail %s", err.Error())
 			continue
 		}

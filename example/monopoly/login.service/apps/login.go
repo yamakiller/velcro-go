@@ -5,6 +5,7 @@ import (
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/dba/rds"
+	"github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/logs"
 )
 
@@ -55,5 +56,10 @@ func (ls *loginService) Stop() error {
 }
 
 func (ls *loginService) newLoginActor(conn *serve.ServantClientConn) serve.ServantClientActor {
-	return &LoginActor{ancestor: ls.login}
+	actor := &LoginActor{ancestor: ls.login}
+
+	conn.Register(&pubs.SignIn{}, actor.onSignIn)
+	conn.Register(&pubs.SignOut{}, actor.onSignOut)
+
+	return actor
 }

@@ -5,6 +5,6 @@ option go_package=".;pubs";
 
 // 报告Nat信息
 message ReportNatClient {
-    fixed32 RoomID = 1;      // 房间ID
-    string  VerifiyCode = 2; // 房间验证码
+    string BattleSpaceID = 1;   // 对战空间ID
+    string VerifiyCode = 2;    // 房间验证码
 }

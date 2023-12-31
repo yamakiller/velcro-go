@@ -11,11 +11,11 @@ del .\protocols\prvs\*.pb.go /f /s /q
 del .\protocols\pubs\*.pb.go /f /s /q
 
 ::生成client_id.proto
-echo %GO_COMPILER_PATH% --go_out=.\protocols\prvs --proto_path=.\proto\prvs report_nat.proto 
-%GO_COMPILER_PATH% --go_out=.\protocols\prvs --proto_path=.\proto\prvs report_nat.proto
+echo %GO_COMPILER_PATH% --go_out=.\protocols\prvs --proto_path=.\proto\prvs report_nat.proto exitbattle.proto
+%GO_COMPILER_PATH% --go_out=.\protocols\prvs --proto_path=.\proto\prvs report_nat.proto exitbattle.proto
 
-echo %GO_COMPILER_PATH% --go_out=.\protocols\pubs --proto_path=.\proto\pubs report_nat_client.proto signin.proto signout.proto
-%GO_COMPILER_PATH% --go_out=.\protocols\pubs --proto_path=.\proto\pubs report_nat_client.proto signin.proto signout.proto
+echo %GO_COMPILER_PATH% --go_out=.\protocols\pubs --proto_path=.\proto\pubs report_nat_client.proto signin.proto signout.proto battle.proto
+%GO_COMPILER_PATH% --go_out=.\protocols\pubs --proto_path=.\proto\pubs report_nat_client.proto signin.proto signout.proto battle.proto
 
 ::protoc -I="../actor" --go_out=. --go_opt=paths=source_relative --proto_path=. routercontracts.proto
 ::pubkey.proto forward_message.proto
