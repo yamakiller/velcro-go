@@ -9,8 +9,6 @@ import (
 	"github.com/yamakiller/velcro-go/utils/files"
 )
 
-var appName = "login.service"
-
 type Program struct {
 	service  *loginService
 	logAgent logs.LogAgent

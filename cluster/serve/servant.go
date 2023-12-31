@@ -1,29 +1,22 @@
 package serve
 
 import (
-	"fmt"
-	"reflect"
 	"sync"
-	"time"
 
-	"github.com/yamakiller/velcro-go/cluster/protocols"
-	"github.com/yamakiller/velcro-go/cluster/proxy"
-	"github.com/yamakiller/velcro-go/cluster/repeat"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/syncx"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func New(options ...ServantConfigOption) *Servant {
 	config := configure(options...)
 	s := &Servant{
 		Config:  config,
-		clients: make(map[network.CIDKEY]*network.ClientID),
-		vaddrs:  newSliceMap()}
+		clients: make(map[network.CIDKEY]*network.ClientID)}
 	s.System = network.NewTCPSyncServerNetworkSystem(
 		network.WithLoggerFactory(func(system *network.NetworkSystem) logs.LogAgent {
 			return config.Logger
@@ -41,25 +34,24 @@ type Servant struct {
 	clients     map[network.CIDKEY]*network.ClientID
 	clientMutex sync.Mutex
 	routeGroup  *router.RouterGroup
-	vaddrs      *sliceMap // 虚地址表
 }
 
 func (s *Servant) Start() error {
-	r, _ := router.Loader(s.Config.Router.URI,
-		router.WithAlgorithm(s.Config.Router.ProxyAlgorithm),
-		router.WithDialTimeout(s.Config.Router.ProxyDialTimeout),
-		router.WithKleepalive(s.Config.Router.ProxyKleepalive),
-		router.WithConnectedCallback(s.onProxyConnected),
-		router.WithReceiveCallback(s.Config.FromRouterRecvice),
-	)
+	if s.Config.Router != nil {
+		routeGroup, err := router.Loader(s.Config.Router.URI,
+			router.WithAlgorithm(s.Config.Router.Algorithm),
+			router.WithDialTimeout(s.Config.Router.DialTimeout),
+			router.WithKleepalive(s.Config.Router.Kleepalive))
+		if err != nil {
+			return nil
+		}
 
-	// 尝试连接服务
-	if r != nil {
-		s.routeGroup = r
+		s.routeGroup = routeGroup
 		s.routeGroup.Open()
 	}
-	// 打开监听
+
 	if err := s.System.Open(s.Config.LAddr); err != nil {
+		s.routeGroup.Shutdown()
 		return err
 	}
 
@@ -67,6 +59,10 @@ func (s *Servant) Start() error {
 }
 
 func (s *Servant) Stop() error {
+	if s.routeGroup != nil {
+		s.routeGroup.Shutdown()
+	}
+
 	if s.System != nil {
 		s.System.Info(s.Config.Name + " Shutdown Closing client")
 		s.clientMutex.Lock()
@@ -80,14 +76,22 @@ func (s *Servant) Stop() error {
 		s.System = nil
 	}
 
-	if s.routeGroup != nil {
-		s.routeGroup.Shutdown()
-	}
+	s.routeGroup = nil
 
 	return nil
 }
 
-func (s *Servant) PostMessage(addr string, msg proto.Message) error {
+// FindRouter 查询路由
+func (s *Servant) FindRouter(message proto.Message) *router.Router {
+	if s.routeGroup == nil {
+		return nil
+	}
+
+	return s.routeGroup.Get(string(protoreflect.FullName(proto.MessageName(message))))
+}
+
+// ReplyMessage 回复消息给连接着
+/*func (s *Servant) ReplyMessage(addr string, msg proto.Message) error {
 	b, err := messages.MarshalMessageProtobuf(0, msg)
 	if err != nil {
 		panic(err)
@@ -129,10 +133,10 @@ repeat_label:
 		repeat.StopOnSuccess(),
 		repeat.WithDelay(repeat.ExponentialBackoff(500*time.Millisecond).Set()))
 	return resultErr
-}
+}*/
 
-func (s *Servant) onProxyConnected(conn *proxy.RpcProxyConn) {
-	_, err := conn.RequestMessage(&protocols.RegisterRequest{
+/*func (s *Servant) onProxyConnected(conn *proxy.RpcProxyConn) {
+	_, err := conn.RequestMessage(&internal.RegisterRequest{
 		Vaddr: s.Config.Name + "@" + s.Config.VAddr,
 	}, 2000)
 
@@ -141,7 +145,7 @@ func (s *Servant) onProxyConnected(conn *proxy.RpcProxyConn) {
 		conn.Close()
 		return
 	}
-}
+}*/
 
 func (s *Servant) spawConn(system *network.NetworkSystem) network.Client {
 	return &ServantClientConn{

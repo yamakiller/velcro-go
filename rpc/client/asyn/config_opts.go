@@ -1,7 +1,5 @@
 package asyn
 
-import "google.golang.org/protobuf/proto"
-
 // ConnConfigOption 是一个配置rpc connector 的函数
 type ConnConfigOption func(config *ConnConfig)
 
@@ -25,12 +23,6 @@ func WithKleepalive(kleepalive int32) ConnConfigOption {
 func WithConnected(f func()) ConnConfigOption {
 	return func(config *ConnConfig) {
 		config.Connected = f
-	}
-}
-
-func WithReceive(f func(proto.Message)) ConnConfigOption {
-	return func(config *ConnConfig) {
-		config.Receive = f
 	}
 }
 

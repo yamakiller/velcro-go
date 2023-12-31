@@ -1,8 +1,10 @@
 server:
-  Address: 0.0.0.0:8860
+  laddr: 0.0.0.0:8860
+  vaddr: 172.1.0.1:8800
 redis:
-  addr: 0.0.0.0:6379
-  pwd: yqXaWje245RPbsn*
-  dial-timeout: 5000
-  read-timeout: 2000
-  write-timeout: 2000
+  address: 0.0.0.0:6379
+  password: yqXaWje245RPbsn*
+  timeout:
+    dial: 5000
+    read: 2000
+    write: 2000

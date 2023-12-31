@@ -2,15 +2,13 @@ package gateway
 
 import (
 	"errors"
-	"reflect"
 	"sync"
 
-	"github.com/yamakiller/velcro-go/cluster/protocols"
-	"github.com/yamakiller/velcro-go/cluster/proxy"
+	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/router"
+	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -30,41 +28,46 @@ func New(options ...GatewayConfigOption) *Gateway {
 	)
 
 	if config.ClientPool == nil {
-		config.ClientPool = NewDefaultGatewayClientPool(g, config.MessageMaxTimeout)
+		config.ClientPool = NewDefaultGatewayClientPool(g, config.RequestDefautTimeout)
 	}
+
+	g.servant = serve.New(
+		serve.WithLoggerAgent(g.logger),
+		serve.WithProducerActor(g.newServantActor),
+		serve.WithName("Gateway"),
+		serve.WithLAddr(config.LAddrServant),
+		serve.WithVAddr(config.VAddr),
+		serve.WithKleepalive(config.KleepaliveServant),
+		serve.WithRoute(config.Router),
+	)
 
 	return g
 }
 
 // Gateway 网关
 type Gateway struct {
-	System     *network.NetworkSystem
-	Config     *GatewayConfig
-	clients    map[network.CIDKEY]Client // 连接客户端
+	System *network.NetworkSystem
+	Config *GatewayConfig
+	// 客户端--------------------
+	clients    map[network.CIDKEY]Client
 	mu         sync.Mutex
 	encryption *Encryption
-	routeGroup *router.RouterGroup // 路由
-	logger     logs.LogAgent
+	//---------------------------
+	// 内部服务来连接
+	servant *serve.Servant
+	logger  logs.LogAgent
 }
 
 func (g *Gateway) Start() error {
-	r, err := router.Loader(g.Config.Router.URI,
-		router.WithAlgorithm(g.Config.Router.ProxyAlgorithm),
-		router.WithDialTimeout(g.Config.Router.ProxyDialTimeout),
-		router.WithKleepalive(g.Config.Router.ProxyKleepalive),
-		router.WithConnectedCallback(g.onProxyConnected),
-		router.WithReceiveCallback(g.onProxyRecvice),
-	)
 
-	if err != nil {
+	if err := g.servant.Start(); err != nil {
 		return err
 	}
 
-	// 尝试连接服务
-	g.routeGroup = r
-	g.routeGroup.Open()
 	// 打开监听
 	if err := g.System.Open(g.Config.LAddr); err != nil {
+		g.servant.Stop()
+
 		return err
 	}
 
@@ -87,9 +90,10 @@ func (g *Gateway) Stop() error {
 		g.System = nil
 	}
 
-	if g.routeGroup != nil {
-		g.routeGroup.Shutdown()
+	if g.servant != nil {
+		g.servant.Stop()
 	}
+
 	return nil
 }
 
@@ -156,7 +160,7 @@ func (g *Gateway) ReleaseClient(c Client) {
 
 // FindRouter 查询路由
 func (g *Gateway) FindRouter(message proto.Message) *router.Router {
-	return g.routeGroup.Get(string(proto.MessageName(message)))
+	return g.servant.FindRouter(message)
 }
 
 // NewClientID 创建客户端连接者ID
@@ -164,74 +168,14 @@ func (g *Gateway) NewClientID(id string) *network.ClientID {
 	return g.System.NewClientID(id)
 }
 
-func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
-	_, err := conn.RequestMessage(&protocols.RegisterRequest{
-		Vaddr: "Gateway@" + g.Config.VAddr,
-	}, 2000)
+func (g *Gateway) newServantActor(conn *serve.ServantClientConn) serve.ServantClientActor {
+	actor := &GatewayServantActor{gateway: g}
 
-	if err != nil {
-		g.System.Error("proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
-		conn.Close()
-		return
-	}
-}
+	conn.Register(&prvs.RequestGatewayPush{}, actor.onRequestGatewayPush)
+	conn.Register(&prvs.RequestGatewayAlterRule{}, actor.onRequestGatewayAlterRule)
+	conn.Register(&prvs.RequestGatewayCloseClient{}, actor.onRequestGatewayCloseClient)
 
-func (g *Gateway) onProxyRecvice(message interface{}) {
-	switch msg := message.(type) {
-	case *protocols.Backward:
-		g.onBackwardClient(msg)
-	case *protocols.UpdateRule:
-		g.onUpdateRuleClient(msg)
-	case *protocols.Closing:
-		g.onCloseClient(msg)
-	default:
-		g.System.Error("Unknown %s message received from service", reflect.TypeOf(msg).Name())
-	}
-}
-
-func (g *Gateway) onBackwardClient(backward *protocols.Backward) {
-	if backward.Target == nil {
-		return
-	}
-
-	c := g.GetClient(backward.Target)
-	if c == nil {
-		return
-	}
-
-	defer g.ReleaseClient(c)
-	anyMsg := backward.Msg.ProtoReflect().New().Interface()
-
-	if err := backward.Msg.UnmarshalTo(anyMsg); err != nil {
-		g.System.Error("forward %s message unmarshal fail[error: %s]",
-			string(backward.Msg.MessageName()),
-			err.Error())
-		return
-	}
-
-	c.Post(anyMsg)
-}
-
-func (g *Gateway) onUpdateRuleClient(updateRule *protocols.UpdateRule) {
-	c := g.GetClient(updateRule.Target)
-	if c == nil {
-		g.System.Debug("update rule fail unfound client id[%+v]", updateRule.Target)
-		return
-	}
-	defer g.ReleaseClient(c)
-	c.onUpdateRule(updateRule.Rule)
-}
-
-func (g *Gateway) onCloseClient(closing *protocols.Closing) {
-	c := g.GetClient(closing.ClientID)
-	if c == nil {
-		// 如果没有找到目标连接, 哪说明目标连接已关闭.
-		g.routeGroup.Broadcast(&protocols.Closed{ClientID: closing.ClientID}, messages.RpcQosRetry)
-		return
-	}
-	defer g.ReleaseClient(c)
-
-	c.ClientID().UserClose()
+	return actor
 }
 
 func (g *Gateway) newClient(System *network.NetworkSystem) network.Client {

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package pubs;
+option go_package=".;pubs";
+
+message Error {
+    string  Name = 2;
+    string  Err  = 3;
+}

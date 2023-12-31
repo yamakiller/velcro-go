@@ -13,15 +13,14 @@ func defaultConfig() *ServantConfig {
 }
 
 type ServantConfig struct {
-	MetricsProvider   metric.MeterProvider
-	Producer          func(*ServantClientConn) ServantClientActor
-	FromRouterRecvice func(interface{})
-	Name              string
-	LAddr             string
-	VAddr             string
-	Kleepalive        int32
-	Logger            logs.LogAgent
-	Router            *router.RouterConfig
+	MetricsProvider metric.MeterProvider
+	Producer        func(*ServantClientConn) ServantClientActor
+	Name            string
+	LAddr           string
+	VAddr           string
+	Kleepalive      int32
+	Logger          logs.LogAgent
+	Router          *router.RouterConfig
 }
 
 type ServantConfigOption func(config *ServantConfig)
@@ -54,13 +53,6 @@ func WithMetricsProvider(provider metric.MeterProvider) ServantConfigOption {
 func WithProducerActor(f func(*ServantClientConn) ServantClientActor) ServantConfigOption {
 	return func(config *ServantConfig) {
 		config.Producer = f
-	}
-}
-
-// WithFromRouterRecvice 设置来至于路由器推送的数据
-func WithFromRouterRecvice(f func(interface{})) ServantConfigOption {
-	return func(config *ServantConfig) {
-		config.FromRouterRecvice = f
 	}
 }
 

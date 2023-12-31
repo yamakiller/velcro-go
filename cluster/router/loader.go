@@ -28,24 +28,20 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 		return nil, err
 	}
 
-	result := &RouterGroup{routes: make([]*Router, 0), cmaps: cmap.New()}
+	result := &RouterGroup{routes: make([]*Router, 0), cmaps: cmap.New(), vmaps: cmap.New()}
 	for _, router := range yamlGroup.Routes {
 		// TODO: 构建代理对象
 		p, err := proxy.NewRpcProxy(
 			proxy.WithAlgorithm(opt.Algorithm),
 			proxy.WithKleepalive(opt.Kleepalive),
 			proxy.WithDialTimeout(opt.DialTimeout),
-			proxy.WithDecided(router.Decided),
 			proxy.WithLogger(opt.Logger),
-			proxy.WithConnectedCallback(opt.ConnectedCallback),
-			proxy.WithReceiveCallback(opt.RecviceCallback),
 			proxy.WithTargetHost(router.Endpoints))
 		if err != nil {
 			return nil, err
 		}
 
 		r := &Router{
-			VAddress: router.VAddress,
 			Proxy:    p,
 			commands: make(map[string]struct{}),
 		}
@@ -60,6 +56,9 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 			r.commands[cmd] = struct{}{}
 		}
 
+		for _, addr := range router.Endpoints {
+			result.vmaps.SetIfAbsent(addr.VAddr, r)
+		}
 		result.Push(r)
 
 	}

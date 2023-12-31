@@ -7,16 +7,16 @@ import (
 	"reflect"
 	"strconv"
 	"sync/atomic"
-	"time"
 
 	"github.com/google/uuid"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
-	"github.com/yamakiller/velcro-go/cluster/protocols"
+	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
+	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -30,25 +30,25 @@ type Client interface {
 	Closed(ctx network.Context)
 	Destory()
 
-	onPingReply(ctx network.Context, message *protocols.PingMsg)
-	onPubkeyReply(ctx network.Context, message *protocols.PubkeyMsg)
-	onRequestMessage(ctx network.Context, message *protocols.ClientRequestMessage)
-	onPostMessage(ctx network.Context, message proto.Message)
-	onUpdateRule(rule int32)
+	alterRule(rule int32)
+
+	onPingReply(ctx network.Context, message *pubs.PingMsg)
+	onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg)
+	onRequestMessage(ctx network.Context, message proto.Message)
 
 	referenceIncrement() int32
 	referenceDecrement() int32
 }
 
 type ClientConn struct {
-	gateway             *Gateway
-	clientID            *network.ClientID
-	ruleID              int32  //角色ID
-	secret              []byte //密钥
-	recvice             *circbuf.RingBuffer
-	ping                uint64
-	message_max_timeout int64 //最大超时时间 毫秒级
-	reference           int32 //引用计数器
+	gateway        *Gateway
+	clientID       *network.ClientID
+	ruleID         int32  //角色ID
+	secret         []byte //密钥
+	recvice        *circbuf.RingBuffer
+	ping           uint64
+	requestTimeout int64 //最大超时时间 毫秒级
+	reference      int32 //引用计数器
 }
 
 func (dl *ClientConn) ClientID() *network.ClientID {
@@ -77,7 +77,7 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 	uid := uuid.New()
 	dl.ping, _ = strconv.ParseUint(uid.String(), 10, 64)
 
-	msg := &protocols.PingMsg{VerificationKey: dl.ping}
+	msg := &pubs.PingMsg{VerificationKey: dl.ping}
 	msgb, err := protomessge.Marshal(msg, dl.secret)
 	if err != nil {
 		ctx.Error("ping marshal message [error:%v]", err.Error())
@@ -130,27 +130,29 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 		}
 
 		switch message := msg.(type) {
-		case *protocols.PingMsg:
+		case *pubs.PingMsg:
 			dl.onPingReply(ctx, message)
-		case *protocols.PubkeyMsg:
+		case *pubs.PubkeyMsg:
 			dl.onPubkeyReply(ctx, message)
-		case *protocols.ClientRequestMessage:
-			dl.onRequestMessage(ctx, message)
 		default:
-			dl.onPostMessage(ctx, message)
+			dl.onRequestMessage(ctx, message)
 		}
 	}
-
 }
 
 func (dl *ClientConn) Closed(ctx network.Context) {
-	// 广播给所有服务,客户端连接已被关闭
-	dl.gateway.routeGroup.Broadcast(&protocols.Closed{ClientID: network.NewClientID(ctx.Self().Address,
-		ctx.Self().Id)}, messages.RpcQosRetry)
+	request := &prvs.ClientClosed{
+		ClientID: ctx.Self(),
+	}
+
+	r := dl.gateway.FindRouter(request)
+	if r != nil {
+		if _, err := r.Proxy.RequestMessage(request, dl.requestTimeout); err != nil {
+			ctx.Error("request client %s closed to %s", request.ClientID.ToString(), "")
+		}
+	}
 
 	dl.gateway.UnRegister(ctx.Self()) //关闭释放对象
-	// 广播连接已关闭
-
 }
 
 func (dl *ClientConn) Destory() {
@@ -160,7 +162,7 @@ func (dl *ClientConn) Destory() {
 	dl.recvice.Reset()
 }
 
-func (dl *ClientConn) onPingReply(ctx network.Context, message *protocols.PingMsg) {
+func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
 
 	if dl.ping == 0 {
 		ctx.Debug("unrequest ping")
@@ -178,7 +180,7 @@ func (dl *ClientConn) onPingReply(ctx network.Context, message *protocols.PingMs
 	ctx.Debug("ping reply success")
 }
 
-func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *protocols.PubkeyMsg) {
+func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg) {
 	if dl.gateway.encryption == nil {
 		ctx.Debug("encrypted communication not enabled")
 		ctx.Close(ctx.Self())
@@ -228,7 +230,7 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *protocols.Pubk
 	dl.ruleID = router.KEYED_RULE_ID
 
 	// 回复消息
-	pubkeyMessage := &protocols.PubkeyMsg{Key: base64.StdEncoding.EncodeToString(dl.gateway.encryption.Ecdh.Marshal(pubKey))}
+	pubkeyMessage := &pubs.PubkeyMsg{Key: base64.StdEncoding.EncodeToString(dl.gateway.encryption.Ecdh.Marshal(pubKey))}
 	b, err := protomessge.Marshal(pubkeyMessage, nil)
 	if err != nil {
 		ctx.Debug("marshal pubkey message error %s", err.Error())
@@ -239,47 +241,46 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *protocols.Pubk
 	ctx.PostMessage(ctx.Self(), b)
 }
 
-func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.ClientRequestMessage) {
-	requestMessageName := string(message.RequestMessage.MessageName())
-
-	r := dl.gateway.routeGroup.Get(requestMessageName)
+func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Message) {
+	r := dl.gateway.FindRouter(message)
 	if r == nil {
-		ctx.Warning("%s message unfound router", requestMessageName)
+		ctx.Warning("%s message unfound router",
+			string(protoreflect.FullName(proto.MessageName(message))))
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	if !r.IsRulePass(dl.ruleID) {
-		ctx.Warning("%s message Insufficient permissions", requestMessageName)
+		ctx.Warning("%s message Insufficient permissions",
+			string(protoreflect.FullName(proto.MessageName(message))))
 		ctx.Close(ctx.Self())
 		return
 	}
 
-	forward := &protocols.Forward{
-		Sender: dl.clientID,
-		Msg:    message.RequestMessage,
+	bodyAny, err := anypb.New(message)
+	if err != nil {
+		ctx.Warning("%s message encoding failed error %s",
+			string(protoreflect.FullName(proto.MessageName(message))), err.Error())
+		ctx.Close(ctx.Self())
+		return
 	}
 
-	if int64(message.RequestTimeout) > dl.message_max_timeout {
-		ctx.Warning("%s message timeout to long ,max timeout is %d", requestMessageName, dl.message_max_timeout)
-		return
+	forwardBundle := &prvs.ForwardBundle{
+		Sender: dl.clientID,
+		Body:   bodyAny,
 	}
-	timeout := int64(message.RequestTimeout) - (time.Now().UnixMilli() - int64(message.RequestTime))
-	if timeout <= 0 {
-		ctx.Warning("%s message timeout", requestMessageName)
-		return
-	}
-	result, err := r.Proxy.RequestMessage(forward, int64(message.RequestTimeout))
+
+	// 采用平均时间
+	result, err := r.Proxy.RequestMessage(forwardBundle, int64(dl.requestTimeout))
 	if err != nil {
-		b, msge := protomessge.Marshal(&protocols.Error{
-			ID:   message.RequestID,
-			Name: requestMessageName,
+
+		b, msge := protomessge.Marshal(&pubs.Error{
+			Name: string(protoreflect.FullName(proto.MessageName(message))),
 			Err:  err.Error(),
 		}, dl.secret)
+
 		if msge != nil {
-			ctx.Error("requesting protocols.Error marshal %s message fail[error:%s]", requestMessageName, msge.Error())
-			ctx.Close(ctx.Self())
-			return
+			panic(msge)
 		}
 
 		ctx.PostMessage(ctx.Self(), b)
@@ -288,7 +289,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.C
 
 	b, msge := protomessge.Marshal(result.(proto.Message), dl.secret)
 	if msge != nil {
-		ctx.Error("requesting protocols.Error marshal %s message fail[error:%s]", reflect.TypeOf(result).Name(), msge.Error())
+		ctx.Error("requesting pubs.Error marshal %s message fail[error:%s]", reflect.TypeOf(result).Name(), msge.Error())
 		ctx.Close(ctx.Self())
 		return
 	}
@@ -296,54 +297,8 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message *protocols.C
 	ctx.PostMessage(ctx.Self(), b)
 }
 
-func (dl *ClientConn) onPostMessage(ctx network.Context, message proto.Message) {
-
-	msgName := proto.MessageName(message)
-	r := dl.gateway.routeGroup.Get(string(msgName))
-	if r == nil {
-		ctx.Warning("%s message unfound router", msgName)
-		ctx.Close(ctx.Self())
-		return
-	}
-
-	if !r.IsRulePass(dl.ruleID) {
-		ctx.Warning("%s message Insufficient permissions", msgName)
-		ctx.Close(ctx.Self())
-		return
-	}
-
-	anyMsg, err := anypb.New(message)
-	if err != nil {
-		ctx.Warning("%s message serialization error %s", err.Error())
-		ctx.Close(ctx.Self())
-	}
-
-	forward := &protocols.Forward{
-		Sender: dl.clientID,
-		Msg:    anyMsg,
-	}
-
-	err = r.Proxy.PostMessage(forward, messages.RpcQosDiscard)
-	if err != nil {
-		b, msge := protomessge.Marshal(&protocols.Error{
-			Name: string(msgName),
-			Err:  err.Error(),
-		}, dl.secret)
-		if msge != nil {
-			ctx.Error("posting protocols.Error marshal %s message fail[error:%s]", string(msgName), msge.Error())
-			ctx.Close(ctx.Self())
-			return
-		}
-
-		ctx.PostMessage(ctx.Self(), b)
-		return
-	}
-
-	ctx.Debug("post message %s", msgName)
-}
-
 // onUpdateRule 更改角色等级信息
-func (dl *ClientConn) onUpdateRule(rule int32) {
+func (dl *ClientConn) alterRule(rule int32) {
 	dl.ruleID = rule
 }
 

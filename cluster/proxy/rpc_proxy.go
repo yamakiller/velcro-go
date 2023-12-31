@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"github.com/yamakiller/velcro-go/cluster/balancer"
+	"github.com/yamakiller/velcro-go/cluster/repeat"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/rpc/client/asyn"
-	"github.com/yamakiller/velcro-go/utils/host"
+	"github.com/yamakiller/velcro-go/rpc/errs"
 	"google.golang.org/protobuf/proto"
-
-	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 )
 
 // NewRpcProxy 创建Rpc代理
@@ -22,25 +21,21 @@ func NewRpcProxy(options ...RpcProxyConfigOption) (*RpcProxy, error) {
 func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 	hosts := make([]string, 0)
 	hostMap := make(map[string]*RpcProxyConn)
+	hostAddrMap := make(map[string]string)
 	alive := make(map[string]bool)
 
 	for _, targetHost := range option.TargetHost {
-		_, _, err := host.Parse(targetHost)
-		if err != nil {
-			return nil, err
-		}
 
 		//创建连接
 		conn := &RpcProxyConn{}
 		conn.Conn = asyn.NewConn(
 			asyn.WithKleepalive(option.Kleepalive),
 			asyn.WithConnected(conn.Connected),
-			asyn.WithClosed(conn.Closed),
-			asyn.WithReceive(conn.Receive))
+			asyn.WithClosed(conn.Closed))
 
-		// 初始化时, 未处于活动状态
-		alive[targetHost] = false
-		hostMap[targetHost] = conn
+		alive[targetHost.VAddr] = false
+		hostMap[targetHost.VAddr] = conn
+		hostAddrMap[targetHost.VAddr] = targetHost.LAddr
 	}
 
 	lb, err := balancer.Build(option.Algorithm, hosts)
@@ -48,20 +43,11 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 		return nil, err
 	}
 
-	var strategy RpcProxyStrategy
-	if option.Decided == DecidedOneToOne {
-		strategy = &RpcProxyStrategyOneToOne{}
-	} else {
-		strategy = &RpcProxyStrategyMoreToOne{}
-	}
-
 	return &RpcProxy{
 		dialTimeouot: time.Millisecond * time.Duration(option.DialTimeout),
 		hostMap:      hostMap,
+		hostAddrMap:  hostAddrMap,
 		balancer:     lb,
-		strategy:     strategy,
-		connected:    option.ConnectedCallback,
-		recvice:      option.RecviceCallback,
 		alive:        alive,
 		logger:       option.Logger,
 		stopper:      make(chan struct{}),
@@ -73,15 +59,12 @@ type RpcProxy struct {
 	// 连接等待超时
 	dialTimeouot time.Duration
 	// 连接器
-	hostMap map[string]*RpcProxyConn
-	// 策略器
-	strategy RpcProxyStrategy
+	hostMap     map[string]*RpcProxyConn
+	hostAddrMap map[string]string
 	// 均衡器
 	balancer balancer.Balancer
 	// 代理连接成功回调函数
 	connected func(*RpcProxyConn)
-	// 代理接收数据回调函数
-	recvice func(interface{})
 	// 活着的目标
 	sync.RWMutex
 	alive map[string]bool
@@ -95,21 +78,21 @@ func (rpx *RpcProxy) Open() {
 	for host, conn := range rpx.hostMap {
 		conn.proxy = rpx
 		conn.repe = &RpcProxyConnRepeat{
-			host:         host,
+			host:         rpx.hostAddrMap[host],
 			conn:         conn,
 			dialTimeouot: rpx.dialTimeouot,
 			printError:   rpx.LogError,
 		}
 
-		rpx.LogInfo("%s connecting", host)
-		if err := conn.Dial(host, rpx.dialTimeouot); err != nil {
-			rpx.LogError("%s connect fail[error:%s]", host, err.Error())
+		rpx.LogInfo("%s connecting", rpx.hostAddrMap[host])
+		if err := conn.Dial(rpx.hostAddrMap[host], rpx.dialTimeouot); err != nil {
+			rpx.LogError("%s connect fail[error:%s]", rpx.hostAddrMap[host], err.Error())
 			// 启动退避启动器
 			conn.repe.start()
 			continue
 		}
 
-		rpx.LogInfo("%s connected", host)
+		rpx.LogInfo("%s connected", rpx.hostAddrMap[host])
 
 		rpx.alive[host] = true
 		rpx.balancer.Add(host)
@@ -118,29 +101,87 @@ func (rpx *RpcProxy) Open() {
 
 // RequestMessage 集群请求消息
 func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
-	host, err := rpx.balancer.Balance("")
+	var (
+		host   string
+		err    error
+		future *asyn.Future
+	)
+
+	startMills := time.Now().UnixMilli()
+	endMills := int64(0)
+	host, err = rpx.balancer.Balance("")
 	if err != nil {
-		rpx.LogError("RequestMessage %v fail[error:%s]", message, err.Error())
-		return nil, err
+		goto try_again_label
 	}
 
 	rpx.balancer.Inc(host)
 	defer rpx.balancer.Done(host)
 
-	return rpx.strategy.RequestMessage(host, message, timeout)
-}
-
-// PostMessage 集群推送消息
-func (rpx *RpcProxy) PostMessage(message proto.Message, qos rpcmessage.RpcQos) error {
-	host, err := rpx.balancer.Balance("")
+	future, err = rpx.hostMap[host].RequestMessage(message, timeout)
 	if err != nil {
-
-		return err
+		goto try_again_label
 	}
-	rpx.balancer.Inc(host)
-	defer rpx.balancer.Done(host)
 
-	return rpx.hostMap[host].PostMessage(message, qos)
+	future.Wait()
+	if future.Error() != nil {
+		if future.Error() == errs.ErrorRequestTimeout {
+			return nil, errs.ErrorRequestTimeout
+		}
+
+		endMills = time.Now().UnixMilli()
+		if endMills-startMills > timeout {
+			return nil, errs.ErrorRequestTimeout
+		}
+		goto try_again_label
+	}
+
+	return future.Result(), nil
+try_again_label:
+	var result proto.Message = nil
+	var resultErr error = nil
+	repeat.Repeat(repeat.FnWithCounter(func(n int) error {
+		if n >= 2 {
+			return nil
+		}
+
+		endMills = time.Now().UnixMilli()
+		if endMills-startMills > timeout {
+			resultErr = errs.ErrorRequestTimeout
+			return nil
+		}
+
+		host, err = rpx.balancer.Balance("")
+		if err != nil {
+			resultErr = err
+			return resultErr
+		}
+
+		rpx.balancer.Inc(host)
+		defer rpx.balancer.Done(host)
+
+		future, err = rpx.hostMap[host].RequestMessage(message, timeout)
+		if err != nil {
+			resultErr = err
+			return resultErr
+		}
+
+		future.Wait()
+		if future.Error() != nil {
+			if future.Error() == errs.ErrorRequestTimeout {
+				resultErr = errs.ErrorRequestTimeout
+				return nil
+			}
+
+			resultErr = err
+			return resultErr
+		}
+		result = future.Result()
+		return nil
+	}),
+		repeat.StopOnSuccess(),
+		repeat.WithDelay(repeat.ExponentialBackoff(200*time.Millisecond).Set()))
+
+	return result, resultErr
 }
 
 // Shutdown 关闭代理

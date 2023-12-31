@@ -1,9 +1,0 @@
-syntax = "proto3";
-package protocols;
-option go_package=".;protocols";
-
-
-message PingMsg {
-    fixed64 VerificationKey = 1;
-}
-

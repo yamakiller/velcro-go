@@ -59,7 +59,7 @@ func MarshalResponseProtobuf(sequenceID int32, result proto.Message) ([]byte, er
 	return data[:n], nil
 }
 
-func MarshalMessageProtobuf(sequenceID int32, message proto.Message) ([]byte, error) {
+/*func MarshalMessageProtobuf(sequenceID int32, message proto.Message) ([]byte, error) {
 	msgAny, err := anypb.New(message)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func MarshalMessageProtobuf(sequenceID int32, message proto.Message) ([]byte, er
 	n := copy(data[3:len(msgBytes)+3], msgBytes)
 
 	return data[:n], nil
-}
+}*/
 
 func MarshalPingProtobuf(VerifyKey uint64) ([]byte, error) {
 	msg := &RpcPingMessage{

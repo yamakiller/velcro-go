@@ -30,7 +30,6 @@ type RpcClient interface {
 	Accept(ctx network.Context)
 	Ping(ctx network.Context)
 	Recvice(ctx network.Context)
-	PostMessage(ctx network.Context, message proto.Message) error
 	Closed(ctx network.Context)
 	Destory()
 	onRpcPing(ctx network.Context, message *rpcmessage.RpcPingMessage)
@@ -67,6 +66,7 @@ func (rcc *RpcClientConn) Ping(ctx network.Context) {
 }
 
 func (rcc *RpcClientConn) Recvice(ctx network.Context) {
+	// 通用化需要修改
 	offset := 0
 	for {
 		n, err := rcc.recvice.Write(ctx.Message()[offset:])
@@ -131,8 +131,8 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 			}
 
 			cancel()
-		case *messages.RpcMsgMessage:
-			postMsg, err := message.Message.UnmarshalNew()
+		case *messages.RpcResponseMessage:
+			/*postMsg, err := message.Message.UnmarshalNew()
 			if err != nil {
 				goto rpc_client_offset_label
 			}
@@ -142,7 +142,7 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 			}
 
 			f(&RpcClientContext{context: ctx,
-				message: postMsg})
+				message: postMsg})*/
 
 		default:
 			ctx.Debug("unknown RPC message")
@@ -154,7 +154,7 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 	}
 }
 
-func (rcc *RpcClientConn) PostMessage(ctx network.Context, message proto.Message) error {
+/*func (rcc *RpcClientConn) PostMessage(ctx network.Context, message proto.Message) error {
 	b, err := messages.MarshalMessageProtobuf(0, message)
 	if err != nil {
 		ctx.Close(ctx.Self())
@@ -164,7 +164,7 @@ func (rcc *RpcClientConn) PostMessage(ctx network.Context, message proto.Message
 	ctx.PostMessage(ctx.Self(), b)
 
 	return nil
-}
+}*/
 
 func (rcc *RpcClientConn) Closed(ctx network.Context) {
 	rcc.unregister(ctx.Self())

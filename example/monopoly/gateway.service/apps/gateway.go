@@ -8,9 +8,9 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/gateway"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
-	local_protocols "github.com/yamakiller/velcro-go/example/monopoly/generate/protocols"
+	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
+	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/logs"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/encryption"
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"
 	"google.golang.org/protobuf/proto"
@@ -105,7 +105,7 @@ func (gs *gatewayService) udpLoop() {
 			continue
 		}
 
-		msg := local_protocols.ReportNatClient{}
+		msg := mpubs.ReportNatClient{}
 		// 设定生存周期
 		{
 			defer gs.gwy.ReleaseClient(client)
@@ -124,7 +124,7 @@ func (gs *gatewayService) udpLoop() {
 			}
 		}
 
-		postMsg := &local_protocols.ReportNat{RoomID: msg.RoomID,
+		postMsg := &mprvs.ReportNat{RoomID: msg.RoomID,
 			VerifiyCode: msg.VerifiyCode,
 			NatAddr:     addr.AddrPort().String()}
 
@@ -136,7 +136,7 @@ func (gs *gatewayService) udpLoop() {
 		}
 
 		// 推送到目标服务
-		if err := r.Proxy.PostMessage(postMsg, messages.RpcQosDiscard); err != nil {
+		if _, err := r.Proxy.RequestMessage(postMsg, 2000); err != nil {
 			gs.gwy.System.Error("protocols.ReportNat post message fail %s", err.Error())
 			continue
 		}

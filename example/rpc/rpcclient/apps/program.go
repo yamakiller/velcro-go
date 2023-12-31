@@ -1,22 +1,6 @@
 package apps
 
-import (
-	"os"
-	"path/filepath"
-	"time"
-
-	"github.com/kardianos/service"
-	"github.com/sirupsen/logrus"
-	"github.com/yamakiller/velcro-go/envs"
-	"github.com/yamakiller/velcro-go/rpc/client/asyn"
-
-	"github.com/yamakiller/velcro-go/example/rpc/protos"
-	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/configs"
-	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/internet"
-	"github.com/yamakiller/velcro-go/logs"
-)
-
-var appName string = "test-rpc-client"
+/*var appName string = "test-rpc-client"
 
 type Program struct {
 	_c       *asyn.Conn
@@ -81,3 +65,4 @@ func (p *Program) GetLocalConfigFilePath() (string, error) {
 
 	return cfgFilePath, nil
 }
+*/

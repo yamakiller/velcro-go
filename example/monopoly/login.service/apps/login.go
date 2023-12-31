@@ -1,8 +1,6 @@
 package apps
 
 import (
-	"reflect"
-
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
@@ -18,9 +16,9 @@ func (ls *loginService) Start(logAgent logs.LogAgent) error {
 
 	rds.WithAddr(envs.Instance().Get("configs").(*configs.Config).Redis.Addr)
 	rds.WithPwd(envs.Instance().Get("configs").(*configs.Config).Redis.Pwd)
-	rds.WithDialTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.DialTimeout)
-	rds.WithReadTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.ReadTimeout)
-	rds.WithWriteTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.WriteTimeout)
+	rds.WithDialTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Dial)
+	rds.WithReadTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Read)
+	rds.WithWriteTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Write)
 
 	if err := rds.Connection(); err != nil {
 		return err
@@ -28,14 +26,18 @@ func (ls *loginService) Start(logAgent logs.LogAgent) error {
 
 	ls.login = serve.New(
 		serve.WithLoggerAgent(logAgent),
-		serve.WithProducerActor(newActor),
-		serve.WithFromRouterRecvice(ls.onFromRouteRecvice),
-		serve.WithName("loginService"),
+		serve.WithProducerActor(ls.newLoginActor),
+		serve.WithName("LoginService"),
 		serve.WithLAddr(envs.Instance().Get("configs").(*configs.Config).Server.LAddr),
 		serve.WithVAddr(envs.Instance().Get("configs").(*configs.Config).Server.VAddr),
 		serve.WithKleepalive(int32(envs.Instance().Get("configs").(*configs.Config).Server.Kleepalive)),
 		serve.WithRoute(&envs.Instance().Get("configs").(*configs.Config).Router),
 	)
+
+	if err := ls.login.Start(); err != nil {
+		rds.Disconnect()
+		return err
+	}
 
 	return nil
 }
@@ -52,6 +54,6 @@ func (ls *loginService) Stop() error {
 	return nil
 }
 
-func (ls *loginService) onFromRouteRecvice(msg interface{}) {
-	ls.login.System.Info("from route recvice %s", reflect.TypeOf(msg))
+func (ls *loginService) newLoginActor(conn *serve.ServantClientConn) serve.ServantClientActor {
+	return &LoginActor{ancestor: ls.login}
 }

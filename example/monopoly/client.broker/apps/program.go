@@ -1,5 +1,6 @@
 package apps
 
+/*
 import (
 	"fmt"
 	"net"
@@ -15,7 +16,7 @@ import (
 
 	protocolss "github.com/yamakiller/velcro-go/cluster/protocols"
 	"github.com/yamakiller/velcro-go/envs"
-	"github.com/yamakiller/velcro-go/example/monopoly/generate/protocols"
+	"github.com/yamakiller/velcro-go/example/monopoly/pub/protocols"
 	"github.com/yamakiller/velcro-go/example/tcpclient/configs"
 	"github.com/yamakiller/velcro-go/logs"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -75,12 +76,11 @@ func (p *Program) Start(s service.Service) error {
 
 	data, _ := anypb.New(&register)
 	req := protocolss.ClientRequestMessage{
-		RequestID: 1,
+		RequestID:      1,
 		RequestMessage: data,
 		RequestTimeout: 2000,
 		RequestTime:    uint64(time.Now().UnixMilli()),
 	}
-
 
 	b, _ := protomessge.Marshal(&req, nil)
 	p.writeBytes = b
@@ -119,14 +119,14 @@ func (p *Program) Start(s service.Service) error {
 	return nil
 }
 func getMessageTypeFromTypeURL(typeURL string) (protoreflect.Message, error) {
-    // 解析 typeURL
+	// 解析 typeURL
 
-    // 获取类型
-    messageType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(typeURL))
-    if err != nil {
-        return nil, fmt.Errorf("Type %s not found", typeURL)
-    }
-    return messageType.New(), nil
+	// 获取类型
+	messageType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(typeURL))
+	if err != nil {
+		return nil, fmt.Errorf("Type %s not found", typeURL)
+	}
+	return messageType.New(), nil
 }
 
 func (p *Program) Stop(s service.Service) error {
@@ -211,3 +211,4 @@ func (p *Program) GetLocalConfigFilePath() (string, error) {
 
 	return cfgFilePath, nil
 }
+*/

@@ -14,6 +14,6 @@ func SignIn(ctx context.Context, token string) (*sign.Account, error) {
 	return signHandle.In(ctx, token)
 }
 
-func SignOut() error {
-	return signHandle.Out()
+func SignOut(token string) error {
+	return signHandle.Out(token)
 }

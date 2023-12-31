@@ -36,13 +36,14 @@ func (ls *LocalSign) In(ctx context.Context, token string) (*sign.Account, error
 	}
 
 	result := &sign.Account{
-		UID:     fmt.Sprintf("t%d", sn),
-		Externs: map[string]string{},
+		UID:         fmt.Sprintf("t%d", sn),
+		DisplayName: fmt.Sprintf("米奇%d", sn),
+		Externs:     map[string]string{},
 	}
 
 	return result, nil
 }
 
-func (ls *LocalSign) Out() error {
+func (ls *LocalSign) Out(token string) error {
 	return nil
 }

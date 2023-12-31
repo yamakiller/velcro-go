@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "client_id.proto";
+
+package prvs;
+option go_package=".;prvs";
+
+// 服务->网关->客户端
+message ForwardBundle {
+    network.ClientID    sender = 1;  // 目标(可为空)  
+    google.protobuf.Any body = 2;  // 具体消息 
+}
+
+// 服务->网关->客户端
+message RequestGatewayPush {
+    network.ClientID target = 1;  // 目标(可为空)  
+    google.protobuf.Any body = 2;  // 具体消息 
+}

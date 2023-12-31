@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package prvs;
+option go_package=".;prvs";
+
+message ReportNat {
+    fixed32 RoomID = 1;      // 房间ID
+    string  VerifiyCode = 2; // 房间验证码
+    string  NatAddr = 3;     // Nat地址
+}

@@ -33,6 +33,12 @@ func WithLAddr(laddr string) GatewayConfigOption {
 	}
 }
 
+func WithLAddrServant(laddr string) GatewayConfigOption {
+	return func(opt *GatewayConfig) {
+		opt.LAddrServant = laddr
+	}
+}
+
 func WithNewSystem(newFunc func(options ...network.ConfigOption) *network.NetworkSystem) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
 		opt.NewNetworkSystem = newFunc
@@ -60,17 +66,24 @@ func WithLoggerAgent(logger logs.LogAgent) GatewayConfigOption {
 	}
 }
 
-// WithNetworkTimeout 设置网络超时时间
+// WithNetworkTimeout 设置客户端网络连接保活时间
 func WithKleepalive(timeout int32) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
 		opt.Kleepalive = timeout
 	}
 }
 
-// WithMaxTimeout 设置消息最大超时时间
-func WithMessageMaxTimeout(timeout int64) GatewayConfigOption {
+// WithKleepaliveServant 设置内部服务网络连接保活时间
+func WithKleepaliveServant(timeout int32) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
-		opt.MessageMaxTimeout = timeout
+		opt.KleepaliveServant = timeout
+	}
+}
+
+// WithRequestTimeout 请求默认超时
+func WithRequestTimeout(timeout int64) GatewayConfigOption {
+	return func(opt *GatewayConfig) {
+		opt.RequestDefautTimeout = timeout
 	}
 }
 
@@ -90,32 +103,35 @@ func WithRoute(router *router.RouterConfig) GatewayConfigOption {
 
 // GatewayConfig 网关配置信息
 type GatewayConfig struct {
-	VAddr             string
-	LAddr             string
-	NewNetworkSystem  func(options ...network.ConfigOption) *network.NetworkSystem
-	ClientPool        GatewayClientPool
-	NewEncryption     func() *Encryption
-	MetricsProvider   metric.MeterProvider
-	Logger            logs.LogAgent
-	Kleepalive        int32
-	MessageMaxTimeout int64
-	OnlineOfNumber    int
-	Router            *router.RouterConfig
+	VAddr                string
+	LAddr                string
+	LAddrServant         string
+	NewNetworkSystem     func(options ...network.ConfigOption) *network.NetworkSystem
+	ClientPool           GatewayClientPool
+	NewEncryption        func() *Encryption
+	MetricsProvider      metric.MeterProvider
+	Logger               logs.LogAgent
+	Kleepalive           int32
+	KleepaliveServant    int32
+	RequestDefautTimeout int64
+	OnlineOfNumber       int
+	Router               *router.RouterConfig
 }
 
 func defaultGatewayConfig() *GatewayConfig {
 	return &GatewayConfig{
-		NewNetworkSystem:  network.NewTCPServerNetworkSystem,
-		NewEncryption:     defaultEncryption,
-		MetricsProvider:   nil,
-		Kleepalive:        2000,
-		MessageMaxTimeout: 2000,
-		OnlineOfNumber:    2000,
+		NewNetworkSystem:     network.NewTCPServerNetworkSystem,
+		NewEncryption:        defaultEncryption,
+		MetricsProvider:      nil,
+		Kleepalive:           2000,
+		KleepaliveServant:    2000,
+		RequestDefautTimeout: 1000,
+		OnlineOfNumber:       2000,
 		Router: &router.RouterConfig{
-			URI:              files.NewLocalPathFull("routes.yaml"),
-			ProxyDialTimeout: 2000,
-			ProxyKleepalive:  4000,
-			ProxyAlgorithm:   "p2c",
+			URI:         files.NewLocalPathFull("routes.yaml"),
+			DialTimeout: 2000,
+			Kleepalive:  4000,
+			Algorithm:   "p2c",
 		},
 	}
 }

@@ -20,8 +20,8 @@ func UnMarshalProtobuf(buffer circbuf.Buffer) (int, interface{}, error) {
 		return unmarshalRequestProtobuf(buffer)
 	case RpcResponse:
 		return unmarshalResponseProtobuf(buffer)
-	case RpcMessage:
-		return unmarshalMessageProtobuf(buffer)
+	/*case RpcMessage:
+	return unmarshalMessageProtobuf(buffer)*/
 	case RpcPing:
 		return unmarshalMessagePing(buffer)
 	default:
@@ -120,8 +120,8 @@ func unmarshalProtobufBody(buffer circbuf.Buffer, direct RpcDirect, bodyLength i
 		msg = &RpcRequestMessage{}
 	case RpcResponse:
 		msg = &RpcResponseMessage{}
-	case RpcMessage:
-		msg = &RpcMsgMessage{}
+	/*case RpcMessage:
+	msg = &RpcMsgMessage{}*/
 	case RpcPing:
 		msg = &RpcPingMessage{}
 	}

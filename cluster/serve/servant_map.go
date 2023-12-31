@@ -1,6 +1,6 @@
 package serve
 
-import (
+/*import (
 	cmap "github.com/orcaman/concurrent-map"
 	murmur32 "github.com/twmb/murmur3"
 )
@@ -25,3 +25,4 @@ func (s *sliceMap) getBucket(key string) cmap.ConcurrentMap {
 	index := uint32(hash) & (uint32(len(s.bucker)) - 1)
 	return s.bucker[index]
 }
+*/

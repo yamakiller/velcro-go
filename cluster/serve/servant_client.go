@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/yamakiller/velcro-go/cluster/protocols"
+	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
@@ -23,7 +23,6 @@ type ServantClientContext struct {
 
 type ServantClientConn struct {
 	Servant *Servant
-	vaddr   string
 	actor   ServantClientActor
 	recvice *circbuf.RingBuffer // 接收缓冲区
 	events  map[interface{}]interface{}
@@ -69,6 +68,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 				panic(err)
 			}
 
+			//TODO: 这里需要抛给并行器
 			timeout := int64(message.Timeout) - (time.Now().UnixMilli() - int64(message.ForwardTime))
 			// 如果已超时
 			if timeout <= 0 {
@@ -77,23 +77,14 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 
 			var sender *network.ClientID = nil
 			switch rs := reqMsg.(type) {
-			case *protocols.RegisterRequest:
-				c.vaddr = rs.Vaddr
-				bucket := c.Servant.vaddrs.getBucket(c.vaddr)
-				bucket.SetIfAbsent(c.vaddr, ctx.Self())
-
-				b, _ := messages.MarshalResponseProtobuf(message.SequenceID, &protocols.RegisterResponse{})
-				ctx.PostMessage(ctx.Self(), b)
-				goto servant_client_offset_label
-			case *protocols.Forward:
-				reqMsg, err = rs.Msg.UnmarshalNew()
+			case *prvs.ForwardBundle:
+				reqMsg, err = rs.Body.UnmarshalNew()
 				if err != nil {
 					panic(err)
 				}
 				sender = rs.Sender
 			default:
 			}
-			// 设置超时器
 			background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
 			evt, ok := c.events[reflect.TypeOf(reqMsg)]
 			if !ok || evt.(func(*ServantClientContext) (proto.Message, error)) == nil {
@@ -122,35 +113,6 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			}
 
 			cancel()
-		case *messages.RpcMsgMessage:
-			postMsg, err := message.Message.UnmarshalNew()
-			if err != nil {
-				goto servant_client_offset_label
-			}
-
-			var sender *network.ClientID = nil
-			switch rs := postMsg.(type) {
-			case *protocols.Forward:
-				postMsg, err = rs.Msg.UnmarshalNew()
-				if err != nil {
-					panic(err)
-				}
-				sender = rs.Sender
-			default:
-			}
-
-			evt, ok := c.events[reflect.TypeOf(postMsg)]
-			if !ok || evt.(func(*ServantClientContext)) == nil {
-				panic(fmt.Errorf("servant post unfound events %s", reflect.TypeOf(postMsg)))
-			}
-
-			evt.(func(*ServantClientContext))(&ServantClientContext{
-				SequenceID: message.SequenceID,
-				Sender:     sender,
-				Background: nil,
-				Context:    ctx,
-				Message:    postMsg,
-			})
 		default:
 			panic("Unknown service")
 		}
@@ -174,11 +136,6 @@ func (c *ServantClientConn) Register(key, evt interface{}) {
 }
 
 func (c *ServantClientConn) Closed(ctx network.Context) {
-	if c.vaddr != "" {
-		bucket := c.Servant.vaddrs.getBucket(c.vaddr)
-		_, _ = bucket.Pop(c.vaddr)
-	}
-
 	c.Servant.clientMutex.Lock()
 	delete(c.Servant.clients, network.Key(ctx.Self()))
 	c.Servant.clientMutex.Unlock()

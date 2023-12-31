@@ -1,10 +1,7 @@
 package proxy
 
 import (
-	"reflect"
-
 	"github.com/yamakiller/velcro-go/rpc/client/asyn"
-	"google.golang.org/protobuf/proto"
 )
 
 type RpcProxyConn struct {
@@ -43,14 +40,4 @@ func (rpcx *RpcProxyConn) Closed() {
 	}
 
 	rpcx.proxy.LogDebug("%s closed", rpcx.ToAddress())
-}
-
-func (rpcx *RpcProxyConn) Receive(msg proto.Message) {
-	if rpcx.proxy == nil || rpcx.proxy.recvice == nil {
-		return
-	}
-
-	rpcx.proxy.recvice(msg)
-
-	rpcx.proxy.LogDebug("receive %s", reflect.TypeOf(msg))
 }
