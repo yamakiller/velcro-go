@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+import "client_id.proto";
+
+package prvs;
+option go_package=".;prvs";
+
+// 请求网关关闭客户端
+message RequestGatewayCloseClient {
+    network.ClientID Target = 1;
+}
+
+// 通知某服务客户端连接已关闭
+message ClientClosed {
+    network.ClientID ClientID = 1;
+}
+
+

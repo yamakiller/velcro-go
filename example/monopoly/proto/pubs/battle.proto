@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package pubs;
+option go_package=".;pubs";
+
+message CreateBattleSpace{
+    string mapURI = 1;
+}
+
+message CreateBattleSpaceResp{
+    string spaceId = 1;
+    string mapURI  = 2;
+}
+
+message BattleSpacePlayerSimple {
+    string display = 1;
+    int32  pos     = 2;
+}
+
+message BattleSpaceDataSimple {
+    string spaceId = 1;
+    string mapURI  = 2;
+    string masterUid = 3;
+    string masterIcon = 4;
+    string masterDisplay = 5;
+    repeated BattleSpacePlayerSimple players = 6;
+}
+
+
+message BattleSpacePlayer {
+    string uid = 1;
+    string display = 2;
+    string icon    = 3;
+    int32  pos     = 4;
+}
+
+message BattleSpaceData {
+    string  spaceId = 1;
+    string  mapURI  = 2;
+    string  masterUid = 3;
+    fixed64 starttime = 4;
+    int32   state = 5;
+    repeated BattleSpacePlayer players = 6;
+}
+
+message GetBattleSpaceList {
+    int32 start = 1;
+    int32 size  = 2;
+}
+
+message GetBattleSpaceListResp {
+    int32 start = 1;
+    int32 count = 2;
+    repeated BattleSpaceDataSimple spaces = 3;
+}
+
+
+message EnterBattleSpace {
+    string spaceId = 1;
+}
+
+message EnterBattleSpaceResp {
+    BattleSpaceData space = 1;
+}

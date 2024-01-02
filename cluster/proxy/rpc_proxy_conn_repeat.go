@@ -26,7 +26,7 @@ func (rpcr *RpcProxyConnRepeat) start() {
 		repeat.Repeat(repeat.FnWithCounter(rpcr.reconnect),
 			// 如果 reconnect 返回空停止流程
 			repeat.StopOnSuccess(),
-			repeat.WithDelay(repeat.ExponentialBackoff(500*time.Millisecond).Set()))
+			repeat.WithDelay(repeat.ExponentialBackoff(200*time.Millisecond).Set()))
 
 		rpcr.mu.Lock()
 		if !rpcr.isStopped() {

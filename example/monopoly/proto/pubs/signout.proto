@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pubs;
+option go_package=".;pubs";
+
+message SignOut{
+    string token = 1;
+}
+
+message SignOutResp{
+    int32 result = 1;
+}

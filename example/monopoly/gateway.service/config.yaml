@@ -1,6 +1,13 @@
-laddr: 127.0.0.1:8800
-vaddr: 127.0.0.1:8800
-router-uri: ./
-encryption-enabled: false
-online-number: 5000
-request-timeout-limit: 2000
+server:
+  - laddr: 127.0.0.1:8800
+  - vaddr: 172.0.0.1:8800
+  - encryption-enabled: false
+  - online-number: 5000
+  - request-timeout-max: 2000
+router: 
+  - uri: routes.yaml
+  - dialtimeout: 2000
+  - kleepalive: 2000
+  - algorithm: p2c
+
+

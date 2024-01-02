@@ -5,6 +5,7 @@ import (
 
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/syncx"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type RpcPool interface {
@@ -16,13 +17,10 @@ func NewDefaultRpcPool(s *RpcServer) RpcPool {
 	return &defaultRpcPool{pls: sync.Pool{
 		New: func() interface{} {
 			return &RpcClientConn{
-				recvice:         circbuf.New(32768, &syncx.NoMutex{}),
-				methods:         make(map[interface{}]func(*RpcClientContext) interface{}),
-				register:        s.Register,
-				unregister:      s.UnRegister,
-				unmarshal:       s.UnMarshal,
-				marshalping:     s.MarshalPing,
-				marshalresponse: s.MarshalResponse,
+				recvice:    circbuf.New(32768, &syncx.NoMutex{}),
+				methods:    make(map[interface{}]func(*RpcClientContext) (protoreflect.ProtoMessage, error)),
+				register:   s.Register,
+				unregister: s.UnRegister,
 			}
 
 		},

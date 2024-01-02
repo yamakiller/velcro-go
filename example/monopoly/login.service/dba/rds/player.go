@@ -2,60 +2,28 @@ package rds
 
 import (
 	"context"
-	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/yamakiller/velcro-go/example/monopoly/login.service/accounts/errs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/accounts/sign"
+	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
 	"github.com/yamakiller/velcro-go/network"
 )
 
 // 房间在Redis中的存储关系
 
-/*func MakeRoom(room datas.Room) error {
-	idRoomKey := getRoomKey(room.Id)
-
-	ctx, cancel := context.WithTimeout(context.Background(), setTimeout)
-	defer cancel()
-
-	pipe := _client.TxPipeline()
-	defer pipe.Close()
-
-	pipe.RPush(ctx, getRoomListKey(), room.Id)
-
-	roomess := map[string]interface{}{
-		"RoomId":           room.Id,
-		"RoomMap":          room.Map,
-		"RoomOwner":        room.Owner,
-		"RoomOwnerNatAddr": room.OwnerNatAddr,
-		"RoomMembers":      room.Members,
-		"RoomData":         room.Data,
-		"RoomCreate":       room.Create,
-	}
-	pipe.HSet(ctx, idRoomKey, roomess)
-
-	pipe.HSet(ctx, getPlayerIdKey(room.Members[0].Id), "RoomAddr", room.Id)
-
-	_, err := pipe.Exec(ctx)
-	if err != nil {
-		pipe.Discard()
-		return err
-	}
-
-	return nil
-}*/
-
 func RegisterPlayer(ctx context.Context,
-	uid string,
 	clientId *network.ClientID,
-	account *sign.Account,
-	onlineTimeout time.Duration) error {
+	uid string,
+	displayName string,
+	account *sign.Account) error {
 
-	mutex := sync.NewMutex(getPlayerLockKey(uid))
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
 	if err := mutex.Lock(); err != nil {
 		return err
 	}
 
-	n, err := client.Exists(ctx, getPlayerUidKey(uid)).Result()
+	n, err := client.Exists(ctx, rdsconst.GetPlayerUidKey(uid)).Result()
 	if err != nil {
 		mutex.Unlock()
 		return err
@@ -63,7 +31,7 @@ func RegisterPlayer(ctx context.Context,
 
 	oldClientID := ""
 	if n > 0 {
-		oldClientID, err = client.Get(ctx, getPlayerUidKey(uid)).Result()
+		oldClientID, err = client.Get(ctx, rdsconst.GetPlayerUidKey(uid)).Result()
 		if err != nil {
 			mutex.Unlock()
 			return err
@@ -75,36 +43,36 @@ func RegisterPlayer(ctx context.Context,
 
 	pipe.Do(ctx, "MULTI")
 
-	pipe.Set(ctx, getPlayerUidKey(uid), clientId.ToString(), 0)
+	pipe.Set(ctx, rdsconst.GetPlayerUidKey(uid), clientId.ToString(), 0)
+	pipe.Set(ctx, rdsconst.GetPlayerDisplayNameKey(displayName), uid, 0)
 
 	if oldClientID != clientId.ToString() && oldClientID != "" {
-		pipe.Del(ctx, getPlayerClientIDKey(oldClientID))
+		pipe.Del(ctx, rdsconst.GetPlayerClientIDKey(oldClientID))
 	} else {
-		pipe.RPush(ctx, player_online_table, uid)
+		pipe.RPush(ctx, rdsconst.PlayerOnlineTable, uid)
 	}
 
-	pipe.Set(ctx, getPlayerClientIDKey(clientId.ToString()), uid, 0)
+	pipe.Set(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString()), uid, 0)
 
 	if oldClientID != clientId.ToString() && oldClientID != "" {
 		// 如果用户已经存在更形client id 信息;
-		pipe.HSet(ctx, getPlayerOnlineDataKey(uid),
-			palyer_map_client_id_address, clientId.Address,
-			player_map_client_id_id, clientId.Id)
+		pipe.HSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid),
+			rdsconst.PalyerMapClientIdAddress, clientId.Address,
+			rdsconst.PlayerMapClientIdId, clientId.Id)
 	} else {
 		// 如果用户不存在,插入在线数据;
 		member := map[string]string{
-			player_map_client_uid:        uid,
-			palyer_map_client_id_address: clientId.Address,
-			player_map_client_id_id:      clientId.Id,
+			rdsconst.PlayerMapClientUid:         uid,
+			rdsconst.PlayerMapClientDisplayName: displayName,
+			rdsconst.PalyerMapClientIdAddress:   clientId.Address,
+			rdsconst.PlayerMapClientIdId:        clientId.Id,
 		}
 		for mkey, mvalue := range account.Externs {
 			member[mkey] = mvalue
 		}
 
-		pipe.HMSet(ctx, getPlayerOnlineDataKey(uid), member)
+		pipe.HMSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), member)
 	}
-
-	pipe.Expire(ctx, getPlayerUidKey(uid), onlineTimeout)
 
 	pipe.Do(ctx, "exec")
 
@@ -121,48 +89,40 @@ func RegisterPlayer(ctx context.Context,
 	return nil
 }
 
-func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID) error {
-	uid, err := client.Get(ctx, getPlayerClientIDKey(clientId.ToString())).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return nil
-		}
+func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID, uid string) (map[string]string, error) {
 
-		return err
-	}
-
-	mutex := sync.NewMutex(getPlayerLockKey(uid))
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
 	if err := mutex.Lock(); err != nil {
-		return err
+		return nil, err
 	}
 
-	n, err := client.Exists(ctx, getPlayerUidKey(uid)).Result()
-	if err != nil {
+	results, err := client.HGetAll(ctx, rdsconst.GetPlayerOnlineDataKey(uid)).Result()
+
+	if err == redis.Nil {
 		mutex.Unlock()
-		return err
+		return nil, nil
 	}
 
-	oldClientID := ""
-	if n > 0 {
-		oldClientID, err = client.Get(ctx, getPlayerUidKey(uid)).Result()
-		if err != nil {
-			mutex.Unlock()
-			return err
-		}
+	displayName := results[rdsconst.PlayerMapClientDisplayName]
+
+	// 拥有者权限检查
+	if !clientId.Equal(&network.ClientID{Address: results[rdsconst.PalyerMapClientIdAddress],
+		Id: results[rdsconst.PlayerMapClientIdId]}) {
+		mutex.Unlock()
+		return nil, errs.ErrPermissionsLost
 	}
 
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 
 	pipe.Do(ctx, "MULTI")
-	if oldClientID != clientId.ToString() && oldClientID != "" {
-		pipe.Del(ctx, getPlayerClientIDKey(oldClientID))
-	}else{
-		pipe.Del(ctx, getPlayerClientIDKey(clientId.ToString()))
-	}
-	
-	pipe.Del(ctx, getPlayerOnlineDataKey(uid))
-	pipe.Del(ctx, getPlayerUidKey(uid))
+
+	pipe.Del(ctx, rdsconst.GetPlayerUidKey(uid))
+	pipe.Del(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString()))
+	pipe.Del(ctx, rdsconst.GetPlayerDisplayNameKey(displayName))
+	pipe.LRem(ctx, rdsconst.PlayerOnlineTable, 1, uid)
+
+	pipe.Del(ctx, rdsconst.GetPlayerOnlineDataKey(uid))
 
 	pipe.Do(ctx, "exec")
 
@@ -170,15 +130,16 @@ func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID) error {
 	if err != nil {
 		pipe.Discard()
 		mutex.Unlock()
-		return err
+		return nil, err
 	}
 
 	mutex.Unlock()
-	return nil
+
+	return results, nil
 }
 
 func IsAuth(ctx context.Context, clientId *network.ClientID) (bool, error) {
-	uid, err := client.Get(ctx, getPlayerClientIDKey(clientId.ToString())).Result()
+	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return false, nil
@@ -187,12 +148,15 @@ func IsAuth(ctx context.Context, clientId *network.ClientID) (bool, error) {
 		return false, err
 	}
 
-	mutex := sync.NewMutex(getPlayerLockKey(uid))
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
 	if err := mutex.Lock(); err != nil {
 		return false, err
 	}
 
-	values, err := client.HMGet(ctx, getPlayerOnlineDataKey(uid), palyer_map_client_id_address, player_map_client_id_id).Result()
+	values, err := client.HMGet(ctx,
+		rdsconst.GetPlayerOnlineDataKey(uid),
+		rdsconst.PalyerMapClientIdAddress,
+		rdsconst.PlayerMapClientIdId).Result()
 	if err != nil {
 		if err == redis.Nil {
 			mutex.Unlock()
@@ -211,6 +175,20 @@ func IsAuth(ctx context.Context, clientId *network.ClientID) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// GetPlayerUID 获取客户端绑定的UID
+func GetPlayerUID(ctx context.Context, clientId *network.ClientID) (string, error) {
+	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", nil
+		}
+
+		return "", err
+	}
+
+	return uid, nil
 }
 
 /*func GetUserCount(ctx context.Context) (int64, error) {

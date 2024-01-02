@@ -18,12 +18,12 @@ func NewUDPNetworkSystemConfig(config *Config) *NetworkSystem {
 	if ns.Config.MetricsProvider != nil {
 		ns.Config.meriicsKey = "udpserver" + ns.ID
 	}
-	ns._producer = config.Producer
-	ns._handlers = NewHandlerRegistry(ns, config.VAddr)
-	ns._extensions = extensions.NewExtensions()
-	ns._extensionId = extensions.NextExtensionID()
-	ns._logger = config.LoggerFactory(ns)
-	ns._module = newUDPNetworkServerModule(ns)
+	ns.producer = config.Producer
+	ns.handlers = NewHandlerRegistry(ns, config.VAddr)
+	ns.extensions = extensions.NewExtensions()
+	ns.extensionId = extensions.NextExtensionID()
+	ns.logger = config.LoggerFactory(ns)
+	ns.module = newUDPNetworkServerModule(ns)
 
 	return ns
 }

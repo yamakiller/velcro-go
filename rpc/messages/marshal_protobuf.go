@@ -1,88 +1,104 @@
 package messages
 
 import (
+	"encoding/binary"
+	"time"
+
 	"github.com/yamakiller/velcro-go/utils"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func MarshalRequestProtobuf(sequenceID int32, timeout uint64, message interface{}) ([]byte, error) {
-	protomessage := message.(proto.Message)
-	msgBytes, err := proto.Marshal(protomessage)
+func MarshalRequestProtobuf(sequenceID int32, timeout uint64, message proto.Message) ([]byte, error) {
+	msgAny, err := anypb.New(message)
 	if err != nil {
 		return nil, err
 	}
 
-	msgName := proto.MessageName(protomessage)
-	msgNameBytes := []byte(string(msgName))
-	msgNameLen := len(msgNameBytes)
+	request := &RpcRequestMessage{
+		SequenceID:  sequenceID,
+		ForwardTime: uint64(time.Now().UnixMilli()),
+		Timeout:     timeout,
+		Message:     msgAny,
+	}
 
-	var msgBodyBytes []byte = make([]byte, 0)
-
-	msgBodyBytes = append(msgBodyBytes, uint8(msgNameLen))
-	msgBodyBytes = append(msgBodyBytes, msgNameBytes[:]...)
-	msgBodyBytes = append(msgBodyBytes, msgBytes[:]...)
-
-	var msgBuffer []byte = make([]byte, utils.AlignOf(uint32(len(msgBodyBytes)+RpcRequestHeaderLength), uint32(4)))
-	length, err := marshalRequest(msgBuffer[:len(msgBodyBytes)+RpcRequestHeaderLength], sequenceID, timeout, msgBodyBytes)
+	msgBytes, err := proto.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
-	return msgBuffer[:length], nil
+
+	data := make([]byte, utils.AlignOf(uint32(len(msgBytes)+3), uint32(4)))
+	data[0] = RpcRequest
+	binary.BigEndian.PutUint16(data[1:3], uint16(len(msgBytes)))
+	n := copy(data[3:len(msgBytes)+3], msgBytes)
+
+	return data[:n], nil
 }
 
-func MarshalResponseProtobuf(sequenceID int32, result int8, message interface{}) ([]byte, error) {
-	protomessage := message.(proto.Message)
-	var msgBodyBytes []byte = nil
-	var msgBodyLength int = 0
-	if message != nil {
-		msgBytes, err := proto.Marshal(protomessage)
-		if err != nil {
-			return nil, err
-		}
-
-		msgName := proto.MessageName(protomessage)
-		msgNameBytes := []byte(string(msgName))
-		msgNameLen := len(msgNameBytes)
-
-		msgBodyBytes = make([]byte, 0)
-		msgBodyBytes = append(msgBodyBytes, uint8(msgNameLen))
-		msgBodyBytes = append(msgBodyBytes, msgNameBytes[:]...)
-		msgBodyBytes = append(msgBodyBytes, msgBytes[:]...)
-
-		msgBodyLength = len(msgBodyBytes)
-	}
-
-	var msgBuffer []byte = make([]byte, utils.AlignOf(uint32(msgBodyLength+RpcResponseHeaderLength), uint32(4)))
-	length, err := marshalResponse(msgBuffer[:msgBodyLength+RpcResponseHeaderLength], sequenceID, result, msgBodyBytes)
+func MarshalResponseProtobuf(sequenceID int32, result proto.Message) ([]byte, error) {
+	resultAny, err := anypb.New(result)
 	if err != nil {
 		return nil, err
 	}
-	return msgBuffer[:length], nil
+
+	resp := &RpcResponseMessage{
+		SequenceID: sequenceID,
+		Result:     resultAny,
+	}
+
+	respBytes, err := proto.Marshal(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]byte, utils.AlignOf(uint32(len(respBytes)+3), uint32(4)))
+	data[0] = RpcResponse
+	binary.BigEndian.PutUint16(data[1:3], uint16(len(respBytes)))
+	n := copy(data[3:len(respBytes)+3], respBytes)
+
+	return data[:n], nil
 }
 
-func MarshalMessageProtobuf(sequenceID int32, message interface{}) ([]byte, error) {
-	protomessage := message.(proto.Message)
-	msgBytes, err := proto.Marshal(protomessage)
+/*func MarshalMessageProtobuf(sequenceID int32, message proto.Message) ([]byte, error) {
+	msgAny, err := anypb.New(message)
 	if err != nil {
 		return nil, err
 	}
 
-	msgName := proto.MessageName(protomessage)
-	msgNameBytes := []byte(string(msgName))
-	msgNameLen := len(msgNameBytes)
+	msg := &RpcMsgMessage{
+		SequenceID: sequenceID,
+		Message:    msgAny,
+	}
 
-	var msgBodyBytes []byte = make([]byte, 0)
-
-	msgBodyBytes = append(msgBodyBytes, uint8(msgNameLen))
-	msgBodyBytes = append(msgBodyBytes, msgNameBytes[:]...)
-	msgBodyBytes = append(msgBodyBytes, msgBytes[:]...)
-
-	var msgBodyLength int = len(msgBodyBytes)
-
-	var msgBuffer []byte = make([]byte, utils.AlignOf(uint32(msgBodyLength+RpcMessageHeaderLength), uint32(4)))
-	length, err := marshalMessage(msgBuffer[:msgBodyLength+RpcMessageHeaderLength], sequenceID, msgBodyBytes)
+	msgBytes, err := proto.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
-	return msgBuffer[:length], nil
+
+	data := make([]byte, utils.AlignOf(uint32(len(msgBytes)+3), uint32(4)))
+	data[0] = RpcMessage
+
+	binary.BigEndian.PutUint16(data[1:3], uint16(len(msgBytes)))
+	n := copy(data[3:len(msgBytes)+3], msgBytes)
+
+	return data[:n], nil
+}*/
+
+func MarshalPingProtobuf(VerifyKey uint64) ([]byte, error) {
+	msg := &RpcPingMessage{
+		VerifyKey: VerifyKey,
+	}
+
+	msgBytes, err := proto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]byte, utils.AlignOf(uint32(len(msgBytes)+3), uint32(4)))
+	data[0] = RpcPing
+
+	binary.BigEndian.PutUint16(data[1:3], uint16(len(msgBytes)))
+	n := copy(data[3:len(msgBytes)+3], msgBytes)
+
+	return data[:n], nil
 }

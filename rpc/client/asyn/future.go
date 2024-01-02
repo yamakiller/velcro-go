@@ -2,9 +2,10 @@ package asyn
 
 import (
 	"sync"
-	"sync/atomic"
 	"time"
-	"unsafe"
+
+	"github.com/yamakiller/velcro-go/rpc/messages"
+	"google.golang.org/protobuf/proto"
 )
 
 // 请求器
@@ -12,37 +13,26 @@ type Future struct {
 	sequenceID int32
 	cond       *sync.Cond
 	done       bool
-	result     interface{}
+	request    *messages.RpcRequestMessage
+	result     proto.Message
 	err        error
 	t          *time.Timer
 }
 
-func (ref *Future) wait() {
+// Error 错误信息
+func (ref *Future) Error() error {
+	return ref.err
+}
+
+// Result 结果
+func (ref *Future) Result() proto.Message {
+	return ref.result
+}
+
+func (ref *Future) Wait() {
 	ref.cond.L.Lock()
 	for !ref.done {
 		ref.cond.Wait()
 	}
 	ref.cond.L.Unlock()
-}
-
-func (ref *Future) Stop(slf *Conn) {
-	ref.cond.L.Lock()
-	if ref.done {
-		ref.cond.L.Unlock()
-
-		return
-	}
-
-	ref.done = true
-	tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&ref.t))))
-
-	if tp != nil {
-		tp.Stop()
-	}
-
-	//移除
-	slf.removeFuture(ref.sequenceID)
-
-	ref.cond.L.Unlock()
-	ref.cond.Signal()
 }

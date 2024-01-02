@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package prvs;
+option go_package=".;prvs";
+
+message ReportNat {
+    string  BattleSpaceID = 1; // 对战空间ID
+    string  VerifiyCode = 2;   // 对战空间验证码
+    string  NatAddr = 3;       // Nat地址
+}

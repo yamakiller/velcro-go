@@ -1,0 +1,9 @@
+syntax = "proto3";
+package pubs;
+option go_package=".;pubs";
+
+
+message PingMsg {
+    fixed64 VerificationKey = 1;
+}
+

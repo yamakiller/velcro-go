@@ -31,13 +31,6 @@ func WithDialTimeout(timeout int32) RpcProxyConfigOption {
 	}
 }
 
-// WithDecided 设置策略决策
-func WithDecided(decided Decided) RpcProxyConfigOption {
-	return func(opt *RpcProxyOption) {
-		opt.Decided = decided
-	}
-}
-
 // WithLogger 设置日志代理
 func WithLogger(logger logs.LogAgent) RpcProxyConfigOption {
 	return func(opt *RpcProxyOption) {
@@ -45,21 +38,8 @@ func WithLogger(logger logs.LogAgent) RpcProxyConfigOption {
 	}
 }
 
-func WithConnectedCallback(f func(*RpcProxyConn)) RpcProxyConfigOption {
-	return func(opt *RpcProxyOption) {
-		opt.ConnectedCallback = f
-	}
-}
-
-// WithReceiveCallback 设置连接器消息回调函数
-func WithReceiveCallback(f func(interface{})) RpcProxyConfigOption {
-	return func(opt *RpcProxyOption) {
-		opt.RecviceCallback = f
-	}
-}
-
 // WithTargetHost 设置目标主机组
-func WithTargetHost(host []string) RpcProxyConfigOption {
+func WithTargetHost(host []ResolveAddress) RpcProxyConfigOption {
 	return func(opt *RpcProxyOption) {
 		opt.TargetHost = host
 	}
@@ -75,22 +55,22 @@ func WithAlgorithm(algorithm string) RpcProxyConfigOption {
 
 // RpcProxyOption
 type RpcProxyOption struct {
-	Kleepalive        int32         // 连接器保活时间(单位:毫秒)
-	DialTimeout       int32         // 连接器连接等待超时时间(单位:毫秒)
-	Decided           Decided       // 决定
-	Logger            logs.LogAgent // 日志代理
-	ConnectedCallback func(*RpcProxyConn)
-	RecviceCallback   func(interface{})
+	Kleepalive  int32         // 连接器保活时间(单位:毫秒)
+	DialTimeout int32         // 连接器连接等待超时时间(单位:毫秒)
+	Logger      logs.LogAgent // 日志代理
+	TargetHost  []ResolveAddress
+	Algorithm   string
+}
 
-	TargetHost []string
-	Algorithm  string
+type ResolveAddress struct {
+	VAddr string `yaml:"vaddr"` // 虚拟地址
+	LAddr string `yaml:"laddr"` // 真实地址
 }
 
 func defaultRpcProxyOption() *RpcProxyOption {
 	return &RpcProxyOption{
 		Kleepalive:  10 * 1000,
 		DialTimeout: 2 * 1000,
-		Decided:     DecidedOneToOne,
 		Algorithm:   "p2c",
 	}
 }

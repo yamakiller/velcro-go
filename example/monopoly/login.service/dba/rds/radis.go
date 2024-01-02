@@ -29,12 +29,6 @@ var (
 )
 
 const (
-	playNameKey = "player_name:"
-	playNickKey = "player_nick:"
-	playLockKey = "player_lock:"
-)
-
-const (
 	maxOfCoefficient  = 4 // 最大连接系数
 	idleOfCoefficient = 2 // 空闲连接系数
 )

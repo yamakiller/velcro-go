@@ -13,12 +13,12 @@ type GatewayClientPool interface {
 	Put(c Client)
 }
 
-func NewDefaultGatewayClientPool(g *Gateway,message_max_timeout int64) GatewayClientPool {
+func NewDefaultGatewayClientPool(g *Gateway, request_timeout int64) GatewayClientPool {
 	return &defaultGatewayClientPool{pls: sync.Pool{
 		New: func() interface{} {
 			return &ClientConn{gateway: g,
-				message_max_timeout: message_max_timeout,
-				recvice: circbuf.New(32768, &syncx.NoMutex{})}
+				requestTimeout: request_timeout,
+				recvice:        circbuf.New(32768, &syncx.NoMutex{})}
 		},
 	}}
 }

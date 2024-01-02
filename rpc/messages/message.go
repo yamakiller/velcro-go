@@ -6,17 +6,19 @@ type RpcQos int
 const (
 	RpcRequest = iota
 	RpcResponse
-	RpcMessage
 	RpcPing
 )
 
 const (
-	RpcQosDiscard = iota // 数据可丢弃
-	RpcQosRetry          // 数据可重试
-	RpcQosMust           // 数据必须达
+	RpcHeaderLength int = 3
 )
 
-const (
+type RpcHeader struct {
+	Direct RpcDirect
+	Length uint16
+}
+
+/*const (
 	RpcRequestHeaderLength  int = 25
 	RpcResponseHeaderLength int = 8
 	RpcMessageHeaderLength  int = 7
@@ -39,9 +41,9 @@ type RpcResonseHeader struct {
 type RpcMessageHeader struct {
 	SequenceID int32
 	BodyLength uint16
-}
+}*/
 
-type RpcRequestMessage struct {
+/*type RpcRequestMessage struct {
 	SequenceID  int32
 	ForwardTime uint64
 	Timeout     uint64
@@ -62,4 +64,4 @@ type RpcMsgMessage struct {
 
 type RpcPingMessage struct {
 	VerifyKey uint64
-}
+}*/

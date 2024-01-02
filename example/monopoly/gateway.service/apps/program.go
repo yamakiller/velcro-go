@@ -1,12 +1,12 @@
 package apps
 
 import (
+	"github.com/kardianos/service"
 	"github.com/yamakiller/velcro-go/cluster/gateway"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/utils/files"
-	"github.com/kardianos/service"
 )
 
 type Program struct {
@@ -17,8 +17,8 @@ type Program struct {
 func (p *Program) Start(s service.Service) error {
 
 	p.logAgent = gateway.ProduceLogger()
-
 	p.logAgent.Info("[PROGRAM]", "Gateway Start loading environment variables")
+
 	envs.With(&envs.YAMLEnv{})
 	if err := envs.Instance().Load("configs",
 		files.NewLocalPathFull("config.yaml"),

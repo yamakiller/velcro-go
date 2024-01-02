@@ -2,15 +2,13 @@ package gateway
 
 import (
 	"errors"
-	"reflect"
 	"sync"
 
-	"github.com/yamakiller/velcro-go/cluster/protocols"
-	"github.com/yamakiller/velcro-go/cluster/proxy"
+	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/router"
+	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -24,65 +22,52 @@ func New(options ...GatewayConfigOption) *Gateway {
 		network.WithLoggerFactory(func(System *network.NetworkSystem) logs.LogAgent {
 			return g.logger
 		}),
-		network.WithNetworkTimeout(config.NetowkTimeout),
+		network.WithKleepalive(config.Kleepalive),
 		network.WithProducer(g.newClient),
-		network.WithVAddr(config.VAddr),
+		network.WithVAddr("Gateway@"+config.VAddr),
 	)
 
 	if config.ClientPool == nil {
-		config.ClientPool = NewDefaultGatewayClientPool(g, config.MessageMaxTimeout)
+		config.ClientPool = NewDefaultGatewayClientPool(g, config.RequestDefautTimeout)
 	}
 
-	g.clientPool = config.ClientPool
-	g.onlineOfNumber = config.OnlineOfNumber
-	g.routeURI = config.RouterURI
-	g.routeProxyDialTimeout = config.RouteProxyDialTimeout
-	g.routeProxyKleepalive = config.RouteProxyKleepalive
-	g.routeProxyAlgorithm = config.RouteProxyAlgorithm
-	g.vaddr = config.VAddr
-	g.laddr = config.LAddr
+	g.servant = serve.New(
+		serve.WithLoggerAgent(g.logger),
+		serve.WithProducerActor(g.newServantActor),
+		serve.WithName("Gateway"),
+		serve.WithLAddr(config.LAddrServant),
+		serve.WithVAddr(config.VAddr),
+		serve.WithKleepalive(config.KleepaliveServant),
+		serve.WithRoute(config.Router),
+	)
+
 	return g
 }
 
 // Gateway 网关
 type Gateway struct {
 	System *network.NetworkSystem
-	vaddr  string // 网关局域网虚拟地址
-	laddr  string // 网关监听地址
-	// 连接客户端
-	clients        map[network.CIDKEY]Client
-	onlineOfNumber int
-	mu             sync.Mutex
-	clientPool     GatewayClientPool
-	// 编码
+	Config *GatewayConfig
+	// 客户端--------------------
+	clients    map[network.CIDKEY]Client
+	mu         sync.Mutex
 	encryption *Encryption
-	// 路由
-	routeURI              string
-	routeProxyDialTimeout int32
-	routeProxyKleepalive  int32
-	routeProxyAlgorithm   string
-	routeGroup            *router.RouterGroup
-	logger                logs.LogAgent
+	//---------------------------
+	// 内部服务来连接
+	servant *serve.Servant
+	logger  logs.LogAgent
 }
 
 func (g *Gateway) Start() error {
-	r, err := router.Loader(g.routeURI,
-		router.WithAlgorithm(g.routeProxyAlgorithm),
-		router.WithDialTimeout(g.routeProxyDialTimeout),
-		router.WithKleepalive(g.routeProxyKleepalive),
-		router.WithConnectedCallback(g.onProxyConnected),
-		router.WithReceiveCallback(g.onProxyRecvice),
-	)
 
-	if err != nil {
+	if err := g.servant.Start(); err != nil {
 		return err
 	}
 
-	// 尝试连接服务
-	g.routeGroup = r
-	g.routeGroup.Open()
 	// 打开监听
-	if err := g.System.Open(g.laddr); err != nil {
+	if err := g.System.Open(g.Config.LAddr); err != nil {
+		g.servant.Stop()
+
 		return err
 	}
 
@@ -105,9 +90,10 @@ func (g *Gateway) Stop() error {
 		g.System = nil
 	}
 
-	if g.routeGroup != nil {
-		g.routeGroup.Shutdown()
+	if g.servant != nil {
+		g.servant.Stop()
 	}
+
 	return nil
 }
 
@@ -115,7 +101,7 @@ func (g *Gateway) Register(cid *network.ClientID, l Client) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	if len(g.clients) >= g.onlineOfNumber {
+	if len(g.clients) >= g.Config.OnlineOfNumber {
 		return errors.New("gateway: client fulled")
 	}
 
@@ -174,7 +160,7 @@ func (g *Gateway) ReleaseClient(c Client) {
 
 // FindRouter 查询路由
 func (g *Gateway) FindRouter(message proto.Message) *router.Router {
-	return g.routeGroup.Get(string(proto.MessageName(message)))
+	return g.servant.FindRouter(message)
 }
 
 // NewClientID 创建客户端连接者ID
@@ -182,80 +168,21 @@ func (g *Gateway) NewClientID(id string) *network.ClientID {
 	return g.System.NewClientID(id)
 }
 
-func (g *Gateway) onProxyConnected(conn *proxy.RpcProxyConn) {
-	_, err := conn.RequestMessage(&protocols.RegisterRequest{
-		Vaddr: g.vaddr,
-	}, 2000)
-	if err != nil {
-		g.System.Error("proxy %s connected fail[error:%s]", conn.ToAddress(), err.Error())
-		conn.Close()
-		return
-	}
-}
+func (g *Gateway) newServantActor(conn *serve.ServantClientConn) serve.ServantClientActor {
+	actor := &GatewayServantActor{gateway: g}
 
-func (g *Gateway) onProxyRecvice(message interface{}) {
-	switch msg := message.(type) {
-	case *protocols.Backward:
-		g.onBackwardClient(msg)
-	case *protocols.UpdateRule:
-		g.onUpdateRuleClient(msg)
-	case *protocols.Closing:
-		g.onCloseClient(msg)
-	default:
-		g.System.Error("Unknown %s message received from service", reflect.TypeOf(msg).Name())
-	}
-}
+	conn.Register(&prvs.RequestGatewayPush{}, actor.onRequestGatewayPush)
+	conn.Register(&prvs.RequestGatewayAlterRule{}, actor.onRequestGatewayAlterRule)
+	conn.Register(&prvs.RequestGatewayCloseClient{}, actor.onRequestGatewayCloseClient)
 
-func (g *Gateway) onBackwardClient(backward *protocols.Backward) {
-	if backward.Target == nil {
-		return
-	}
-
-	c := g.GetClient(backward.Target)
-	if c == nil {
-		return
-	}
-
-	defer g.ReleaseClient(c)
-	anyMsg := backward.Msg.ProtoReflect().New().Interface()
-
-	if err := backward.Msg.UnmarshalTo(anyMsg); err != nil {
-		g.System.Error("forward %s message unmarshal fail[error: %s]",
-			string(backward.Msg.MessageName()),
-			err.Error())
-		return
-	}
-
-	c.Post(anyMsg)
-}
-
-func (g *Gateway) onUpdateRuleClient(updateRule *protocols.UpdateRule) {
-	c := g.GetClient(updateRule.Target)
-	if c == nil {
-		g.System.Debug("update rule fail unfound client id[%+v]", updateRule.Target)
-		return
-	}
-	defer g.ReleaseClient(c)
-	c.onUpdateRule(updateRule.Rule)
-}
-
-func (g *Gateway) onCloseClient(closing *protocols.Closing) {
-	c := g.GetClient(closing.ClientID)
-	if c == nil {
-		// 如果没有找到目标连接, 哪说明目标连接已关闭.
-		g.routeGroup.Broadcast(&protocols.Closed{ClientID: closing.ClientID}, messages.RpcQosRetry)
-		return
-	}
-	defer g.ReleaseClient(c)
-
-	c.ClientID().UserClose()
+	return actor
 }
 
 func (g *Gateway) newClient(System *network.NetworkSystem) network.Client {
-	return g.clientPool.Get()
+	return g.Config.ClientPool.Get()
 }
 
 func (g *Gateway) free(l Client) {
 	l.Destory()
-	g.clientPool.Put(l)
+	g.Config.ClientPool.Put(l)
 }

@@ -1,36 +1,27 @@
 package sync
 
 import (
+	"errors"
 	"net"
 	"sync/atomic"
 	"time"
 
-	"github.com/yamakiller/velcro-go/rpc"
-	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
+	"github.com/yamakiller/velcro-go/rpc/errs"
+	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/syncx"
+	"google.golang.org/protobuf/proto"
 )
 
-func NewConn(options ...ConnConfigOption) *Conn {
-	config := Configure(options...)
-
-	return NewConnConfig(config)
-}
-
-func NewConnConfig(config *ConnConfig) *Conn {
+func NewConn() *Conn {
 	return &Conn{
-		sequence:       0,
-		MarshalRequest: config.MarshalRequest,
-		UnMarshal:      config.UnMarshal,
+		sequence: 0,
 	}
 }
 
 type Conn struct {
 	conn     net.Conn
 	sequence int32
-
-	MarshalRequest rpcmessage.MarshalRequestFunc
-	UnMarshal      rpcmessage.UnMarshalFunc
 }
 
 func (rc *Conn) Dial(addr string, timeout time.Duration) error {
@@ -48,16 +39,10 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 }
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
-func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}, error) {
+func (rc *Conn) RequestMessage(message proto.Message, timeout uint64) (proto.Message, error) {
 	seq := rc.nextID()
-	req := &rpcmessage.RpcRequestMessage{
-		SequenceID:  seq,
-		ForwardTime: uint64(time.Now().UnixMilli()),
-		Timeout:     timeout,
-		Message:     message,
-	}
-
-	b, err := rc.MarshalRequest(req.SequenceID, req.Timeout, req.Message)
+	forwardTime := uint64(time.Now().UnixMilli())
+	b, err := messages.MarshalRequestProtobuf(seq, timeout, message)
 	if err != nil {
 		return nil, err
 	}
@@ -73,14 +58,14 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 	for {
 
 		if timeout > 0 {
-			diff := int64(req.Timeout) - (time.Now().UnixMilli() - int64(req.ForwardTime))
+			diff := int64(timeout) - (time.Now().UnixMilli() - int64(forwardTime))
 			rc.conn.SetReadDeadline(time.Now().Add(time.Duration(diff) * time.Millisecond))
 		}
 
 		nr, err := rc.conn.Read(readtemp[:])
 		if err != nil {
 			if e, ok := err.(net.Error); ok && e.Timeout() {
-				return nil, rpc.ErrorRequestTimeout
+				return nil, errs.ErrorRequestTimeout
 			}
 			return nil, err
 		}
@@ -90,7 +75,7 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 			nw, err := readbuffer.Write(readtemp[offset:nr])
 			offset += nw
 
-			_, msg, uerr := rc.UnMarshal(readbuffer)
+			_, msg, uerr := messages.UnMarshalProtobuf(readbuffer)
 			if uerr != nil {
 				return nil, uerr
 			}
@@ -102,14 +87,19 @@ func (rc *Conn) RequestMessage(message interface{}, timeout uint64) (interface{}
 
 			if msg != nil {
 				switch message := msg.(type) {
-				case *rpcmessage.RpcPingMessage:
-				case *rpcmessage.RpcResponseMessage:
+				case *messages.RpcPingMessage:
+				case *messages.RpcResponseMessage:
 					if message.SequenceID == seq {
-						if message.Result == -1 {
-							return nil, rpc.ErrorRequestTimeout
+						result, err := message.Result.UnmarshalNew()
+						if err != nil {
+							return nil, err
 						}
-
-						return message.Message, nil
+						switch r := result.(type) {
+						case *messages.RpcError:
+							return nil, errors.New(r.Err)
+						default:
+							return r, nil
+						}
 					}
 				default:
 				}

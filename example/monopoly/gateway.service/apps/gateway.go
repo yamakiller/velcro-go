@@ -8,12 +8,11 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/gateway"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
-	local_protocols "github.com/yamakiller/velcro-go/example/monopoly/generate/protocols"
+	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
+	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/logs"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/encryption"
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"
-	"github.com/yamakiller/velcro-go/utils/files"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -25,7 +24,7 @@ type gatewayService struct {
 
 func (gs *gatewayService) Start(logAgent logs.LogAgent) error {
 
-	udpAddr, err := net.ResolveUDPAddr("udp", envs.Instance().Get("configs").(*configs.Config).LAddr)
+	udpAddr, err := net.ResolveUDPAddr("udp", envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
 	if err != nil {
 		return err
 	}
@@ -38,9 +37,9 @@ func (gs *gatewayService) Start(logAgent logs.LogAgent) error {
 
 	gs.gwy = gateway.New(
 		gateway.WithLoggerAgent(logAgent),
-		gateway.WithLAddr(envs.Instance().Get("configs").(*configs.Config).LAddr),
-		gateway.WithVAddr(envs.Instance().Get("configs").(*configs.Config).VAddr),
-		gateway.WithRouterURI(files.NewLocalPathFull("routes.yaml")),
+		gateway.WithLAddr(envs.Instance().Get("configs").(*configs.Config).Server.LAddr),
+		gateway.WithVAddr(envs.Instance().Get("configs").(*configs.Config).Server.VAddr),
+		gateway.WithRoute(&envs.Instance().Get("configs").(*configs.Config).Router),
 		gateway.WithNewEncryption(gs.newEncryption),
 	)
 
@@ -72,7 +71,7 @@ func (gs *gatewayService) Stop() error {
 }
 
 func (gs *gatewayService) newEncryption() *gateway.Encryption {
-	if !envs.Instance().Get("configs").(*configs.Config).EncryptionEnabled {
+	if !envs.Instance().Get("configs").(*configs.Config).Server.EncryptionEnabled {
 		return nil
 	}
 
@@ -106,7 +105,7 @@ func (gs *gatewayService) udpLoop() {
 			continue
 		}
 
-		msg := local_protocols.ReportNatClient{}
+		request := mpubs.ReportNatClient{}
 		// 设定生存周期
 		{
 			defer gs.gwy.ReleaseClient(client)
@@ -119,25 +118,25 @@ func (gs *gatewayService) udpLoop() {
 				dLen = copy(temp[:len(decrypt)], decrypt)
 			}
 
-			if err := proto.Unmarshal(temp[:dLen], &msg); err != nil {
+			if err := proto.Unmarshal(temp[:dLen], &request); err != nil {
 				gs.gwy.System.Error("udp unmarshal protobuff fail[error:%s]", err.Error())
 				continue
 			}
 		}
 
-		postMsg := &local_protocols.ReportNat{RoomID: msg.RoomID,
-			VerifiyCode: msg.VerifiyCode,
+		postRequest := &mprvs.ReportNat{BattleSpaceID: request.BattleSpaceID,
+			VerifiyCode: request.VerifiyCode,
 			NatAddr:     addr.AddrPort().String()}
 
 		// 查找目标路由
-		r := gs.gwy.FindRouter(postMsg)
+		r := gs.gwy.FindRouter(postRequest)
 		if r == nil {
 			gs.gwy.System.Warning("protocols.ReportNat message unfound router")
 			continue
 		}
 
 		// 推送到目标服务
-		if err := r.Proxy.PostMessage(postMsg, messages.RpcQosDiscard); err != nil {
+		if _, err := r.Proxy.RequestMessage(postRequest, 2000); err != nil {
 			gs.gwy.System.Error("protocols.ReportNat post message fail %s", err.Error())
 			continue
 		}

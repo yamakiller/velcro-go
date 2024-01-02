@@ -17,35 +17,35 @@ import (
 
 func newTCPNetworkServerModule(system *NetworkSystem) *tcpNetworkServerModule {
 	return &tcpNetworkServerModule{
-		_system:    system,
-		_waitGroup: sync.WaitGroup{},
-		_stoped:    make(chan struct{}),
+		system:    system,
+		waitGroup: sync.WaitGroup{},
+		stoped:    make(chan struct{}),
 	}
 }
 
 type tcpNetworkServerModule struct {
-	_system    *NetworkSystem
-	_listen    net.Listener
-	_waitGroup sync.WaitGroup
-	_stoped    chan struct{}
+	system    *NetworkSystem
+	listen    net.Listener
+	waitGroup sync.WaitGroup
+	stoped    chan struct{}
 }
 
-func (tns *tcpNetworkServerModule) Open(addr string) error {
+func (t *tcpNetworkServerModule) Open(addr string) error {
 	address, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return err
 	}
 
-	tns._listen, err = net.ListenTCP("tcp", address)
+	t.listen, err = net.ListenTCP("tcp", address)
 
 	if err != nil {
 		return err
 	}
 
-	tns._waitGroup.Add(1)
+	t.waitGroup.Add(1)
 
 	go func() {
-		defer tns._waitGroup.Done()
+		defer t.waitGroup.Done()
 
 		var (
 			err  error
@@ -53,11 +53,11 @@ func (tns *tcpNetworkServerModule) Open(addr string) error {
 		)
 		for {
 			select {
-			case <-tns._stoped:
+			case <-t.stoped:
 				goto exit_label
 			default:
 			}
-			conn, err = tns._listen.Accept()
+			conn, err = t.listen.Accept()
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -67,12 +67,12 @@ func (tns *tcpNetworkServerModule) Open(addr string) error {
 					continue
 				}
 
-				tns._system.Debug("%s accept error %v", address, err)
+				t.system.Debug("%s accept error %v", address, err)
 				goto exit_label
 			}
 
 			//新建客户端
-			if err = tns.spawn(conn); err != nil {
+			if err = t.spawn(conn); err != nil {
 				conn.Close()
 				continue
 			}
@@ -83,52 +83,52 @@ func (tns *tcpNetworkServerModule) Open(addr string) error {
 	return nil
 }
 
-func (tns *tcpNetworkServerModule) Stop() {
-	if tns._stoped != nil {
-		close(tns._stoped)
+func (t *tcpNetworkServerModule) Stop() {
+	if t.stoped != nil {
+		close(t.stoped)
 	}
 
-	if tns._listen != nil {
-		tns._listen.Close()
+	if t.listen != nil {
+		t.listen.Close()
 	}
 
-	tns._waitGroup.Wait()
-	tns._stoped = nil
-	tns._listen = nil
+	t.waitGroup.Wait()
+	t.stoped = nil
+	t.listen = nil
 }
 
 func (tnc *tcpNetworkServerModule) Network() string {
 	return "tcpserver"
 }
 
-func (tns *tcpNetworkServerModule) isStopped() bool {
+func (t *tcpNetworkServerModule) isStopped() bool {
 	select {
-	case <-tns._stoped:
+	case <-t.stoped:
 		return true
 	default:
 		return false
 	}
 }
 
-func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
-	id := tns._system._handlers.NextId()
+func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
+	id := t.system.handlers.NextId()
 
-	ctx := clientContext{_system: tns._system, _state: stateAccept}
+	ctx := clientContext{system: t.system, state: stateAccept}
 	handler := &tcpClientHandler{
 		conn:      conn,
 		sendbox:   containers.NewQueue(4, &syncx.NoMutex{}),
 		sendcond:  sync.NewCond(&sync.Mutex{}),
-		keepalive: uint32(tns._system.Config.NetowkTimeout),
+		keepalive: uint32(t.system.Config.Kleepalive),
 		invoker:   &ctx,
 		mailbox:   make(chan interface{}, 1),
 		stopper:   make(chan struct{}),
-		refdone:   &tns._waitGroup,
+		refdone:   &t.waitGroup,
 	}
 
-	if tns._system.Config.MetricsProvider != nil {
-		sysMetrics, ok := tns._system._extensions.Get(tns._system._extensionId).(*Metrics)
+	if t.system.Config.MetricsProvider != nil {
+		sysMetrics, ok := t.system.extensions.Get(t.system.extensionId).(*Metrics)
 		if ok && sysMetrics._enabled {
-			if instruments := sysMetrics._metrics.Get(ctx._system.Config.meriicsKey); instruments != nil {
+			if instruments := sysMetrics._metrics.Get(ctx.system.Config.meriicsKey); instruments != nil {
 				sysMetrics.PrepareSendQueueLengthGauge()
 				meter := otel.Meter(metrics.LibName)
 				if _, err := meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
@@ -136,13 +136,13 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 					return nil
 				}); err != nil {
 					err = fmt.Errorf("failed to instrument Client SendQueue, %w", err)
-					tns._system.Error(err.Error())
+					t.system.Error(err.Error())
 				}
 			}
 		}
 	}
 
-	cid, ok := tns._system._handlers.Push(handler, id)
+	cid, ok := t.system.handlers.Push(handler, id)
 	if !ok {
 		handler.Close()
 		// 释放资源
@@ -155,7 +155,7 @@ func (tns *tcpNetworkServerModule) spawn(conn net.Conn) error {
 		return errors.Errorf("client-id %s existed", cid.ToString())
 	}
 
-	ctx._self = cid
+	ctx.self = cid
 	ctx.incarnateClient()
 
 	handler.start()

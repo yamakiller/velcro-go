@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/yamakiller/velcro-go/network"
-	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 )
 
 func New(options ...ConnConfigOption) *RpcServer {
@@ -16,10 +15,6 @@ func New(options ...ConnConfigOption) *RpcServer {
 		config.Pool = NewDefaultRpcPool(s)
 	}
 	s.clientPool = config.Pool
-	s.MarshalMessage = config.MarshalMessage
-	s.MarshalPing = config.MarshalPing
-	s.MarshalResponse = config.MarshalResponse
-	s.UnMarshal = config.UnMarshal
 
 	return s
 }
@@ -30,12 +25,6 @@ type RpcServer struct {
 	clients    map[network.CIDKEY]RpcClient
 	clientPool RpcPool
 	climu      sync.Mutex
-
-	MarshalResponse rpcmessage.MarshalResponseFunc
-	MarshalMessage  rpcmessage.MarshalMessageFunc
-	MarshalPing     rpcmessage.MarshalPingFunc
-
-	UnMarshal rpcmessage.UnMarshalFunc
 }
 
 func (s *RpcServer) WithPool(pool RpcPool) {

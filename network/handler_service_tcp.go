@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"net"
 	"runtime"
 	sync "sync"
@@ -36,20 +37,22 @@ func (c *tcpClientHandler) start() {
 	go c.guardian()
 }
 
-func (c *tcpClientHandler) PostMessage(b []byte) {
+func (c *tcpClientHandler) PostMessage(b []byte) error {
 	c.sendcond.L.Lock()
 	if c.isStopped() {
 		c.sendcond.L.Unlock()
-		return
+		return errors.New("client: closed")
 	}
 	c.sendbox.Push(b)
 	c.sendcond.L.Unlock()
 
 	c.sendcond.Signal()
+
+	return nil
 }
 
-func (c *tcpClientHandler) PostToMessage(b []byte, target net.Addr) {
-	panic("tcp undefine post to message")
+func (c *tcpClientHandler) PostToMessage(b []byte, target net.Addr) error {
+	return errors.New("client: undefine post to message")
 }
 
 func (c *tcpClientHandler) Close() {
@@ -161,7 +164,7 @@ func (c *tcpClientHandler) reader() {
 	c.sendcond.Signal()
 
 	c.mailbox <- &ClosedMessage{}
-	
+
 }
 
 func (c *tcpClientHandler) guardian() {
