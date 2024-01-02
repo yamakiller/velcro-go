@@ -24,7 +24,12 @@ func (p *Program) Start(s service.Service) error {
 		p.logAgent.Close()
 		return err
 	}
-
+	p.service = &battleService{}
+	if err := p.service.Start(p.logAgent); err != nil {
+		p.logAgent.Fatal("[PROGRAM]", "Failed to load environment variables[error:%s]", err.Error())
+		p.logAgent.Close()
+		return err
+	}
 	return nil
 }
 
