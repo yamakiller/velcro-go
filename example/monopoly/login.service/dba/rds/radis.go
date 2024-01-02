@@ -14,7 +14,7 @@ import (
 var (
 	client       *redis.Client    = nil
 	sync         *redsync.Redsync = nil
-	addr         string
+	address      string
 	password     string = ""
 	dialTimeout  int    = 10000
 	readTimeout  int    = 10000
@@ -35,7 +35,7 @@ const (
 
 // WithAddr 集群地址表 addr:port
 func WithAddr(addr string) {
-	addr = addr
+	address = addr
 }
 
 // WithPwd 连接验证密码
@@ -61,7 +61,7 @@ func WithWriteTimeout(millisec int) {
 func Connection() error {
 
 	client = redis.NewClient(&redis.Options{
-		Addr:         addr,
+		Addr:         address,
 		DB:           0,
 		Password:     password,
 		PoolSize:     runtime.NumCPU() * maxOfCoefficient,

@@ -60,8 +60,9 @@ func (bs *battleService) newBattleActor(conn *serve.ServantClientConn) serve.Ser
 	conn.Register(&mpubs.CreateBattleSpace{}, actor.onCreateBattleSpace)
 	conn.Register(&mpubs.GetBattleSpaceList{}, actor.onGetBattleSpaceList)
 	conn.Register(&mpubs.EnterBattleSpace{}, actor.onEnterBattleSpace)
+	conn.Register(&mpubs.DisplayBattleSpace{}, actor.onDisplayBattleSpace)
 	conn.Register(&mprvs.ReportNat{}, actor.onReportNat)
 	conn.Register(&mprvs.RequestExitBattleSpace{}, actor.onRequestExitBattleSpace)
-
+	
 	return actor
 }
