@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/yamakiller/velcro-go/cluster/repeat"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 // RpcProxyConnRepeat 代理重试器
@@ -12,7 +13,6 @@ type RpcProxyConnRepeat struct {
 	host         string
 	conn         *RpcProxyConn
 	dialTimeouot time.Duration
-	printError   func(fmts string, args ...interface{})
 	stopper      chan struct{}
 	mu           sync.Mutex
 	wg           sync.WaitGroup
@@ -63,7 +63,7 @@ func (rpcr *RpcProxyConnRepeat) reconnect(counter int) error {
 	}
 
 	if err := rpcr.conn.Redial(); err != nil {
-		rpcr.printError("%s connect fail[error:%s]", rpcr.host, err.Error())
+		vlog.Error(rpcr.host, "connect fail", err.Error())
 		return err
 	}
 

@@ -11,6 +11,7 @@ import (
 	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/syncx"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -145,7 +146,7 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 				message: postMsg})*/
 
 		default:
-			ctx.Debug("unknown RPC message")
+			vlog.Debug("unknown RPC message")
 		}
 	rpc_client_offset_label:
 		if offset == len(ctx.Message()) {

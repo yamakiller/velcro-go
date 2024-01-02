@@ -2,17 +2,15 @@ package network
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"strings"
 	sync "sync"
 
 	"github.com/pkg/errors"
-	"github.com/yamakiller/velcro-go/containers"
-	"github.com/yamakiller/velcro-go/debugs/metrics"
+	"github.com/yamakiller/velcro-go/gofunc"
+	"github.com/yamakiller/velcro-go/utils/collection"
 	"github.com/yamakiller/velcro-go/utils/syncx"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/metric"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 func newTCPNetworkServerModule(system *NetworkSystem) *tcpNetworkServerModule {
@@ -39,18 +37,20 @@ func (t *tcpNetworkServerModule) Open(addr string) error {
 	t.listen, err = net.ListenTCP("tcp", address)
 
 	if err != nil {
+		vlog.Infof("VELCRO: network server listen failed, addr=%s error=%s", addr, err)
 		return err
 	}
+	vlog.Errorf("VELCRO: network server listen at addr=%s", addr)
 
 	t.waitGroup.Add(1)
-
-	go func() {
+	gofunc.GoFunc(context.Background(), func() {
 		defer t.waitGroup.Done()
 
 		var (
 			err  error
 			conn net.Conn
 		)
+
 		for {
 			select {
 			case <-t.stoped:
@@ -67,7 +67,7 @@ func (t *tcpNetworkServerModule) Open(addr string) error {
 					continue
 				}
 
-				t.system.Debug("%s accept error %v", address, err)
+				vlog.Debugf("%s accept error %v", address, err)
 				goto exit_label
 			}
 
@@ -78,7 +78,7 @@ func (t *tcpNetworkServerModule) Open(addr string) error {
 			}
 		}
 	exit_label:
-	}()
+	})
 
 	return nil
 }
@@ -116,30 +116,13 @@ func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	ctx := clientContext{system: t.system, state: stateAccept}
 	handler := &tcpClientHandler{
 		conn:      conn,
-		sendbox:   containers.NewQueue(4, &syncx.NoMutex{}),
+		sendbox:   collection.NewQueue(4, &syncx.NoMutex{}),
 		sendcond:  sync.NewCond(&sync.Mutex{}),
 		keepalive: uint32(t.system.Config.Kleepalive),
 		invoker:   &ctx,
 		mailbox:   make(chan interface{}, 1),
 		stopper:   make(chan struct{}),
 		refdone:   &t.waitGroup,
-	}
-
-	if t.system.Config.MetricsProvider != nil {
-		sysMetrics, ok := t.system.extensions.Get(t.system.extensionId).(*Metrics)
-		if ok && sysMetrics._enabled {
-			if instruments := sysMetrics._metrics.Get(ctx.system.Config.meriicsKey); instruments != nil {
-				sysMetrics.PrepareSendQueueLengthGauge()
-				meter := otel.Meter(metrics.LibName)
-				if _, err := meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
-					o.ObserveInt64(instruments.ClientSendQueueLength, int64(handler.sendbox.Length()), metric.WithAttributes(sysMetrics.CommonLabels(&ctx)...))
-					return nil
-				}); err != nil {
-					err = fmt.Errorf("failed to instrument Client SendQueue, %w", err)
-					t.system.Error(err.Error())
-				}
-			}
-		}
 	}
 
 	cid, ok := t.system.handlers.Push(handler, id)

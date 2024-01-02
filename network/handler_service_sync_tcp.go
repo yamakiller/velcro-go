@@ -1,10 +1,13 @@
 package network
 
 import (
+	"context"
 	"errors"
 	"net"
 	sync "sync"
 	"time"
+
+	"github.com/yamakiller/velcro-go/gofunc"
 )
 
 type tcpSyncClientHandler struct {
@@ -23,7 +26,10 @@ func (c *tcpSyncClientHandler) start() {
 	c.refdone.Add(1)
 	c.done.Add(1)
 
-	go c.reader()
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		c.reader,
+		gofunc.NewBasicInfo("reader", c.invoker.invokerEscalateFailure))
+
 }
 
 // PostMessage 直接写数据

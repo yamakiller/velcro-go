@@ -10,9 +10,9 @@ import (
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
 	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
-	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/utils/encryption"
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -22,7 +22,7 @@ type gatewayService struct {
 	udpWait sync.WaitGroup
 }
 
-func (gs *gatewayService) Start(logAgent logs.LogAgent) error {
+func (gs *gatewayService) Start() error {
 
 	udpAddr, err := net.ResolveUDPAddr("udp", envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
 	if err != nil {
@@ -36,7 +36,6 @@ func (gs *gatewayService) Start(logAgent logs.LogAgent) error {
 	gs.udp = udpConn
 
 	gs.gwy = gateway.New(
-		gateway.WithLoggerAgent(logAgent),
 		gateway.WithLAddr(envs.Instance().Get("configs").(*configs.Config).Server.LAddr),
 		gateway.WithVAddr(envs.Instance().Get("configs").(*configs.Config).Server.VAddr),
 		gateway.WithRoute(&envs.Instance().Get("configs").(*configs.Config).Router),
@@ -112,14 +111,14 @@ func (gs *gatewayService) udpLoop() {
 			if client.Secret() != nil {
 				decrypt, err := encryption.AesDecryptByGCM(temp[38:38+dLen], client.Secret())
 				if err != nil {
-					gs.gwy.System.Error("udp decrypt fail[error:%s]", err.Error())
+					vlog.Errorf("udp decrypt fail[error:%s]", err.Error())
 					continue
 				}
 				dLen = copy(temp[:len(decrypt)], decrypt)
 			}
 
 			if err := proto.Unmarshal(temp[:dLen], &request); err != nil {
-				gs.gwy.System.Error("udp unmarshal protobuff fail[error:%s]", err.Error())
+				vlog.Errorf("udp unmarshal protobuff fail[error:%s]", err.Error())
 				continue
 			}
 		}
@@ -131,13 +130,13 @@ func (gs *gatewayService) udpLoop() {
 		// 查找目标路由
 		r := gs.gwy.FindRouter(postRequest)
 		if r == nil {
-			gs.gwy.System.Warning("protocols.ReportNat message unfound router")
+			vlog.Warn("protocols.ReportNat message unfound router")
 			continue
 		}
 
 		// 推送到目标服务
 		if _, err := r.Proxy.RequestMessage(postRequest, 2000); err != nil {
-			gs.gwy.System.Error("protocols.ReportNat post message fail %s", err.Error())
+			vlog.Errorf("protocols.ReportNat post message fail %s", err.Error())
 			continue
 		}
 	}

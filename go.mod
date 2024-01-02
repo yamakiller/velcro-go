@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redsync/redsync/v4 v4.11.0
+	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38
 	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/kardianos/service v1.2.2

@@ -6,14 +6,13 @@ import (
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/dba/rds"
 	"github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
-	"github.com/yamakiller/velcro-go/logs"
 )
 
 type loginService struct {
 	login *serve.Servant
 }
 
-func (ls *loginService) Start(logAgent logs.LogAgent) error {
+func (ls *loginService) Start() error {
 
 	rds.WithAddr(envs.Instance().Get("configs").(*configs.Config).Redis.Addr)
 	rds.WithPwd(envs.Instance().Get("configs").(*configs.Config).Redis.Pwd)
@@ -26,7 +25,6 @@ func (ls *loginService) Start(logAgent logs.LogAgent) error {
 	}
 
 	ls.login = serve.New(
-		serve.WithLoggerAgent(logAgent),
 		serve.WithProducerActor(ls.newLoginActor),
 		serve.WithName("LoginService"),
 		serve.WithLAddr(envs.Instance().Get("configs").(*configs.Config).Server.LAddr),

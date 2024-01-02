@@ -23,11 +23,4 @@ type Context interface {
 	PostToMessage(*ClientID, []byte, net.Addr) error
 	// Close 关闭当前连接
 	Close(*ClientID)
-	// 日志
-	Info(sfmt string, args ...interface{})
-	Debug(sfmt string, args ...interface{})
-	Error(sfmt string, args ...interface{})
-	Warning(sfmt string, args ...interface{})
-	Fatal(sfmt string, args ...interface{})
-	Panic(sfmt string, args ...interface{})
 }

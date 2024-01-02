@@ -14,11 +14,11 @@ import (
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/yamakiller/velcro-go/containers/intrusive"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
 	"github.com/yamakiller/velcro-go/utils/syncx"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"

@@ -1,11 +1,13 @@
 package network
 
 import (
+	"context"
 	"errors"
 	"net"
 	sync "sync"
 
-	"github.com/yamakiller/velcro-go/containers"
+	"github.com/yamakiller/velcro-go/gofunc"
+	"github.com/yamakiller/velcro-go/utils/collection"
 )
 
 type udpMsg struct {
@@ -15,7 +17,7 @@ type udpMsg struct {
 
 type udpClientHandler struct {
 	conn      *net.UDPConn
-	sendbox   *containers.Queue
+	sendbox   *collection.Queue
 	sendcond  *sync.Cond
 	mailbox   chan interface{}
 	invoker   MessageInvoker
@@ -29,10 +31,19 @@ type udpClientHandler struct {
 func (u *udpClientHandler) start() {
 	u.refdone.Add(3)
 	u.done.Add(2)
-	go u.sender()
-	go u.reader()
+
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		u.sender,
+		gofunc.NewBasicInfo("sender", u.invoker.invokerEscalateFailure))
+
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		u.reader,
+		gofunc.NewBasicInfo("reader", u.invoker.invokerEscalateFailure))
+
 	u.guarddone.Add(1)
-	go u.guardian()
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		u.guardian,
+		gofunc.NewBasicInfo("guardian", u.invoker.invokerEscalateFailure))
 }
 
 func (u *udpClientHandler) PostMessage(b []byte) error {

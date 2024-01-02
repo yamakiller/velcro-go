@@ -2,11 +2,9 @@ package gateway
 
 import (
 	"github.com/yamakiller/velcro-go/cluster/router"
-	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/encryption/ecdh"
 	"github.com/yamakiller/velcro-go/utils/files"
-	"go.opentelemetry.io/otel/metric"
 )
 
 // GatewayConfigOption 是一个配置网关参数的函数
@@ -59,13 +57,6 @@ func WithNewEncryption(newFunc func() *Encryption) GatewayConfigOption {
 	}
 }
 
-// WithLoggerFactory 设置日志委托对象
-func WithLoggerAgent(logger logs.LogAgent) GatewayConfigOption {
-	return func(opt *GatewayConfig) {
-		opt.Logger = logger
-	}
-}
-
 // WithNetworkTimeout 设置客户端网络连接保活时间
 func WithKleepalive(timeout int32) GatewayConfigOption {
 	return func(opt *GatewayConfig) {
@@ -109,8 +100,6 @@ type GatewayConfig struct {
 	NewNetworkSystem     func(options ...network.ConfigOption) *network.NetworkSystem
 	ClientPool           GatewayClientPool
 	NewEncryption        func() *Encryption
-	MetricsProvider      metric.MeterProvider
-	Logger               logs.LogAgent
 	Kleepalive           int32
 	KleepaliveServant    int32
 	RequestDefautTimeout int64
@@ -122,7 +111,6 @@ func defaultGatewayConfig() *GatewayConfig {
 	return &GatewayConfig{
 		NewNetworkSystem:     network.NewTCPServerNetworkSystem,
 		NewEncryption:        defaultEncryption,
-		MetricsProvider:      nil,
 		Kleepalive:           2000,
 		KleepaliveServant:    2000,
 		RequestDefautTimeout: 1000,

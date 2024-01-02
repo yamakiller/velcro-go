@@ -1,11 +1,14 @@
 package network
 
 import (
+	"context"
 	"net"
 	"strings"
 	sync "sync"
 
 	"github.com/pkg/errors"
+	"github.com/yamakiller/velcro-go/gofunc"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 type tcpSyncNetworkServerModule struct {
@@ -24,12 +27,14 @@ func (t *tcpSyncNetworkServerModule) Open(addr string) error {
 	t.listen, err = net.ListenTCP("tcp", address)
 
 	if err != nil {
+		vlog.Infof("VELCRO: network server listen failed, addr=%s error=%s", addr, err)
 		return err
 	}
+	vlog.Errorf("VELCRO: network server listen at addr=%s", addr)
 
 	t.waitGroup.Add(1)
 
-	go func() {
+	gofunc.GoFunc(context.Background(), func() {
 		defer t.waitGroup.Done()
 
 		var (
@@ -52,7 +57,7 @@ func (t *tcpSyncNetworkServerModule) Open(addr string) error {
 					continue
 				}
 
-				t.system.Debug("%s accept error %v", address, err)
+				vlog.Debugf("%s accept error %v", address, err)
 				goto exit_label
 			}
 
@@ -63,7 +68,7 @@ func (t *tcpSyncNetworkServerModule) Open(addr string) error {
 			}
 		}
 	exit_label:
-	}()
+	})
 
 	return nil
 }

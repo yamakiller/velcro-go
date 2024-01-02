@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"github.com/yamakiller/velcro-go/rpc/client/asyn"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 type RpcProxyConn struct {
@@ -39,5 +40,5 @@ func (rpcx *RpcProxyConn) Closed() {
 		rpcx.repe.start()
 	}
 
-	rpcx.proxy.LogDebug("%s closed", rpcx.ToAddress())
+	vlog.Errorf("%s closed", rpcx.ToAddress())
 }

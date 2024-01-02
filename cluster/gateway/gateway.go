@@ -7,8 +7,8 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/cluster/serve"
-	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -16,12 +16,8 @@ func New(options ...GatewayConfigOption) *Gateway {
 
 	config := Configure(options...)
 
-	g := &Gateway{clients: make(map[network.CIDKEY]Client), logger: config.Logger}
+	g := &Gateway{clients: make(map[network.CIDKEY]Client)}
 	g.System = config.NewNetworkSystem(
-		network.WithMetricProviders(config.MetricsProvider),
-		network.WithLoggerFactory(func(System *network.NetworkSystem) logs.LogAgent {
-			return g.logger
-		}),
 		network.WithKleepalive(config.Kleepalive),
 		network.WithProducer(g.newClient),
 		network.WithVAddr("Gateway@"+config.VAddr),
@@ -32,7 +28,6 @@ func New(options ...GatewayConfigOption) *Gateway {
 	}
 
 	g.servant = serve.New(
-		serve.WithLoggerAgent(g.logger),
 		serve.WithProducerActor(g.newServantActor),
 		serve.WithName("Gateway"),
 		serve.WithLAddr(config.LAddrServant),
@@ -55,7 +50,6 @@ type Gateway struct {
 	//---------------------------
 	// 内部服务来连接
 	servant *serve.Servant
-	logger  logs.LogAgent
 }
 
 func (g *Gateway) Start() error {
@@ -77,16 +71,16 @@ func (g *Gateway) Start() error {
 func (g *Gateway) Stop() error {
 
 	if g.System != nil {
-		g.System.Info("Gateway Shutdown Closing client")
+		vlog.Info("Gateway Shutdown Closing client")
 
 		g.mu.Lock()
 		for _, c := range g.clients {
 			c.ClientID().UserClose()
 		}
 		g.mu.Unlock()
-		g.System.Info("Gateway Shutdown Closed client")
+		vlog.Info("Gateway Shutdown Closed client")
 		g.System.Shutdown()
-		g.System.Info("Gateway Shutdown")
+		vlog.Info("Gateway Shutdown")
 		g.System = nil
 	}
 

@@ -5,43 +5,31 @@ import (
 	"path/filepath"
 
 	"github.com/kardianos/service"
-	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/velcro-go/cluster/gateway"
-	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 type Program struct {
-	System   *gateway.Gateway
-	logAgent *logs.DefaultAgent
+	System *gateway.Gateway
 }
 
 func (p *Program) Start(s service.Service) error {
-	logLevel := logrus.DebugLevel
-	if os.Getenv("DEBUG") != "" {
-		logLevel = logrus.InfoLevel
-	}
 
-	logDir := p.getDirLog()
-
-	pLogHandle := logs.SpawnFileLogrus(logLevel, logDir, "")
-	p.logAgent = &logs.DefaultAgent{}
-	p.logAgent.WithHandle(pLogHandle)
-
-	p.System = gateway.New(gateway.WithLoggerAgent(p.logAgent), gateway.WithLAddr("127.0.0.1:8800"), gateway.WithVAddr("127.0.0.1:8810"))
+	p.System = gateway.New(gateway.WithLAddr("127.0.0.1:8800"), gateway.WithVAddr("127.0.0.1:8810"))
 
 	if err := p.System.Start(); err != nil {
-		p.logAgent.Error("", "Listening 127.0.0.1:8800 fail[error:%s]", err.Error())
+		vlog.Errorf("Listening 127.0.0.1:8800 fail[error:%s]", err.Error())
 		return err
 	}
 
-	p.logAgent.Info("", "Listening 127.0.0.1:8800")
+	vlog.Info("Listening 127.0.0.1:8800")
 
 	return nil
 }
 
 func (p *Program) Stop(s service.Service) error {
 	if p.System != nil {
-		p.logAgent.Info("", "Service Shutdown")
+		vlog.Info("Service Shutdown")
 		p.System.Stop()
 		p.System = nil
 	}

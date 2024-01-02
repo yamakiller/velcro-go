@@ -2,7 +2,6 @@ package serve
 
 import (
 	"github.com/yamakiller/velcro-go/cluster/router"
-	"github.com/yamakiller/velcro-go/logs"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -19,7 +18,6 @@ type ServantConfig struct {
 	LAddr           string
 	VAddr           string
 	Kleepalive      int32
-	Logger          logs.LogAgent
 	Router          *router.RouterConfig
 }
 
@@ -74,13 +72,6 @@ func WithLAddr(laddr string) ServantConfigOption {
 func WithVAddr(vaddr string) ServantConfigOption {
 	return func(config *ServantConfig) {
 		config.VAddr = vaddr
-	}
-}
-
-// WithLoggerAgent 设置关联日志文件
-func WithLoggerAgent(agent logs.LogAgent) ServantConfigOption {
-	return func(config *ServantConfig) {
-		config.Logger = agent
 	}
 }
 

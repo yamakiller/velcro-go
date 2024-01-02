@@ -12,6 +12,7 @@ import (
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -31,7 +32,7 @@ func (actor *LoginActor) onSignIn(ctx *serve.ServantClientContext) (proto.Messag
 	player, err := accounts.SignIn(ctx.Background, request.Token)
 	if err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onSignin error %s", err.Error())
+		vlog.ContextDebugf(ctx.Background, "onSignin error %s", err.Error())
 		return nil, err
 	}
 
@@ -97,18 +98,13 @@ func (actor *LoginActor) submitRequestCloseClient(ctx *serve.ServantClientContex
 func (actor *LoginActor) submitRequest(ctx *serve.ServantClientContext, request proto.Message) (proto.Message, error) {
 	r := actor.ancestor.FindRouter(request)
 	if r == nil {
-		if ctx != nil {
-			ctx.Context.Error("%s unfound router", proto.MessageName(request))
-		}
-
+		vlog.Errorf("%s unfound router", proto.MessageName(request))
 		return nil, errors.New("unfound router")
 	}
 
 	result, err := r.Proxy.RequestMessage(request, defaultRequestTimeout)
 	if err != nil {
-		if ctx != nil {
-			ctx.Context.Error("%s fail error %s", proto.MessageName(request), err.Error())
-		}
+		vlog.Errorf("%s fail error %s", proto.MessageName(request), err.Error())
 	}
 
 	return result, err

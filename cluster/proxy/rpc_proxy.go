@@ -6,9 +6,9 @@ import (
 
 	"github.com/yamakiller/velcro-go/cluster/balancer"
 	"github.com/yamakiller/velcro-go/cluster/repeat"
-	"github.com/yamakiller/velcro-go/logs"
 	"github.com/yamakiller/velcro-go/rpc/client/asyn"
 	"github.com/yamakiller/velcro-go/rpc/errs"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -49,7 +49,6 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 		hostAddrMap:  hostAddrMap,
 		balancer:     lb,
 		alive:        alive,
-		logger:       option.Logger,
 		stopper:      make(chan struct{}),
 	}, nil
 }
@@ -67,9 +66,7 @@ type RpcProxy struct {
 	connected func(*RpcProxyConn)
 	// 活着的目标
 	sync.RWMutex
-	alive map[string]bool
-	// 日志代理
-	logger  logs.LogAgent
+	alive   map[string]bool
 	stopper chan struct{}
 }
 
@@ -81,18 +78,17 @@ func (rpx *RpcProxy) Open() {
 			host:         rpx.hostAddrMap[host],
 			conn:         conn,
 			dialTimeouot: rpx.dialTimeouot,
-			printError:   rpx.LogError,
 		}
 
-		rpx.LogInfo("%s connecting", rpx.hostAddrMap[host])
+		vlog.Infof("%s connecting", rpx.hostAddrMap[host])
 		if err := conn.Dial(rpx.hostAddrMap[host], rpx.dialTimeouot); err != nil {
-			rpx.LogError("%s connect fail[error:%s]", rpx.hostAddrMap[host], err.Error())
+			vlog.Errorf("%s connect fail[error:%s]", rpx.hostAddrMap[host], err.Error())
 			// 启动退避启动器
 			conn.repe.start()
 			continue
 		}
 
-		rpx.LogInfo("%s connected", rpx.hostAddrMap[host])
+		vlog.Infof("%s connected", rpx.hostAddrMap[host])
 
 		rpx.alive[host] = true
 		rpx.balancer.Add(host)
@@ -195,28 +191,6 @@ func (rpx *RpcProxy) Shutdown() {
 	rpx.hostMap = make(map[string]*RpcProxyConn)
 	rpx.alive = make(map[string]bool)
 	rpx.balancer = nil
-}
-
-func (rpx *RpcProxy) LogError(fmts string, args ...interface{}) {
-	if rpx.logger == nil {
-		return
-	}
-	rpx.logger.Error("[RPCPROXY]", fmts, args...)
-}
-
-func (rpx *RpcProxy) LogInfo(fmts string, args ...interface{}) {
-	if rpx.logger == nil {
-		return
-	}
-	rpx.logger.Info("[RPCPROXY]", fmts, args...)
-}
-
-// logdebug 内部调用debug日志
-func (rpx *RpcProxy) LogDebug(fmts string, args ...interface{}) {
-	if rpx.logger == nil {
-		return
-	}
-	rpx.logger.Debug("[RPCPROXY]", fmts, args...)
 }
 
 func (rpx *RpcProxy) isStopped() bool {

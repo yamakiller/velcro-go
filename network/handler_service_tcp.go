@@ -1,13 +1,15 @@
 package network
 
 import (
+	"context"
 	"errors"
 	"net"
 	"runtime"
 	sync "sync"
 	"time"
 
-	"github.com/yamakiller/velcro-go/containers"
+	"github.com/yamakiller/velcro-go/gofunc"
+	"github.com/yamakiller/velcro-go/utils/collection"
 )
 
 var _ Handler = &tcpClientHandler{}
@@ -15,7 +17,7 @@ var _ Handler = &tcpClientHandler{}
 // ClientHandler TCP服务客户端处理程序
 type tcpClientHandler struct {
 	conn           net.Conn
-	sendbox        *containers.Queue
+	sendbox        *collection.Queue
 	sendcond       *sync.Cond
 	mailbox        chan interface{}
 	keepalive      uint32
@@ -31,10 +33,20 @@ type tcpClientHandler struct {
 func (c *tcpClientHandler) start() {
 	c.refdone.Add(3)
 	c.done.Add(2)
-	go c.sender()
-	go c.reader()
+
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		c.sender,
+		gofunc.NewBasicInfo("sender", c.invoker.invokerEscalateFailure))
+
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		c.reader,
+		gofunc.NewBasicInfo("reader", c.invoker.invokerEscalateFailure))
+
 	c.guarddone.Add(1)
-	go c.guardian()
+
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		c.guardian,
+		gofunc.NewBasicInfo("guardian", c.invoker.invokerEscalateFailure))
 }
 
 func (c *tcpClientHandler) PostMessage(b []byte) error {
@@ -147,7 +159,6 @@ func (c *tcpClientHandler) reader() {
 			if e, ok := err.(net.Error); ok && e.Timeout() {
 				c.keepaliveError++
 				if c.keepaliveError <= 3 {
-					//c.invoker.invokerPing()
 					c.mailbox <- &PingMessage{}
 					continue
 				}
@@ -156,7 +167,6 @@ func (c *tcpClientHandler) reader() {
 		}
 
 		c.keepaliveError = 0
-		//c.invoker.invokerRecvice(tmp[:n], remoteAddr)
 		c.mailbox <- &RecviceMessage{Data: tmp[:n], Addr: remoteAddr}
 	}
 

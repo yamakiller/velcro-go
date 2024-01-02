@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"github.com/kardianos/service"
-	"github.com/sirupsen/logrus"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/tcpclient/configs"
-	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 var appName string = "test-client"
@@ -32,32 +31,21 @@ type Program struct {
 	success        int64
 	failed         int64
 	writeBytes     []byte
-	logAgent       *logs.DefaultAgent
 }
 
 func (p *Program) Start(s service.Service) error {
 
-	logLevel := logrus.DebugLevel
-	if os.Getenv("DEBUG") != "" {
-		logLevel = logrus.InfoLevel
-	}
-
-	pLogHandle := logs.SpawnFileLogrus(logLevel, "", "")
-	p.logAgent = &logs.DefaultAgent{}
-	p.logAgent.WithHandle(pLogHandle)
-
 	cfgFilePath, err := p.GetLocalConfigFilePath()
 	if err != nil {
-		p.logAgent.Error(appName, "load config fail:[error:%s]", err.Error())
-		p.logAgent.Close()
+		vlog.Errorf("load config fail:[error:%s]", err.Error())
+
 		return err
 	}
 
 	config := configs.Config{}
 	envs.With(config.IEnv())
 	if err := envs.Instance().Load("config", cfgFilePath, &config); err != nil {
-		p.logAgent.Error(appName, "Load %s config file fail-%s", cfgFilePath, err.Error())
-		p.logAgent.Close()
+		vlog.Errorf("Load %s config file fail-%s", cfgFilePath, err.Error())
 		return err
 	}
 

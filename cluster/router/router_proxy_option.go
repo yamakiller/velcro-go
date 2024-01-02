@@ -1,9 +1,5 @@
 package router
 
-import (
-	"github.com/yamakiller/velcro-go/logs"
-)
-
 // ConnConfigOption 是一个配置rpc connector 的函数
 type RouterRpcProxyConfigOption func(option *RouterRpcProxyOption)
 
@@ -31,13 +27,6 @@ func WithDialTimeout(timeout int32) RouterRpcProxyConfigOption {
 	}
 }
 
-// WithLogger 设置日志代理
-func WithLogger(logger logs.LogAgent) RouterRpcProxyConfigOption {
-	return func(opt *RouterRpcProxyOption) {
-		opt.Logger = logger
-	}
-}
-
 // WithAlgorithm 设置平衡器算法:ip-hash、consistent-hash、p2c、
 // random、round-robin、least-load、bounded.
 func WithAlgorithm(algorithm string) RouterRpcProxyConfigOption {
@@ -48,9 +37,8 @@ func WithAlgorithm(algorithm string) RouterRpcProxyConfigOption {
 
 // RouterRpcProxyOption 路由rpc proxy 参数设置
 type RouterRpcProxyOption struct {
-	Kleepalive  int32         // 连接器保活时间(单位:毫秒)
-	DialTimeout int32         // 连接器连接等待超时时间(单位:毫秒)
-	Logger      logs.LogAgent // 日志代理
+	Kleepalive  int32 // 连接器保活时间(单位:毫秒)
+	DialTimeout int32 // 连接器连接等待超时时间(单位:毫秒)
 	Algorithm   string
 }
 

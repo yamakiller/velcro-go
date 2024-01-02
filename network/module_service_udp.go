@@ -5,8 +5,9 @@ import (
 	sync "sync"
 
 	"github.com/pkg/errors"
-	"github.com/yamakiller/velcro-go/containers"
+	"github.com/yamakiller/velcro-go/utils/collection"
 	"github.com/yamakiller/velcro-go/utils/syncx"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 func newUDPNetworkServerModule(system *NetworkSystem) *udpNetworkServerModule {
@@ -32,15 +33,17 @@ func (u *udpNetworkServerModule) Open(addr string) error {
 
 	u.listen, err = net.ListenUDP("udp", address)
 	if err != nil {
+		vlog.Infof("VELCRO: network server udp listen failed, addr=%s error=%s", addr, err)
 		return err
 	}
+	vlog.Errorf("VELCRO: network server udp listen at addr=%s", addr)
 
 	id := u.system.handlers.NextId()
 
 	ctx := clientContext{system: u.system, state: stateAccept}
 	handler := &udpClientHandler{
 		conn:     u.listen,
-		sendbox:  containers.NewQueue(4, &syncx.NoMutex{}),
+		sendbox:  collection.NewQueue(4, &syncx.NoMutex{}),
 		sendcond: sync.NewCond(&sync.Mutex{}),
 		invoker:  &ctx,
 		mailbox:  make(chan interface{}, 1),

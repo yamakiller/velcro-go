@@ -7,14 +7,13 @@ import (
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/dba/rds"
 	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
-	"github.com/yamakiller/velcro-go/logs"
 )
 
 type battleService struct {
 	battle *serve.Servant
 }
 
-func (bs *battleService) Start(logAgent logs.LogAgent) error {
+func (bs *battleService) Start() error {
 
 	rds.WithAddr(envs.Instance().Get("configs").(*configs.Config).Redis.Addr)
 	rds.WithPwd(envs.Instance().Get("configs").(*configs.Config).Redis.Pwd)
@@ -27,7 +26,6 @@ func (bs *battleService) Start(logAgent logs.LogAgent) error {
 	}
 
 	bs.battle = serve.New(
-		serve.WithLoggerAgent(logAgent),
 		serve.WithProducerActor(bs.newBattleActor),
 		serve.WithName("BattleService"),
 		serve.WithLAddr(envs.Instance().Get("configs").(*configs.Config).Server.LAddr),

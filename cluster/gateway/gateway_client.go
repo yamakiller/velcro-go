@@ -15,6 +15,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -80,7 +81,7 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 	msg := &pubs.PingMsg{VerificationKey: dl.ping}
 	msgb, err := protomessge.Marshal(msg, dl.secret)
 	if err != nil {
-		ctx.Error("ping marshal message [error:%v]", err.Error())
+		vlog.Errorf("ping marshal message [error:%v]", err.Error())
 		return
 	}
 
@@ -111,14 +112,14 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 
 		msg, err := protomessge.UnMarshal(dl.recvice, dl.secret)
 		if err != nil {
-			ctx.Error("unmarshal message error:%v", err.Error())
+			vlog.Errorf("unmarshal message error:%v", err.Error())
 			ctx.Close(ctx.Self())
 			return
 		}
 
 		if msg == nil {
 			if werr != nil {
-				ctx.Error("unmarshal message error:%v", err.Error())
+				vlog.Errorf("unmarshal message error:%v", err.Error())
 				ctx.Close(ctx.Self())
 				return
 			}
@@ -148,7 +149,7 @@ func (dl *ClientConn) Closed(ctx network.Context) {
 	r := dl.gateway.FindRouter(request)
 	if r != nil {
 		if _, err := r.Proxy.RequestMessage(request, dl.requestTimeout); err != nil {
-			ctx.Error("request client %s closed to %s", request.ClientID.ToString(), "")
+			vlog.Errorf("request client %s closed to %s", request.ClientID.ToString(), "")
 		}
 	}
 
@@ -165,30 +166,30 @@ func (dl *ClientConn) Destory() {
 func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
 
 	if dl.ping == 0 {
-		ctx.Debug("unrequest ping")
+		vlog.Debug("unrequest ping")
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	if dl.ping+1 != message.VerificationKey {
-		ctx.Debug("ping reply error %d/%d", dl.ping+1, message.VerificationKey)
+		vlog.Debugf("ping reply error %d/%d", dl.ping+1, message.VerificationKey)
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	dl.ping = 0
-	ctx.Debug("ping reply success")
+	vlog.Debug("ping reply success")
 }
 
 func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg) {
 	if dl.gateway.encryption == nil {
-		ctx.Debug("encrypted communication not enabled")
+		vlog.Debug("encrypted communication not enabled")
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	if dl.ruleID != router.NONE_RULE_ID {
-		ctx.Debug("key exchange completed, abnormal process")
+		vlog.Debug("key exchange completed, abnormal process")
 		ctx.Close(ctx.Self())
 		return
 	}
@@ -200,27 +201,27 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg
 
 	pubkeyByte, err := base64.StdEncoding.DecodeString(message.Key)
 	if err != nil {
-		ctx.Debug("public key decode error %s", err.Error())
+		vlog.Debugf("public key decode error %s", err.Error())
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	prvKey, pubKey, err = dl.gateway.encryption.Ecdh.GenerateKey(rand.Reader)
 	if err != nil {
-		ctx.Debug("generate public/private key error %s", err.Error())
+		vlog.Debugf("generate public/private key error %s", err.Error())
 		ctx.Close(ctx.Self())
 	}
 
 	remotePubkey, ok := dl.gateway.encryption.Ecdh.Unmarshal(pubkeyByte)
 	if !ok {
-		ctx.Debug("Public key parsing exception")
+		vlog.Debug("Public key parsing exception")
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	secret, err := dl.gateway.encryption.Ecdh.GenerateSharedSecret(prvKey, remotePubkey)
 	if err != nil {
-		ctx.Debug("generate shared secret error %s", err.Error())
+		vlog.Debugf("generate shared secret error %s", err.Error())
 		ctx.Close(ctx.Self())
 		return
 	}
@@ -233,7 +234,7 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg
 	pubkeyMessage := &pubs.PubkeyMsg{Key: base64.StdEncoding.EncodeToString(dl.gateway.encryption.Ecdh.Marshal(pubKey))}
 	b, err := protomessge.Marshal(pubkeyMessage, nil)
 	if err != nil {
-		ctx.Debug("marshal pubkey message error %s", err.Error())
+		vlog.Debugf("marshal pubkey message error %s", err.Error())
 		ctx.Close(ctx.Self())
 		return
 	}
@@ -244,14 +245,14 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg
 func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Message) {
 	r := dl.gateway.FindRouter(message)
 	if r == nil {
-		ctx.Warning("%s message unfound router",
+		vlog.Warnf("%s message unfound router",
 			string(protoreflect.FullName(proto.MessageName(message))))
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	if !r.IsRulePass(dl.ruleID) {
-		ctx.Warning("%s message Insufficient permissions",
+		vlog.Warnf("%s message Insufficient permissions",
 			string(protoreflect.FullName(proto.MessageName(message))))
 		ctx.Close(ctx.Self())
 		return
@@ -259,7 +260,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 
 	bodyAny, err := anypb.New(message)
 	if err != nil {
-		ctx.Warning("%s message encoding failed error %s",
+		vlog.Warnf("%s message encoding failed error %s",
 			string(protoreflect.FullName(proto.MessageName(message))), err.Error())
 		ctx.Close(ctx.Self())
 		return
@@ -289,7 +290,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 
 	b, msge := protomessge.Marshal(result.(proto.Message), dl.secret)
 	if msge != nil {
-		ctx.Error("requesting pubs.Error marshal %s message fail[error:%s]", reflect.TypeOf(result).Name(), msge.Error())
+		vlog.Errorf("requesting pubs.Error marshal %s message fail[error:%s]", reflect.TypeOf(result).Name(), msge.Error())
 		ctx.Close(ctx.Self())
 		return
 	}
