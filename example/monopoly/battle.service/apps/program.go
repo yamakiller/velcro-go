@@ -17,13 +17,12 @@ func (p *Program) Start(s service.Service) error {
 
 	envs.With(&envs.YAMLEnv{})
 	if err := envs.Instance().Load("config", files.NewLocalPathFull("config.yaml"), &configs.Config{}); err != nil {
-		vlog.Fatal("[PROGRAM]", "Failed to load environment variables", err.Error())
+		vlog.Fatal("[PROGRAM]", "Failed to load environment variables", err)
 		return err
 	}
 	p.service = &battleService{}
-	if err := p.service.Start(p.logAgent); err != nil {
-		p.logAgent.Fatal("[PROGRAM]", "Failed to load environment variables[error:%s]", err.Error())
-		p.logAgent.Close()
+	if err := p.service.Start(); err != nil {
+		vlog.Fatal("[PROGRAM]", "Failed to load environment variables", err)
 		return err
 	}
 	return nil

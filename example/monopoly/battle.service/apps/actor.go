@@ -11,6 +11,7 @@ import (
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -32,14 +33,14 @@ func (actor *BattleActor) onCreateBattleSpace(ctx *serve.ServantClientContext) (
 	uid, err = rds.GetPlayerUID(ctx.Background, ctx.Sender)
 	if err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onCreateBattleSpace error %s", err.Error())
+		vlog.Debugf("onCreateBattleSpace error %s", err.Error())
 		return nil, err
 	}
 	//TODO: 创建战场
 	spaceid, err = rds.CreateBattleSpace(ctx.Background, uid, ctx.Sender, request.MapURI)
 	if err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onCreateBattleSpace error %s", err.Error())
+		vlog.Debugf("onCreateBattleSpace error %s", err.Error())
 		return nil, err
 	}
 	res := &mpubs.CreateBattleSpaceResp{}
@@ -58,13 +59,13 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx *serve.ServantClientContext) 
 	total, err = rds.GetBattleSpacesCount(ctx.Background)
 	if err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onGetBattleSpaceList error %s", err.Error())
+		vlog.Debugf("onGetBattleSpaceList error %s", err.Error())
 		return nil, err
 	}
 	spaceids, err = rds.GetBattleSpaceList(ctx.Background, int64(request.Start), int64(request.Size))
 	if err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onGetBattleSpaceList error %s", err.Error())
+		vlog.Debugf("onGetBattleSpaceList error %s", err.Error())
 		return nil, err
 	}
 	res := &mpubs.GetBattleSpaceListResp{}
@@ -89,7 +90,7 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx *serve.ServantClientContext) 
 			}
 			spacse.Players = append(spacse.Players, player)
 		}
-	
+
 		if result[rdsconst.BattleSpacePos2Uid] != "" {
 			player := &mpubs.BattleSpacePlayerSimple{
 				Display: result[rdsconst.BattleSpacePos2Display],
@@ -97,7 +98,7 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx *serve.ServantClientContext) 
 			}
 			spacse.Players = append(spacse.Players, player)
 		}
-	
+
 		if result[rdsconst.BattleSpacePos3Uid] != "" {
 			player := &mpubs.BattleSpacePlayerSimple{
 				Display: result[rdsconst.BattleSpacePos3Display],
@@ -105,7 +106,7 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx *serve.ServantClientContext) 
 			}
 			spacse.Players = append(spacse.Players, player)
 		}
-	
+
 		if result[rdsconst.BattleSpacePos4Uid] != "" {
 			player := &mpubs.BattleSpacePlayerSimple{
 
@@ -121,16 +122,16 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx *serve.ServantClientContext) 
 
 func (actor *BattleActor) onEnterBattleSpace(ctx *serve.ServantClientContext) (proto.Message, error) {
 	request := ctx.Message.(*mpubs.EnterBattleSpace)
-	
+
 	if err := rds.EnterBattleSpace(ctx.Background, request.SpaceId, ctx.Sender); err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onEnterBattleSpace error %s", err.Error())
+		vlog.Debugf("onEnterBattleSpace error %s", err.Error())
 		return nil, err
 	}
 	result, err := rds.FindBattleSpaceData(ctx.Background, request.SpaceId)
 	if err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onEnterBattleSpace error %s", err.Error())
+		vlog.Debugf("onEnterBattleSpace error %s", err.Error())
 		return nil, err
 	}
 	res := &mpubs.EnterBattleSpaceResp{}
@@ -185,18 +186,18 @@ func (actor *BattleActor) onEnterBattleSpace(ctx *serve.ServantClientContext) (p
 	return res, nil
 }
 
-func (actor *BattleActor) onDisplayBattleSpace(ctx *serve.ServantClientContext)(proto.Message, error){
+func (actor *BattleActor) onDisplayBattleSpace(ctx *serve.ServantClientContext) (proto.Message, error) {
 	request := ctx.Message.(*mpubs.DisplayBattleSpace)
-	if err := rds.DisplayBattleSpace(ctx.Background, request.SpaceId, request.Uid, request.Display,ctx.Sender); err != nil {
+	if err := rds.DisplayBattleSpace(ctx.Background, request.SpaceId, request.Uid, request.Display, ctx.Sender); err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onRequestExitBattleSpace error %s", err.Error())
+		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
 		return nil, err
 	}
 	res := &mpubs.DisplayBattleSpaceResp{}
 	res.SpaceId = request.SpaceId
 	res.Uid = request.Uid
 	res.Display = request.Display
-	return res,nil
+	return res, nil
 }
 func (actor *BattleActor) onReportNat(ctx *serve.ServantClientContext) (proto.Message, error) {
 	return nil, nil
@@ -204,9 +205,9 @@ func (actor *BattleActor) onReportNat(ctx *serve.ServantClientContext) (proto.Me
 
 func (actor *BattleActor) onRequestExitBattleSpace(ctx *serve.ServantClientContext) (proto.Message, error) {
 	request := ctx.Message.(*mprvs.RequestExitBattleSpace)
-	if err := rds.LeaveBattleSpace(ctx.Background,request.BattleSpaceID,request.UID,ctx.Sender); err != nil{
+	if err := rds.LeaveBattleSpace(ctx.Background, request.BattleSpaceID, request.UID, ctx.Sender); err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		ctx.Context.Debug("onRequestExitBattleSpace error %s", err.Error())
+		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
 		return nil, err
 	}
 	res := &mprvs.RequestExitBattleSpace{}
@@ -222,7 +223,7 @@ func (actor *BattleActor) submitRequest(ctx *serve.ServantClientContext, request
 	r := actor.ancestor.FindRouter(request)
 	if r == nil {
 		if ctx != nil {
-			ctx.Context.Error("%s unfound router", proto.MessageName(request))
+			vlog.Errorf("%s unfound router", proto.MessageName(request))
 		}
 
 		return nil, errors.New("unfound router")
@@ -231,7 +232,7 @@ func (actor *BattleActor) submitRequest(ctx *serve.ServantClientContext, request
 	result, err := r.Proxy.RequestMessage(request, defaultRequestTimeout)
 	if err != nil {
 		if ctx != nil {
-			ctx.Context.Error("%s fail error %s", proto.MessageName(request), err.Error())
+			vlog.Errorf("%s fail error %s", proto.MessageName(request), err.Error())
 		}
 	}
 
