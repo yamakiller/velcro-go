@@ -39,7 +39,7 @@ message BattleSpaceData {
     string  mapURI  = 2;
     string  masterUid = 3;
     fixed64 starttime = 4;
-    int32   state = 5;
+    string   state = 5;
     repeated BattleSpacePlayer players = 6;
 }
 
@@ -61,4 +61,16 @@ message EnterBattleSpace {
 
 message EnterBattleSpaceResp {
     BattleSpaceData space = 1;
+}
+
+message DisplayBattleSpace {
+    string spaceId = 1;
+    string uid = 2;
+    string display = 3;
+}
+
+message DisplayBattleSpaceResp {
+    string spaceId = 1;
+    string uid = 2;
+    string display = 3;
 }

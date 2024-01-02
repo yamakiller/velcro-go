@@ -24,7 +24,10 @@ const (
 	BattleSpaceMapURi        = "space_map_uri"
 	BattleSpaceTime          = "space_time"
 	BattleSpaceNatAddr       = "space_nat_addr"
-	BateleSpaceState         = "space_state"
+	BattleSpaceState         = "space_state"
+	BattleSpaceMasterUid     = "space_master_uid"
+	BattleSpaceMasterIcon    = "space_master_icon"
+	BattleSpaceMasterDisplay = "space_master_display"
 	BattleSpacePos1Uid       = "space_pos_1_uid"
 	BattleSpacePos2Uid       = "space_pos_2_uid"
 	BattleSpacePos3Uid       = "space_pos_3_uid"
@@ -34,6 +37,11 @@ const (
 	BattleSpacePos2Icon = "space_pos_2_icon"
 	BattleSpacePos3Icon = "space_pos_3_icon"
 	BattleSpacePos4Icon = "space_pos_4_icon"
+
+	BattleSpacePos1Display = "space_pos_1_display"
+	BattleSpacePos2Display = "space_pos_2_display"
+	BattleSpacePos3Display = "space_pos_3_display"
+	BattleSpacePos4Display = "space_pos_4_display"
 
 	BattleSpaceStateNomal   = "nomal"   // 正常状态
 	BattleSpaceStateNat     = "nat"     // 接收nat信息状态
