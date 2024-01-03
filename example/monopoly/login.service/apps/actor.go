@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"context"
 	"errors"
 
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
@@ -24,21 +25,22 @@ type LoginActor struct {
 	ancestor *serve.Servant
 }
 
-func (actor *LoginActor) onSignIn(ctx *serve.ServantClientContext) (proto.Message, error) {
-	request := ctx.Message.(*mpubs.SignIn)
+func (actor *LoginActor) onSignIn(ctx context.Context) (proto.Message, error) {
+	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.SignIn)
+	sender :=serve.GetServantClientInfo(ctx).Sender()
 	utils.AssertEmpty(request, "onSignIn message not protocols.SignIn")
-	utils.AssertEmpty(ctx.Sender, "onSignIn sender is null")
+	utils.AssertEmpty(sender, "onSignIn sender is null")
 
-	player, err := accounts.SignIn(ctx.Background, request.Token)
+	player, err := accounts.SignIn(ctx, request.Token)
 	if err != nil {
-		actor.submitRequestCloseClient(ctx, ctx.Sender)
-		vlog.ContextDebugf(ctx.Background, "onSignin error %s", err.Error())
+		actor.submitRequestCloseClient(ctx, sender)
+		vlog.ContextDebugf(ctx, "onSignin error %s", err.Error())
 		return nil, err
 	}
 
-	if err := rds.RegisterPlayer(ctx.Background, ctx.Sender,
+	if err := rds.RegisterPlayer(ctx, sender,
 		player.UID, player.DisplayName, player); err != nil {
-		actor.submitRequestCloseClient(ctx, ctx.Sender)
+		actor.submitRequestCloseClient(ctx, sender)
 		return nil, err
 	}
 
@@ -52,10 +54,11 @@ func (actor *LoginActor) onSignIn(ctx *serve.ServantClientContext) (proto.Messag
 	return resp, nil
 }
 
-func (actor *LoginActor) onSignOut(ctx *serve.ServantClientContext) (proto.Message, error) {
-	request := ctx.Message.(*mpubs.SignOut)
+func (actor *LoginActor) onSignOut(ctx context.Context) (proto.Message, error) {
+	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.SignOut)
+	sender :=serve.GetServantClientInfo(ctx).Sender()
 	utils.AssertEmpty(request, "onSignOut message not pubs.SignOut")
-	utils.AssertEmpty(ctx.Sender, "onSignOut sender is null")
+	utils.AssertEmpty(sender, "onSignOut sender is null")
 
 	accounts.SignOut(request.Token)
 
@@ -65,13 +68,13 @@ func (actor *LoginActor) onSignOut(ctx *serve.ServantClientContext) (proto.Messa
 		results map[string]string
 	)
 
-	uid, err = rds.GetPlayerUID(ctx.Background, ctx.Sender)
+	uid, err = rds.GetPlayerUID(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
 
-	if results, err = rds.UnRegisterPlayer(ctx.Background, ctx.Sender, uid); err != nil {
-		actor.submitRequestCloseClient(ctx, ctx.Sender)
+	if results, err = rds.UnRegisterPlayer(ctx, sender, uid); err != nil {
+		actor.submitRequestCloseClient(ctx, sender)
 		return nil, err
 	}
 
@@ -91,11 +94,11 @@ func (actor *LoginActor) onSignOut(ctx *serve.ServantClientContext) (proto.Messa
 	}, nil
 }
 
-func (actor *LoginActor) submitRequestCloseClient(ctx *serve.ServantClientContext, clientId *network.ClientID) {
+func (actor *LoginActor) submitRequestCloseClient(ctx  context.Context, clientId *network.ClientID) {
 	actor.submitRequest(ctx, &prvs.RequestGatewayCloseClient{Target: clientId})
 }
 
-func (actor *LoginActor) submitRequest(ctx *serve.ServantClientContext, request proto.Message) (proto.Message, error) {
+func (actor *LoginActor) submitRequest(ctx  context.Context, request proto.Message) (proto.Message, error) {
 	r := actor.ancestor.FindRouter(request)
 	if r == nil {
 		vlog.Errorf("%s unfound router", proto.MessageName(request))
@@ -110,6 +113,6 @@ func (actor *LoginActor) submitRequest(ctx *serve.ServantClientContext, request 
 	return result, err
 }
 
-func (actor *LoginActor) Closed(ctx *serve.ServantClientContext) {
+func (actor *LoginActor) Closed(ctx  context.Context) {
 
 }
