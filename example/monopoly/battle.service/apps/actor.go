@@ -175,17 +175,17 @@ func (actor *BattleActor) onReadyBattleSpace(ctx context.Context) (proto.Message
 }
 
 func (actor *BattleActor) onRequestStartBattleSpace(ctx context.Context) (proto.Message, error) {
-	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.RequestStartBattleSpace)
+	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.RequsetStartBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
 	if err := rds.StartBattleSpace(ctx,request.SpaceId, sender); err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
 		vlog.Debugf("onRequestStartBattleSpace error %s", err.Error())
 		return nil, err
 	}
-	players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
-	res := &mpubs.RequestStartBattleSpaceResp{}
+	players := rds.GetBattleSpacePlayers(ctx, request.SpaceId)
+	res := &mpubs.RequsetStartBattleSpaceResp{}
 	res.SpaceId = request.SpaceId
-	
+
 	for _, v := range players {
 		if !sender.Equal(v) {
 			actor.submitRequestGatewayPush(ctx, v, res)
