@@ -1,5 +1,10 @@
 package rdsconst
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
 	player_lock        = "player_lock_"         // uid
 	player_uid         = "player_uid_"          // uid
@@ -28,25 +33,13 @@ const (
 	BattleSpaceMasterUid     = "space_master_uid"
 	BattleSpaceMasterIcon    = "space_master_icon"
 	BattleSpaceMasterDisplay = "space_master_display"
-	BattleSpacePos1Uid       = "space_pos_1_uid"
-	BattleSpacePos2Uid       = "space_pos_2_uid"
-	BattleSpacePos3Uid       = "space_pos_3_uid"
-	BattleSpacePos4Uid       = "space_pos_4_uid"
-
-	BattleSpacePos1Icon = "space_pos_1_icon"
-	BattleSpacePos2Icon = "space_pos_2_icon"
-	BattleSpacePos3Icon = "space_pos_3_icon"
-	BattleSpacePos4Icon = "space_pos_4_icon"
-
-	BattleSpacePos1Display = "space_pos_1_display"
-	BattleSpacePos2Display = "space_pos_2_display"
-	BattleSpacePos3Display = "space_pos_3_display"
-	BattleSpacePos4Display = "space_pos_4_display"
-
-	BattleSpaceStateNomal   = "nomal"   // 正常状态
-	BattleSpaceStateNat     = "nat"     // 接收nat信息状态
-	BattleSpaceStateReady   = "ready"   // 就绪状态
-	BattleSpaceStateRunning = "running" // 游戏中/运行中
+	BattleSpacePlayerCount   = "space_player_count"
+	BattleSpacePlayerPos     = "space_player_pos" //玩家位置
+	BattleSpacePlayer        = "space_player_"    //玩家信息
+	BattleSpaceStateNomal    = "nomal"            // 正常状态
+	BattleSpaceStateNat      = "nat"              // 接收nat信息状态
+	BattleSpaceStateReady    = "ready"            // 就绪状态
+	BattleSpaceStateRunning  = "running"          // 游戏中/运行中
 )
 
 // GetPlayerLockKey 获取player级共享锁Key
@@ -77,4 +70,30 @@ func GetPlayerOnlineDataKey(uid string) string {
 // GetBattleSpaceOnlineDataKey
 func GetBattleSpaceOnlineDataKey(spaceid string) string {
 	return battle_space_online_data + spaceid
+}
+
+// GetBattleSpacePlayerDataKey
+func GetBattleSpacePlayerDataKey(uid string) string {
+	return BattleSpacePlayer + uid
+}
+
+func MakeData(list []string) string {
+	res := ""
+	for i:= (0); i < len(list); i++ {
+		res += fmt.Sprintf("%s&",list[i])
+	}
+	return res[:len(res)-1]
+}
+
+func UpdateData(list []string,index int,val string)string{
+	for i := 0; i < len(list); i++ {
+		if i == index {
+			list[i] = val
+		}
+	}
+	return MakeData(list)
+}
+
+func SplitData(data string) []string {
+	return strings.Split(data, "&")
 }

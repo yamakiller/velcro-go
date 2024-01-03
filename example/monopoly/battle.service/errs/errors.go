@@ -8,4 +8,5 @@ var (
 	ErrorPermissionsLost              = errors.New("permissions lost")
 	ErrorPlayerIsNotInBattleSpace = errors.New("Player not in battle space")
 	ErrorSpacePlayerIsFull = errors.New("Battle space is full")
+	ErrorPlayerRepeatOperation = errors.New("Player repeat operation")
 )

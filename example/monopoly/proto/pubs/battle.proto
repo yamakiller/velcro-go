@@ -5,6 +5,7 @@ option go_package=".;pubs";
 
 message CreateBattleSpace{
     string mapURI = 1;
+    fixed32 maxCount = 2;
 }
 
 message CreateBattleSpaceResp{
@@ -63,14 +64,14 @@ message EnterBattleSpaceResp {
     BattleSpaceData space = 1;
 }
 
-message DisplayBattleSpace {
+message ReadyBattleSpace {
     string spaceId = 1;
     string uid = 2;
-    string display = 3;
+    string ready = 3;
 }
 
-message DisplayBattleSpaceResp {
+message ReadyBattleSpaceResp {
     string spaceId = 1;
     string uid = 2;
-    string display = 3;
+    string ready = 3;
 }
