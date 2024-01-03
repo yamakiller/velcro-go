@@ -1,52 +1,33 @@
 package circbuf
 
-type Buffer interface {
-	Get(p []byte) (n int, err error)
-	GetByte() (b byte, err error)
-	Read(p []byte) (n int, err error)
-	ReadByte() (b byte, err error)
-	Write(p []byte) (n int, err error)
-	WriteByte(c byte) error
-	Peek(num int) (n int, err error)
-	Length() int
-}
-
-// Reader is a collection of operations for nocopy reads.
+// Reader 是 nocopy 读取操作的集合.
 //
-// For ease of use, it is recommended to implement Reader as a blocking interface,
-// rather than simply fetching the buffer.
-// For example, the return of calling Next(n) should be blocked if there are fewer than n bytes, unless timeout.
-// The return value is guaranteed to meet the requirements or an error will be returned.
+// 为了方便使用, 建议将Reader实现为阻塞接口,
+// 而不是简单地获取缓冲区.
+// 例如, 如果少于n个字节, 调用Next(n)的返回应该被阻塞, 除非超时. 保证返回值符合要求, 否则返回错误.
 type Reader interface {
-	// Next returns a slice containing the next n bytes from the buffer,
-	// advancing the buffer as if the bytes had been returned by Read.
+	// Next 返回一个包含缓冲区中接下来的 n 个字节的切片, 推进缓冲区, 就好像这些字节已由 Read 返回一样.
 	//
-	// If there are fewer than n bytes in the buffer, Next returns will be blocked
-	// until data enough or an error occurs (such as a wait timeout).
+	// 如果缓冲区中的字节数少于n, 则Next返回将被阻塞，直到数据足够或发生错误(例如等待超时).
 	//
-	// The slice p is only valid until the next call to the Release method.
-	// Next is not globally optimal, and Skip, ReadString, ReadBinary methods
-	// are recommended for specific scenarios.
+	// 切片 p 仅在下次调用 Release 方法之前有效. Next 并不是全局最优的, 具体场景推荐使
+	// 用 Skip、ReadString、ReadBinary 方法.
 	//
-	// Return: len(p) must be n or 0, and p and error cannot be nil at the same time.
+	// Return: len(p) 必须为 n 或 0, 并且 p 和 error 不能同时为 nil
 	Next(n int) (p []byte, err error)
 
-	// Peek returns the next n bytes without advancing the reader.
-	// Other behavior is the same as Next.
+	// Peek 返回接下来的n个字节而不推进读取器, 其它行为与Next相同.
 	Peek(n int) (buf []byte, err error)
 
-	// Skip the next n bytes and advance the reader, which is
-	// a faster implementation of Next when the next data is not used.
+	// Skip 接下来的 n 个字节并推进读取器, 这是在不使用下一个数据时更快的 Next 实现.
 	Skip(n int) (err error)
 
-	// Until reads until the first occurrence of delim in the input,
-	// returning a slice stops with delim in the input buffer.
-	// If Until encounters an error before finding a delimiter,
-	// it returns all the data in the buffer and the error itself (often ErrEOF or ErrConnClosed).
-	// Until returns err != nil only if line does not end in delim.
+	// Until 读取直到输入中第一次出现 delim，返回一个切片在输入缓冲区中以 delim 停止.
+	// 如果 Until 在找到分隔符之前遇到错误,它将返回缓冲区中的所有数据以及错误本身(通常为 ErrEOF 或 ErrConnClosed).
+	// 仅当行不以 delim 结尾时, 才会返回 err != nil.
 	Until(delim byte) (line []byte, err error)
 
-	// ReadString is a faster implementation of Next when a string needs to be returned.
+	// ReadString 当需要返回字符串时, Next 是更快的实现.
 	// It replaces:
 	//
 	//  var p, err = Next(n)
@@ -54,8 +35,7 @@ type Reader interface {
 	//
 	ReadString(n int) (s string, err error)
 
-	// ReadBinary is a faster implementation of Next when it needs to
-	// return a copy of the slice that is not shared with the underlying layer.
+	// ReadBinary 当需要返回不与底层共享的切片副本时，是 Next 的更快实现.
 	// It replaces:
 	//
 	//  var p, err = Next(n)
@@ -65,7 +45,7 @@ type Reader interface {
 	//
 	ReadBinary(n int) (p []byte, err error)
 
-	// ReadByte is a faster implementation of Next when a byte needs to be returned.
+	// ReadByte 当需要返回字节时，Next 是更快的实现.
 	// It replaces:
 	//
 	//  var p, err = Next(1)
@@ -73,11 +53,10 @@ type Reader interface {
 	//
 	ReadByte() (b byte, err error)
 
-	// Slice returns a new Reader containing the Next n bytes from this Reader.
+	// Slice 返回一个新的 Reader, 其中包含该 Reader 的接下来 n 个字节.
 	//
-	// If you want to make a new Reader using the []byte returned by Next, Slice already does that,
-	// and the operation is zero-copy. Besides, Slice would also Release this Reader.
-	// The logic pseudocode is similar:
+	// 如果你想使用 Next 返回的 []byte 来创建一个新的 Reader，Slice 已经做到了, 并且该操作是零拷贝的.
+	// 另外, Slice也将发布这款Reader. 逻辑伪代码类似:
 	//
 	//  var p, err = this.Next(n)
 	//  var reader = new Reader(p) // pseudocode
@@ -86,13 +65,11 @@ type Reader interface {
 	//
 	Slice(n int) (r Reader, err error)
 
-	// Release the memory space occupied by all read slices. This method needs to be executed actively to
-	// recycle the memory after confirming that the previously read data is no longer in use.
-	// After invoking Release, the slices obtained by the method such as Next, Peek, Skip will
-	// become an invalid address and cannot be used anymore.
+	// Release 所有读取的切片占用的内存空间. 在确认之前读取的数据不再使用后, 需要主动执行该方法来回收内存.
+	// 调用Release后,通过Next、Peek、Skip等方法获取的切片将成为无效地址, 无法再使用.
 	Release() (err error)
 
-	// Len returns the total length of the readable data in the reader.
+	// Len 返回阅读器中可读数据的总长度.
 	Len() (length int)
 }
 
@@ -171,7 +148,7 @@ type Writer interface {
 	// equivalent as
 	//  var buf, _ = Malloc(5)
 	//
-	MallocAck(n int) (err error)
+	//MallocAck(n int) (err error)
 
 	// Append the argument writer to the tail of this writer and set the argument writer to nil,
 	// the operation is zero-copy, similar to p = append(p, w.p).

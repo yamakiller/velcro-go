@@ -443,7 +443,9 @@ func (rc *Conn) reader() {
 	defer rc.done.Done()
 
 	var readtemp [1024]byte
-	readbuffer := circbuf.New(32768, &syncx.NoMutex{})
+	readbuffer := circbuf.NewLinkBuffer(4096)
+	defer readbuffer.Close()
+
 	for {
 		if rc.isStopped() {
 			goto exit_reader_lable
@@ -474,7 +476,7 @@ func (rc *Conn) reader() {
 		rc.kleepaliveError = 0
 		offset := 0
 		for {
-			nw, err := readbuffer.Write(readtemp[offset:nr])
+			nw, err := readbuffer.WriteBinary(readtemp[offset:nr])
 			offset += nw
 
 			_, msg, uerr := messages.UnMarshalProtobuf(readbuffer)

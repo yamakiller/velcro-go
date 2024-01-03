@@ -528,7 +528,7 @@ func (b *LinkBuffer) Close() (err error) {
 
 // ------------------------------------------ implement connection interface ------------------------------------------
 
-// Bytes returns all the readable bytes of this LinkBuffer.
+// Bytes 返回此 LinkBuffer 的所有可读字节
 func (b *LinkBuffer) Bytes() []byte {
 	node, flush := b.read, b.flush
 	if node == flush {

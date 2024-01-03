@@ -10,7 +10,6 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	rpcmessage "github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
-	"github.com/yamakiller/velcro-go/utils/syncx"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -18,7 +17,7 @@ import (
 
 func NewRpcClientConn(s *RpcServer) RpcClient {
 	return &RpcClientConn{
-		recvice:    circbuf.New(32768, &syncx.NoMutex{}),
+		recvice:    circbuf.NewLinkBuffer(4096),
 		methods:    make(map[interface{}]func(*RpcClientContext) (protoreflect.ProtoMessage, error)),
 		register:   s.Register,
 		unregister: s.UnRegister,
@@ -40,7 +39,7 @@ type RpcClient interface {
 
 type RpcClientConn struct {
 	clientID  *network.ClientID   // 客户端ID
-	recvice   *circbuf.RingBuffer // 接收缓冲区
+	recvice   *circbuf.LinkBuffer // 接收缓冲区
 	methods   map[interface{}]func(*RpcClientContext) (proto.Message, error)
 	reference int32 // 引用计数器
 
@@ -70,7 +69,7 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 	// 通用化需要修改
 	offset := 0
 	for {
-		n, err := rcc.recvice.Write(ctx.Message()[offset:])
+		n, err := rcc.recvice.WriteBinary(ctx.Message()[offset:])
 		offset += n
 
 		_, msg, msgErr := messages.UnMarshalProtobuf(rcc.recvice)
@@ -155,25 +154,13 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 	}
 }
 
-/*func (rcc *RpcClientConn) PostMessage(ctx network.Context, message proto.Message) error {
-	b, err := messages.MarshalMessageProtobuf(0, message)
-	if err != nil {
-		ctx.Close(ctx.Self())
-		return err
-	}
-
-	ctx.PostMessage(ctx.Self(), b)
-
-	return nil
-}*/
-
 func (rcc *RpcClientConn) Closed(ctx network.Context) {
 	rcc.unregister(ctx.Self())
 }
 
 func (rcc *RpcClientConn) Destory() {
 	rcc.clientID = nil
-	rcc.recvice.Reset()
+	rcc.recvice.Release()
 }
 
 func (rcc *RpcClientConn) onRpcPing(ctx network.Context, message *messages.RpcPingMessage) {

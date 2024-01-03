@@ -8,8 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/gofunc"
-	"github.com/yamakiller/velcro-go/utils/collection"
-	"github.com/yamakiller/velcro-go/utils/syncx"
+	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
@@ -116,7 +115,7 @@ func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	ctx := clientContext{system: t.system, state: stateAccept}
 	handler := &tcpClientHandler{
 		conn:      conn,
-		sendbox:   collection.NewQueue(4, &syncx.NoMutex{}),
+		sendbox:   circbuf.NewLinkBuffer(4096),
 		sendcond:  sync.NewCond(&sync.Mutex{}),
 		keepalive: uint32(t.system.Config.Kleepalive),
 		invoker:   &ctx,
@@ -131,7 +130,7 @@ func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
 		// 释放资源
 		close(handler.mailbox)
 		close(handler.stopper)
-		handler.sendbox.Destory()
+		handler.sendbox.Close()
 		handler.sendbox = nil
 		handler.sendcond = nil
 

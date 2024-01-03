@@ -54,6 +54,7 @@ func (c *tcpSyncClientHandler) PostToMessage(b []byte, target net.Addr) error {
 	return errors.New("client: sync undefine post to message")
 }
 
+// Close 关闭连接
 func (c *tcpSyncClientHandler) Close() {
 	c.mutex.Lock()
 	if !c.isStopped() {
@@ -74,11 +75,12 @@ func (c *tcpSyncClientHandler) isStopped() bool {
 	}
 }
 
+// reader 读取数据
 func (c *tcpSyncClientHandler) reader() {
 	defer c.done.Done()
 	defer c.refdone.Done()
 
-	var tmp [512]byte
+	var tmp [1024]byte
 	remoteAddr := c.conn.RemoteAddr()
 
 	c.invoker.invokerAccept()

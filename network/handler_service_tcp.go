@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/yamakiller/velcro-go/gofunc"
-	"github.com/yamakiller/velcro-go/utils/collection"
+	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 var _ Handler = &tcpClientHandler{}
@@ -17,7 +18,7 @@ var _ Handler = &tcpClientHandler{}
 // ClientHandler TCP服务客户端处理程序
 type tcpClientHandler struct {
 	conn           net.Conn
-	sendbox        *collection.Queue
+	sendbox        *circbuf.LinkBuffer
 	sendcond       *sync.Cond
 	mailbox        chan interface{}
 	keepalive      uint32
@@ -55,7 +56,8 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return errors.New("client: closed")
 	}
-	c.sendbox.Push(b)
+
+	c.sendbox.WriteBinary(b)
 	c.sendcond.L.Unlock()
 
 	c.sendcond.Signal()
@@ -74,7 +76,8 @@ func (c *tcpClientHandler) Close() {
 		return
 	}
 
-	c.sendbox.Push(nil)
+	c.conn.Close()
+
 	c.sendcond.L.Unlock()
 	c.sendcond.Signal()
 
@@ -95,13 +98,16 @@ func (c *tcpClientHandler) sender() {
 	defer c.done.Done()
 	defer c.refdone.Done()
 
+	var (
+		err       error
+		readbytes []byte = nil
+	)
 	for {
 		c.sendcond.L.Lock()
 		if !c.isStopped() {
 			c.sendcond.Wait()
 		}
 		c.sendcond.L.Unlock()
-
 		i := 0
 		for {
 			if c.isStopped() {
@@ -109,24 +115,26 @@ func (c *tcpClientHandler) sender() {
 			}
 
 			c.sendcond.L.Lock()
-			msg, ok := c.sendbox.Pop()
+			if c.sendbox.Len() > 0 {
+				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
+				if err != nil {
+					c.sendcond.L.Unlock()
+					vlog.Errorf("tcp handler error sendbuffer readbinary fail %s", err.Error())
+					goto tcp_sender_exit_label
+				}
+			}
 			c.sendcond.L.Unlock()
 
-			if !ok {
-				break
-			} else if msg == nil && ok {
-				goto tcp_sender_exit_label
-			}
-
-			if msg != nil {
+			if readbytes != nil {
 				if i > 1 {
 					runtime.Gosched()
 					i = 0
 				}
 
-				if _, err := c.conn.Write(msg.([]byte)); err != nil {
+				if _, err := c.conn.Write(readbytes); err != nil {
 					goto tcp_sender_exit_label
 				}
+				readbytes = nil
 				i++
 			}
 		}
@@ -205,7 +213,7 @@ tcp_guardian_exit_lable:
 	c.done.Wait()
 
 	// 释放资源
-	c.sendbox.Destory()
+	c.sendbox.Close()
 	c.sendbox = nil
 	c.sendcond = nil
 

@@ -9,7 +9,6 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
-	"github.com/yamakiller/velcro-go/utils/syncx"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -53,7 +52,8 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout uint64) (proto.Mes
 	}
 
 	var readtemp [1024]byte
-	readbuffer := circbuf.New(32768, &syncx.NoMutex{})
+	readbuffer := circbuf.NewLinkBuffer(4096)
+	defer readbuffer.Close()
 
 	for {
 
@@ -72,7 +72,7 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout uint64) (proto.Mes
 
 		offset := 0
 		for {
-			nw, err := readbuffer.Write(readtemp[offset:nr])
+			nw, err := readbuffer.WriteBinary(readtemp[offset:nr])
 			offset += nw
 
 			_, msg, uerr := messages.UnMarshalProtobuf(readbuffer)

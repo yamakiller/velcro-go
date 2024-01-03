@@ -6,7 +6,6 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
-	"github.com/yamakiller/velcro-go/utils/syncx"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -89,6 +88,6 @@ func (s *Servant) FindRouter(message proto.Message) *router.Router {
 func (s *Servant) spawConn(system *network.NetworkSystem) network.Client {
 	return &ServantClientConn{
 		Servant: s,
-		recvice: circbuf.New(32768, &syncx.NoMutex{}),
+		recvice: circbuf.NewLinkBuffer(4096),
 	}
 }

@@ -20,7 +20,7 @@ import (
 type ServantClientConn struct {
 	Servant *Servant
 	actor   ServantClientActor
-	recvice *circbuf.RingBuffer // 接收缓冲区
+	recvice *circbuf.LinkBuffer
 	events  map[interface{}]interface{}
 }
 
@@ -36,7 +36,8 @@ func (c *ServantClientConn) Accept(ctx network.Context) {
 func (c *ServantClientConn) Recvice(ctx network.Context) {
 	offset := 0
 	for {
-		n, err := c.recvice.Write(ctx.Message()[offset:])
+
+		n, err := c.recvice.WriteBinary(ctx.Message()[offset:])
 		offset += n
 
 		_, msg, msgErr := messages.UnMarshalProtobuf(c.recvice)
@@ -138,7 +139,8 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 	ctxBack := NewCtxWithServantClientInfo(context.Background(), NewClientInfo(ctx, nil))
 	c.actor.Closed(ctxBack)
 	FreeCtxWithServantClientInfo(ctxBack)
-	c.recvice = nil
+
+	c.recvice.Close()
 }
 
 // Ping 客户端主动请求, 这里不处理

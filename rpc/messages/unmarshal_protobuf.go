@@ -4,26 +4,25 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"google.golang.org/protobuf/proto"
 )
 
-func UnMarshalProtobuf(buffer circbuf.Buffer) (int, interface{}, error) {
-	if buffer.Length() < RpcHeaderLength {
+func UnMarshalProtobuf(reader circbuf.Reader) (int, interface{}, error) {
+	if reader.Len() < RpcHeaderLength {
 		return 0, nil, nil
 	}
 
-	direct, _ := buffer.GetByte()
-	switch RpcDirect(direct) {
+	direct, _ := reader.Peek(1)
+	switch RpcDirect(direct[0]) {
 	case RpcRequest:
-		return unmarshalRequestProtobuf(buffer)
+		return unmarshalRequestProtobuf(reader)
 	case RpcResponse:
-		return unmarshalResponseProtobuf(buffer)
+		return unmarshalResponseProtobuf(reader)
 	/*case RpcMessage:
 	return unmarshalMessageProtobuf(buffer)*/
 	case RpcPing:
-		return unmarshalMessagePing(buffer)
+		return unmarshalMessagePing(reader)
 	default:
 		return 0, nil, errors.New("unknown message")
 	}
@@ -33,20 +32,22 @@ func readHeader(data []byte) *RpcHeader {
 	return &RpcHeader{Direct: RpcDirect(data[0]), Length: binary.BigEndian.Uint16(data[1:3])}
 }
 
-func unmarshalRequestProtobuf(buffer circbuf.Buffer) (int, proto.Message, error) {
+func unmarshalRequestProtobuf(reader circbuf.Reader) (int, proto.Message, error) {
 
-	headerBytes := make([]byte, utils.AlignOf(uint32(RpcHeaderLength), uint32(4)))
-	buffer.Get(headerBytes[:RpcHeaderLength])
+	headerBytes, err := reader.Peek(RpcHeaderLength)
+	if err != nil {
+		return 0, nil, err
+	}
 
 	requestHeader := readHeader(headerBytes)
 
-	if buffer.Length() < int(requestHeader.Length)+RpcHeaderLength {
+	if reader.Len() < int(requestHeader.Length)+RpcHeaderLength {
 		return 0, nil, nil
 	}
 
-	buffer.Peek(RpcHeaderLength)
+	reader.Skip(RpcHeaderLength)
 
-	message, err := unmarshalProtobufBody(buffer, requestHeader.Direct, int(requestHeader.Length))
+	message, err := unmarshalProtobufBody(reader, requestHeader.Direct, int(requestHeader.Length))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -54,17 +55,21 @@ func unmarshalRequestProtobuf(buffer circbuf.Buffer) (int, proto.Message, error)
 	return int(requestHeader.Length) + RpcHeaderLength, message, nil
 }
 
-func unmarshalResponseProtobuf(buffer circbuf.Buffer) (int, proto.Message, error) {
-	headerBytes := make([]byte, utils.AlignOf(uint32(RpcHeaderLength), uint32(4)))
-	buffer.Get(headerBytes[:RpcHeaderLength])
+func unmarshalResponseProtobuf(reader circbuf.Reader) (int, proto.Message, error) {
+	headerBytes, err := reader.Peek(RpcHeaderLength)
+	if err != nil {
+		return 0, nil, err
+	}
 
 	respHeader := readHeader(headerBytes)
 
-	if buffer.Length() < int(respHeader.Length)+RpcHeaderLength {
+	if reader.Len() < int(respHeader.Length)+RpcHeaderLength {
 		return 0, nil, nil
 	}
-	buffer.Peek(RpcHeaderLength)
-	message, err := unmarshalProtobufBody(buffer, respHeader.Direct, int(respHeader.Length))
+
+	reader.Skip(RpcHeaderLength)
+
+	message, err := unmarshalProtobufBody(reader, respHeader.Direct, int(respHeader.Length))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -72,18 +77,20 @@ func unmarshalResponseProtobuf(buffer circbuf.Buffer) (int, proto.Message, error
 	return int(respHeader.Length) + RpcHeaderLength, message, nil
 }
 
-func unmarshalMessageProtobuf(buffer circbuf.Buffer) (int, proto.Message, error) {
-	headerBytes := make([]byte, utils.AlignOf(uint32(RpcHeaderLength), uint32(4)))
-	buffer.Get(headerBytes[:RpcHeaderLength])
+func unmarshalMessagePing(reader circbuf.Reader) (int, proto.Message, error) {
+	headerBytes, err := reader.Peek(RpcHeaderLength)
+	if err != nil {
+		return 0, nil, err
+	}
 
 	respHeader := readHeader(headerBytes)
 
-	if buffer.Length() < int(respHeader.Length)+RpcHeaderLength {
+	if reader.Len() < int(respHeader.Length)+RpcHeaderLength {
 		return 0, nil, nil
 	}
 
-	buffer.Peek(RpcHeaderLength)
-	message, err := unmarshalProtobufBody(buffer, respHeader.Direct, int(respHeader.Length))
+	reader.Skip(RpcHeaderLength)
+	message, err := unmarshalProtobufBody(reader, respHeader.Direct, int(respHeader.Length))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -91,28 +98,12 @@ func unmarshalMessageProtobuf(buffer circbuf.Buffer) (int, proto.Message, error)
 	return int(respHeader.Length) + RpcHeaderLength, message, nil
 }
 
-func unmarshalMessagePing(buffer circbuf.Buffer) (int, proto.Message, error) {
-	headerBytes := make([]byte, utils.AlignOf(uint32(RpcHeaderLength), uint32(4)))
-	buffer.Get(headerBytes[:RpcHeaderLength])
+func unmarshalProtobufBody(reader circbuf.Reader, direct RpcDirect, bodyLength int) (proto.Message, error) {
 
-	respHeader := readHeader(headerBytes)
-
-	if buffer.Length() < int(respHeader.Length)+RpcHeaderLength {
-		return 0, nil, nil
-	}
-
-	buffer.Peek(RpcHeaderLength)
-	message, err := unmarshalProtobufBody(buffer, respHeader.Direct, int(respHeader.Length))
+	bodyBytes, err := reader.ReadBinary(bodyLength)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
-
-	return int(respHeader.Length) + RpcHeaderLength, message, nil
-}
-
-func unmarshalProtobufBody(buffer circbuf.Buffer, direct RpcDirect, bodyLength int) (proto.Message, error) {
-	bodyBytes := make([]byte, utils.AlignOf(uint32(bodyLength), uint32(4)))
-	buffer.Read(bodyBytes[:bodyLength])
 
 	var msg proto.Message
 	switch direct {
@@ -120,13 +111,11 @@ func unmarshalProtobufBody(buffer circbuf.Buffer, direct RpcDirect, bodyLength i
 		msg = &RpcRequestMessage{}
 	case RpcResponse:
 		msg = &RpcResponseMessage{}
-	/*case RpcMessage:
-	msg = &RpcMsgMessage{}*/
 	case RpcPing:
 		msg = &RpcPingMessage{}
 	}
 
-	err := proto.Unmarshal(bodyBytes[:bodyLength], msg)
+	err = proto.Unmarshal(bodyBytes[:bodyLength], msg)
 	if err != nil {
 		return nil, err
 	}
