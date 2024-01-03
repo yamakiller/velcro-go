@@ -5,6 +5,7 @@ import "time"
 type IdleConfig struct {
 	MinIdlePerAddress int
 	MaxIdlePerAddress int
+	MaxMessageTimeout time.Duration
 	MaxIdleGlobal     int
 	MaxIdleTimeout    time.Duration
 }
