@@ -16,7 +16,7 @@ func (p *Program) Start(s service.Service) error {
 	vlog.Info("[PROGRAM]", "BattleService Start loading environment variables")
 
 	envs.With(&envs.YAMLEnv{})
-	if err := envs.Instance().Load("config", files.NewLocalPathFull("config.yaml"), &configs.Config{}); err != nil {
+	if err := envs.Instance().Load("configs", files.NewLocalPathFull("config.yaml"), &configs.Config{}); err != nil {
 		vlog.Fatal("[PROGRAM]", "Failed to load environment variables", err)
 		return err
 	}
