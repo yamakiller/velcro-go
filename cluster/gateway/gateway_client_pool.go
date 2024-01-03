@@ -5,7 +5,6 @@ import (
 
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
-	"github.com/yamakiller/velcro-go/utils/syncx"
 )
 
 type GatewayClientPool interface {
@@ -18,7 +17,7 @@ func NewDefaultGatewayClientPool(g *Gateway, request_timeout int64) GatewayClien
 		New: func() interface{} {
 			return &ClientConn{gateway: g,
 				requestTimeout: request_timeout,
-				recvice:        circbuf.New(32768, &syncx.NoMutex{})}
+				recvice:        circbuf.NewLinkBuffer(4096)}
 		},
 	}}
 }
