@@ -25,7 +25,7 @@ func SetLevel(lv Level) {
 	logger.SetLevel(lv)
 }
 
-// DefaultLogger return the default logger for kitex.
+// DefaultLogger return the default logger for velcro.
 func DefaultLogger() FullLogger {
 	return logger
 }
