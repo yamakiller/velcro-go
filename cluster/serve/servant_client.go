@@ -13,13 +13,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type ServantClientContext struct {
-	SequenceID int32
-	Sender     *network.ClientID
-	Background context.Context
-	Context    network.Context
-	Message    interface{}
-}
+// Background context.Context
+
+// ServantClientContext
 
 type ServantClientConn struct {
 	Servant *Servant
@@ -75,29 +71,28 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 				goto servant_client_offset_label
 			}
 
-			var sender *network.ClientID = nil
+			var messageEnvelope *MessageEnvelope
+			messageEnvelope.sequenceId = message.SequenceID
 			switch rs := reqMsg.(type) {
 			case *prvs.ForwardBundle:
 				reqMsg, err = rs.Body.UnmarshalNew()
 				if err != nil {
 					panic(err)
 				}
-				sender = rs.Sender
+				messageEnvelope = NewMessageEnvelopePool(message.SequenceID, rs.Sender, reqMsg)
 			default:
+				messageEnvelope = NewMessageEnvelopePool(message.SequenceID, nil, reqMsg)
 			}
-			background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
+
 			evt, ok := c.events[reflect.TypeOf(reqMsg)]
-			if !ok || evt.(func(*ServantClientContext) (proto.Message, error)) == nil {
+			if !ok || evt.(func(*context.Context) (proto.Message, error)) != nil {
 				panic(fmt.Errorf("servant request unfound events %s", reflect.TypeOf(reqMsg)))
 			}
-			result, err := evt.(func(*ServantClientContext) (proto.Message, error))(&ServantClientContext{
-				SequenceID: message.SequenceID,
-				Sender:     sender,
-				Background: background,
-				Context:    ctx,
-				Message:    reqMsg,
-			})
 
+			background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
+			background = NewCtxWithServantClientInfo(background, NewClientInfo(ctx, messageEnvelope))
+			result, err := evt.(func(*context.Context) (proto.Message, error))(&background)
+			background = FreeCtxWithServantClientInfo(background)
 			if err != nil {
 				result = &messages.RpcError{Err: err.Error()}
 			}
@@ -126,10 +121,10 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 // Register 注册方法映射
 func (c *ServantClientConn) Register(key, evt interface{}) {
 
-	if evt.(func(*ServantClientContext)) == nil &&
-		evt.(func(*ServantClientContext) (proto.Message, error)) == nil {
-		panic("The input event must be func(*ServantClientContext) or " +
-			"func(*ServantClientContext) (proto.Message, error)")
+	if evt.(func(context.Context)) == nil &&
+		evt.(func(context.Context) (proto.Message, error)) == nil {
+		panic("The input event must be func(context.Context) or " +
+			"func(context.Context) (proto.Message, error)")
 	}
 
 	c.events[reflect.TypeOf(key)] = evt
@@ -140,7 +135,9 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 	delete(c.Servant.clients, network.Key(ctx.Self()))
 	c.Servant.clientMutex.Unlock()
 
-	c.actor.Closed(&ServantClientContext{Context: ctx})
+	ctxBack := NewCtxWithServantClientInfo(context.Background(), NewClientInfo(ctx, nil))
+	c.actor.Closed(ctxBack)
+	FreeCtxWithServantClientInfo(ctxBack)
 	c.recvice = nil
 }
 
