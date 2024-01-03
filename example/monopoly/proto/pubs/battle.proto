@@ -75,3 +75,17 @@ message ReadyBattleSpaceResp {
     string uid = 2;
     string ready = 3;
 }
+
+//解散房间
+message DissBattleSpaceNotify{
+    string spaceId = 1;
+}
+
+//开始战斗
+message RequsetStartBattleSpace{
+    string spaceId = 1;
+}
+
+message RequsetStartBattleSpaceResp{
+    string spaceId = 1;
+}

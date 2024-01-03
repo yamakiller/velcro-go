@@ -15,6 +15,7 @@ import (
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -142,7 +143,12 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 		}
 		res.Space.Players = append(res.Space.Players, player)
 	}
-
+	players := rds.GetBattleSpacePlayers(ctx, request.SpaceId)
+	for _, v := range players {
+		if !sender.Equal(v) {
+			actor.submitRequestGatewayPush(ctx, v, res)
+		}
+	}
 	return res, nil
 }
 
@@ -159,28 +165,111 @@ func (actor *BattleActor) onReadyBattleSpace(ctx context.Context) (proto.Message
 	res.SpaceId = request.SpaceId
 	res.Uid = request.Uid
 	res.Ready = request.Ready
+	players := rds.GetBattleSpacePlayers(ctx, request.SpaceId)
+	for _, v := range players {
+		if !sender.Equal(v) {
+			actor.submitRequestGatewayPush(ctx, v, res)
+		}
+	}
 	return res, nil
 }
-func (actor *BattleActor) onReportNat(ctx context.Context) (proto.Message, error) {
 
-	return nil, nil
+func (actor *BattleActor) onRequestStartBattleSpace(ctx context.Context) (proto.Message, error) {
+	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.RequestStartBattleSpace)
+	sender := serve.GetServantClientInfo(ctx).Sender()
+	if err := rds.StartBattleSpace(ctx,request.SpaceId, sender); err != nil {
+		actor.submitRequestCloseClient(ctx, sender)
+		vlog.Debugf("onRequestStartBattleSpace error %s", err.Error())
+		return nil, err
+	}
+	players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
+	res := &mpubs.RequestStartBattleSpaceResp{}
+	res.SpaceId = request.SpaceId
+	
+	for _, v := range players {
+		if !sender.Equal(v) {
+			actor.submitRequestGatewayPush(ctx, v, res)
+		}
+	}
+	return res, nil
+}
+
+func (actor *BattleActor) onReportNat(ctx context.Context) (proto.Message, error) {
+	request := serve.GetServantClientInfo(ctx).Message().(*mprvs.ReportNat)
+	sender := serve.GetServantClientInfo(ctx).Sender()
+	if err := rds.BattleSpaceReportNat(ctx, request.BattleSpaceID, request.NatAddr, sender); err != nil {
+		actor.submitRequestCloseClient(ctx, sender)
+		vlog.Debugf("onReportNat error %s", err.Error())
+		return nil, err
+	}
+	players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
+	for _, v := range players {
+		if !sender.Equal(v) {
+			actor.submitRequestGatewayPush(ctx, v, request)
+		}
+	}
+	return request, nil
 }
 
 func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.Message, error) {
-	// request := serve.GetServantClientInfo(ctx).Message().(*mprvs.RequestExitBattleSpace)
+	request := serve.GetServantClientInfo(ctx).Message().(*mprvs.RequestExitBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
 	// request := ctx.Message.(*mprvs.RequestExitBattleSpace)
 	if ok, err := rds.IsMaster(ctx, sender); err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
 		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
 	} else if ok {
-		rds.DeleteBattleSpace(ctx, sender)
+		// 房主离开，解散房间
+		players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
+		if err := rds.DeleteBattleSpace(ctx, sender); err == nil {
+			res := &mpubs.DissBattleSpaceNotify{
+				SpaceId: request.BattleSpaceID,
+			}
+			for _, v := range players {
+				if !sender.Equal(v) {
+					actor.submitRequestGatewayPush(ctx, v, res)
+				}
+			}
+		}
 	} else {
+		// 非房主离开，退出房间
 		rds.LeaveBattleSpace(ctx, sender)
+		res := &mprvs.RequestExitBattleSpace{
+			BattleSpaceID: request.BattleSpaceID,
+			UID:           request.UID,
+		}
+		players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
+		for _, v := range players {
+			if !sender.Equal(v) {
+				actor.submitRequestGatewayPush(ctx, v, res)
+			}
+		}
 	}
-	res := &mprvs.RequestExitBattleSpace{}
 
-	return res, nil
+	return &mprvs.RequestExitBattleSpace{
+		BattleSpaceID: request.BattleSpaceID,
+		UID:           request.UID,
+	}, nil
+}
+
+func (actor *BattleActor) submitRequestGatewayPush(ctx context.Context, clientId *network.ClientID, request proto.Message) error {
+	r := actor.ancestor.FindAddrRouter(clientId.Address)
+	if r == nil {
+		if ctx != nil {
+			vlog.Errorf("%s unfound router", proto.MessageName(request))
+		}
+		return errors.New("unfound router")
+	}
+	dataAny, _ := anypb.New(request)
+	bounld := &prvs.RequestGatewayPush{
+		Target: clientId,
+		Body:   dataAny,
+	}
+	_, err := r.Proxy.RequestMessage(bounld, defaultRequestTimeout)
+	if err != nil {
+		vlog.Errorf("%s fail error %s", proto.MessageName(request), err.Error())
+	}
+	return nil
 }
 
 func (actor *BattleActor) submitRequestCloseClient(ctx context.Context, clientId *network.ClientID) {
@@ -210,12 +299,42 @@ func (actor *BattleActor) submitRequest(ctx context.Context, request proto.Messa
 
 func (actor *BattleActor) Closed(ctx context.Context) {
 	sender := serve.GetServantClientInfo(ctx).Sender()
+	spaceId, err := rds.FindBattleSpaceIDByClientID(ctx, sender)
+	if err != nil {
+		actor.submitRequestCloseClient(ctx, sender)
+		return
+	}
+	players := rds.GetBattleSpacePlayers(ctx, spaceId)
+
 	if ok, err := rds.IsMaster(ctx, sender); err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
 		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
 	} else if ok {
-		rds.DeleteBattleSpace(ctx, sender)
+
+		if err := rds.DeleteBattleSpace(ctx, sender); err == nil {
+			res := &mpubs.DissBattleSpaceNotify{
+				SpaceId: spaceId,
+			}
+			for _, v := range players {
+				if !sender.Equal(v) {
+					actor.submitRequestGatewayPush(ctx, v, res)
+				}
+			}
+		}
 	} else {
-		rds.LeaveBattleSpace(ctx, sender)
+
+		uid, spaceid, err := rds.LeaveBattleSpace(ctx, sender)
+		if err == nil {
+			res := &mprvs.RequestExitBattleSpace{
+				BattleSpaceID: spaceid,
+				UID:           uid,
+			}
+			for _, v := range players {
+				if !sender.Equal(v) {
+					actor.submitRequestGatewayPush(ctx, v, res)
+				}
+			}
+		}
+
 	}
 }

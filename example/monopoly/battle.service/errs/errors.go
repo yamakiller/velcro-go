@@ -9,4 +9,6 @@ var (
 	ErrorPlayerIsNotInBattleSpace = errors.New("Player not in battle space")
 	ErrorSpacePlayerIsFull = errors.New("Battle space is full")
 	ErrorPlayerRepeatOperation = errors.New("Player repeat operation")
+	ErrorSpaceOnlineDataLost       = errors.New("Space online data lost")
+	ErrorSpaceIsRunning = errors.New("Space is running")
 )

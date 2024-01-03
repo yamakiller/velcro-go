@@ -86,6 +86,14 @@ func (s *Servant) FindRouter(message proto.Message) *router.Router {
 	return s.routeGroup.Get(string(protoreflect.FullName(proto.MessageName(message))))
 }
 
+func (s *Servant) FindAddrRouter(addr string) *router.Router{
+	if s.routeGroup == nil {
+		return nil
+	}
+
+	return s.routeGroup.Find(addr)
+}
+
 func (s *Servant) spawConn(system *network.NetworkSystem) network.Client {
 	return &ServantClientConn{
 		Servant: s,

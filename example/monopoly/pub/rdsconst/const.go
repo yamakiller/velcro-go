@@ -79,13 +79,13 @@ func GetBattleSpacePlayerDataKey(uid string) string {
 
 func MakeData(list []string) string {
 	res := ""
-	for i:= (0); i < len(list); i++ {
-		res += fmt.Sprintf("%s&",list[i])
+	for i := (0); i < len(list); i++ {
+		res += fmt.Sprintf("%s&", list[i])
 	}
 	return res[:len(res)-1]
 }
 
-func UpdateData(list []string,index int,val string)string{
+func UpdateData(list []string, index int, val string) string {
 	for i := 0; i < len(list); i++ {
 		if i == index {
 			list[i] = val
@@ -94,6 +94,17 @@ func UpdateData(list []string,index int,val string)string{
 	return MakeData(list)
 }
 
+func EnterData(list []string, val string) (string, int32) {
+	index := int32(-1)
+	for i := 0; i < len(list); i++ {
+		if list[i] == "" {
+			list[i] = val
+			index = int32(i)
+			break
+		}
+	}
+	return MakeData(list), index
+}
 func SplitData(data string) []string {
 	return strings.Split(data, "&")
 }
