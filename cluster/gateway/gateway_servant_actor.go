@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -15,8 +16,8 @@ type GatewayServantActor struct {
 }
 
 // onBackwardBundle 回退转发包
-func (actor *GatewayServantActor) onRequestGatewayPush(ctx *serve.ServantClientContext) (proto.Message, error) {
-	backward := ctx.Message.(*prvs.RequestGatewayPush)
+func (actor *GatewayServantActor) onRequestGatewayPush(ctx context.Context) (proto.Message, error) {
+	backward := serve.GetServantClientInfo(ctx).Message().(*prvs.RequestGatewayPush)
 	utils.AssertEmpty(backward, "onBackwardBundle no prvs.RequestGatewayPush")
 
 	if backward.Target == nil {
@@ -40,8 +41,8 @@ func (actor *GatewayServantActor) onRequestGatewayPush(ctx *serve.ServantClientC
 }
 
 // onAlterRule 客户端角色修改
-func (actor *GatewayServantActor) onRequestGatewayAlterRule(ctx *serve.ServantClientContext) (proto.Message, error) {
-	alter := ctx.Message.(*prvs.RequestGatewayAlterRule)
+func (actor *GatewayServantActor) onRequestGatewayAlterRule(ctx context.Context) (proto.Message, error) {
+	alter := serve.GetServantClientInfo(ctx).Message().(*prvs.RequestGatewayAlterRule)
 	utils.AssertEmpty(alter, "onRequestGatewayAlterRule no prvs.RequestGatewayAlterRule")
 
 	c := actor.gateway.GetClient(alter.Target)
@@ -55,8 +56,8 @@ func (actor *GatewayServantActor) onRequestGatewayAlterRule(ctx *serve.ServantCl
 }
 
 // onClientCloseRequest 关闭请求
-func (actor *GatewayServantActor) onRequestGatewayCloseClient(ctx *serve.ServantClientContext) (proto.Message, error) {
-	closing := ctx.Message.(*prvs.RequestGatewayCloseClient)
+func (actor *GatewayServantActor) onRequestGatewayCloseClient(ctx context.Context) (proto.Message, error) {
+	closing := serve.GetServantClientInfo(ctx).Message().(*prvs.RequestGatewayCloseClient)
 	utils.AssertEmpty(closing, "onRequestGatewayCloseClient no prvs.RequestGatewayCloseClient")
 	c := actor.gateway.GetClient(closing.Target)
 	if c == nil {
@@ -68,6 +69,6 @@ func (actor *GatewayServantActor) onRequestGatewayCloseClient(ctx *serve.Servant
 	return nil, nil
 }
 
-func (actor *GatewayServantActor) Closed(ctx *serve.ServantClientContext) {
+func (actor *GatewayServantActor) Closed(ctx context.Context) {
 
 }

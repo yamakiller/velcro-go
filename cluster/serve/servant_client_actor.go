@@ -1,5 +1,7 @@
 package serve
 
+import "context"
+
 type ServantClientActor interface {
-	Closed(*ServantClientContext)
+	Closed(context.Context)
 }
