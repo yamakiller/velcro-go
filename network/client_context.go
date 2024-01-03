@@ -3,6 +3,8 @@ package network
 import (
 	"net"
 	"sync/atomic"
+
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 // 通用客户端上下文
@@ -96,4 +98,5 @@ func (ctx *clientContext) invokerClosed() {
 }
 
 func (ctx *clientContext) invokerEscalateFailure(reason interface{}, message interface{}) {
+	vlog.Errorf("[%s] %s \nstack%s", ctx.self.ToString(), reason.(error).Error(), message.(string))
 }
