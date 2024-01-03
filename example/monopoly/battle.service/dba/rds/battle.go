@@ -131,7 +131,7 @@ func DeleteBattleSpace(ctx context.Context, spaceid string, clientId *network.Cl
 		player_mutex.Unlock()
 		return errs.ErrorPlayerOnlineDataLost
 	}
-	if results[0] == "" {
+	if results[0] != spaceid {
 		player_mutex.Unlock()
 		return errs.ErrorPlayerIsNotInBattleSpace
 	}
@@ -214,6 +214,7 @@ func EnterBattleSpace(ctx context.Context, spaceid string, clientId *network.Cli
 
 	space_mutex := sync.NewMutex(rdsconst.GetBattleSpaceOnlineDataKey(spaceid))
 	if err := space_mutex.Lock(); err != nil {
+		player_mutex.Unlock()
 		return err
 	}
 
@@ -262,7 +263,35 @@ func EnterBattleSpace(ctx context.Context, spaceid string, clientId *network.Cli
 	return nil
 }
 
-func DisplayBattleSpace(ctx context.Context, spaceid string, uid string, display string, clientId *network.ClientID) error {
+func DisplayBattleSpace(ctx context.Context, spaceid string, display string, clientId *network.ClientID) error {
+	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil
+		}
+		return err
+	}
+
+	player_mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	if err := player_mutex.Lock(); err != nil {
+		return err
+	}
+	playerResults, err := client.HMGet(ctx, rdsconst.GetPlayerOnlineDataKey(uid),
+		rdsconst.PlayerMapClientBattleSpaceId).Result()
+	if err != nil {
+		player_mutex.Unlock()
+		return err
+	}
+	if len(playerResults) != 1 {
+		player_mutex.Unlock()
+		return errs.ErrorPlayerOnlineDataLost
+	}
+	if playerResults[0] != spaceid {
+		player_mutex.Unlock()
+		return errs.ErrorPlayerIsNotInBattleSpace
+	}
+	player_mutex.Unlock()
+
 	space_mutex := sync.NewMutex(rdsconst.GetBattleSpaceOnlineDataKey(spaceid))
 	if err := space_mutex.Lock(); err != nil {
 		return err
@@ -306,8 +335,82 @@ func DisplayBattleSpace(ctx context.Context, spaceid string, uid string, display
 	return nil
 }
 
-func LeaveBattleSpace(ctx context.Context, spaceid string, uid string, clientId *network.ClientID) error {
+func LeaveBattleSpace(ctx context.Context, spaceid string, clientId *network.ClientID) error {
+	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil
+		}
+		return err
+	}
 
+	player_mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	if err := player_mutex.Lock(); err != nil {
+		return err
+	}
+	playerResults, err := client.HMGet(ctx, rdsconst.GetPlayerOnlineDataKey(uid),
+		rdsconst.PlayerMapClientBattleSpaceId).Result()
+	if err != nil {
+		player_mutex.Unlock()
+		return err
+	}
+	if len(playerResults) != 1 {
+		player_mutex.Unlock()
+		return errs.ErrorPlayerOnlineDataLost
+	}
+	if playerResults[0] != spaceid {
+		player_mutex.Unlock()
+		return errs.ErrorPlayerIsNotInBattleSpace
+	}
+	player_mutex.Unlock()
+	
+	space_mutex := sync.NewMutex(rdsconst.GetBattleSpaceOnlineDataKey(spaceid))
+	if err := space_mutex.Lock(); err != nil {
+		return err
+	}
+
+	results, err := client.HGetAll(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid)).Result()
+	if err != nil {
+		space_mutex.Unlock()
+		return err
+	}
+
+	
+
+	pipe := client.TxPipeline()
+	defer pipe.Close()
+
+	pipe.Do(ctx, "MULTI")
+	//TODO 房主退出
+	if clientId.Equal(&network.ClientID{Address: results[rdsconst.PalyerMapClientIdAddress],
+		Id: results[rdsconst.PlayerMapClientIdId]}) {
+
+	}else{
+		if results[rdsconst.BattleSpacePos1Uid] == uid {
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePos1Display, rdsconst.BattleSpaceStateNomal)
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),rdsconst.BattleSpacePos1Uid, 0)
+		} else if results[rdsconst.BattleSpacePos2Uid] == uid {
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePos2Display, rdsconst.BattleSpaceStateNomal)
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),rdsconst.BattleSpacePos2Uid, 0)
+		} else if results[rdsconst.BattleSpacePos3Uid] == uid {
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePos3Display, rdsconst.BattleSpaceStateNomal)
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),rdsconst.BattleSpacePos3Uid, 0)
+		} else if results[rdsconst.BattleSpacePos4Uid] == uid {
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePos4Display, rdsconst.BattleSpaceStateNomal)
+			pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),rdsconst.BattleSpacePos4Uid, 0)
+		}
+	}
+	pipe.HSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, "")
+	//TODO 玩家退出
+	pipe.Do(ctx, "exec")
+
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		pipe.Discard()
+		space_mutex.Unlock()
+		return  err
+	}
+	space_mutex.Unlock()
 	return nil
 }
 

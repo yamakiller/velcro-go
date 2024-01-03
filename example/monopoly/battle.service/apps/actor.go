@@ -188,7 +188,7 @@ func (actor *BattleActor) onEnterBattleSpace(ctx *serve.ServantClientContext) (p
 
 func (actor *BattleActor) onDisplayBattleSpace(ctx *serve.ServantClientContext) (proto.Message, error) {
 	request := ctx.Message.(*mpubs.DisplayBattleSpace)
-	if err := rds.DisplayBattleSpace(ctx.Background, request.SpaceId, request.Uid, request.Display, ctx.Sender); err != nil {
+	if err := rds.DisplayBattleSpace(ctx.Background, request.SpaceId, request.Display,ctx.Sender); err != nil {
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
 		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
 		return nil, err
@@ -205,7 +205,7 @@ func (actor *BattleActor) onReportNat(ctx *serve.ServantClientContext) (proto.Me
 
 func (actor *BattleActor) onRequestExitBattleSpace(ctx *serve.ServantClientContext) (proto.Message, error) {
 	request := ctx.Message.(*mprvs.RequestExitBattleSpace)
-	if err := rds.LeaveBattleSpace(ctx.Background, request.BattleSpaceID, request.UID, ctx.Sender); err != nil {
+	if err := rds.LeaveBattleSpace(ctx.Background,request.BattleSpaceID,ctx.Sender); err != nil{
 		actor.submitRequestCloseClient(ctx, ctx.Sender)
 		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
 		return nil, err
