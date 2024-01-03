@@ -46,7 +46,7 @@ type ClientConn struct {
 	clientID       *network.ClientID
 	ruleID         int32  //角色ID
 	secret         []byte //密钥
-	recvice        *circbuf.RingBuffer
+	recvice        *circbuf.LinkBuffer
 	ping           uint64
 	requestTimeout int64 //最大超时时间 毫秒级
 	reference      int32 //引用计数器
@@ -106,7 +106,7 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 		)
 
 		if offset < len(ctx.Message()) {
-			n, werr = dl.recvice.Write(ctx.Message()[offset:])
+			n, werr = dl.recvice.WriteBinary(ctx.Message()[offset:])
 			offset += n
 		}
 
@@ -160,7 +160,7 @@ func (dl *ClientConn) Destory() {
 	dl.clientID = nil
 	dl.gateway = nil
 	dl.secret = nil
-	dl.recvice.Reset()
+	dl.recvice.Release()
 }
 
 func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
@@ -288,7 +288,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 		return
 	}
 
-	b, msge := protomessge.Marshal(result.(proto.Message), dl.secret)
+	b, msge := protomessge.Marshal(result, dl.secret)
 	if msge != nil {
 		vlog.Errorf("requesting pubs.Error marshal %s message fail[error:%s]", reflect.TypeOf(result).Name(), msge.Error())
 		ctx.Close(ctx.Self())
