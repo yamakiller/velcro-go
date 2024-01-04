@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
+	clientpool "github.com/yamakiller/velcro-go/rpc/client/connpool"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils"
@@ -53,7 +54,13 @@ const (
 	Disconnecting
 )
 
+type IntervalLinkNode struct{
+	intrusive.LinkedNode
+	Value interface{}
+}
+
 type Conn struct {
+	clientpool.BaseConnect
 	Config  *ConnConfig
 	conn    net.Conn
 	address *net.TCPAddr
@@ -133,11 +140,7 @@ func (rc *Conn) Register(key interface{}, f func(ctx context.Context, message pr
 }
 
 func (rc *Conn) IsConnected() bool {
-	if rc.state == Connected {
-		return true
-	}
-
-	return false
+	return rc.state == Connected
 }
 
 func (rc *Conn) ToAddress() string {
@@ -150,7 +153,7 @@ func (rc *Conn) ToAddress() string {
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
 // proto.Message
-func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (*Future, error) {
+func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (interface{}, error) {
 	if rc.currentGoroutineId == utils.GetCurrentGoroutineID() {
 		panic("RequestMessage cannot block calls in its own thread")
 	}
@@ -235,10 +238,13 @@ func (rc *Conn) responseMessage(sequenceID int32, message proto.Message) error {
 	return nil
 }
 
-func (rc *Conn) pushSendBox(msg interface{}) *intrusive.LinkedNode {
+func (rc *Conn) pushSendBox(msg interface{}) *IntervalLinkNode {
 	rc.sendcon.L.Lock()
 	// TODO: 是否已关闭
-	node := rc.sendbox.Push(msg)
+	node := &IntervalLinkNode{
+		Value: msg,
+	}
+	rc.sendbox.Push(node)
 	switch msgType := msg.(type) {
 	case *Future:
 		rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(msgType.sequenceID), 10), node)
@@ -252,7 +258,7 @@ func (rc *Conn) pushSendBox(msg interface{}) *intrusive.LinkedNode {
 }
 
 // getFuture 获取并删除
-func (rc *Conn) getFuture(id int32) *intrusive.LinkedNode {
+func (rc *Conn) getFuture(id int32) *IntervalLinkNode {
 
 	v, ok := rc.waitbox.Get(strconv.FormatInt(int64(id), 10))
 	if !ok {
@@ -260,7 +266,7 @@ func (rc *Conn) getFuture(id int32) *intrusive.LinkedNode {
 	}
 
 	rc.waitbox.Remove(strconv.FormatInt(int64(id), 10))
-	return v.(*intrusive.LinkedNode)
+	return v.(*IntervalLinkNode)
 }
 
 func (rc *Conn) Close() {
@@ -361,11 +367,11 @@ func (rc *Conn) sender() {
 			msgNode := rc.sendbox.Pop()
 			rc.sendcon.L.Unlock()
 
-			if msgNode.Value == nil {
+			if msgNode.(*IntervalLinkNode).Value == nil {
 				goto exit_sender_lable
 			}
 
-			switch msg := msgNode.Value.(type) {
+			switch msg := msgNode.(*IntervalLinkNode).Value.(type) {
 			case *Future:
 				msg.cond.L.Lock()
 				if msg.done {
@@ -492,6 +498,7 @@ func (rc *Conn) reader() {
 			if msg != nil {
 				switch message := msg.(type) {
 				case *messages.RpcPingMessage:
+
 				default:
 					rc.mailbox <- message
 				}
@@ -571,6 +578,8 @@ func (rc *Conn) guardian() {
 exit_guardian_lable:
 	rc.done.Wait() // 等待读写线程结束
 	rc.state = Disconnected
+	rc.BaseConnect.Affiliation().Close(rc.BaseConnect.Node())
+
 	for {
 		rc.sendcon.L.Lock()
 		sendMsgNode := rc.sendbox.Pop()
@@ -580,7 +589,7 @@ exit_guardian_lable:
 			break
 		}
 
-		switch sendMsg := sendMsgNode.Value.(type) {
+		switch sendMsg := sendMsgNode.(*IntervalLinkNode).Value.(type) {
 		case *Future:
 			sendMsg.cond.L.Lock()
 			if !sendMsg.done {
@@ -596,7 +605,7 @@ exit_guardian_lable:
 		default:
 		}
 
-		sendMsgNode.Value = nil
+		sendMsgNode.(*IntervalLinkNode).Value = nil
 	}
 
 	/*rc.requestbox.Range(func(key, value any) bool {

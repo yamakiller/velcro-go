@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	clientpool "github.com/yamakiller/velcro-go/rpc/client/connpool"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
@@ -19,6 +20,7 @@ func NewConn() *Conn {
 }
 
 type Conn struct {
+	clientpool.BaseConnect
 	conn     net.Conn
 	sequence int32
 }
@@ -38,7 +40,7 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 }
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
-func (rc *Conn) RequestMessage(message proto.Message, timeout uint64) (proto.Message, error) {
+func (rc *Conn) RequestMessage(message proto.Message, timeout uint64) (interface{}, error) {
 	seq := rc.nextID()
 	forwardTime := uint64(time.Now().UnixMilli())
 	b, err := messages.MarshalRequestProtobuf(seq, timeout, message)

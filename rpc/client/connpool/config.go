@@ -8,6 +8,7 @@ type IdleConfig struct {
 	MaxMessageTimeout time.Duration
 	MaxIdleGlobal     int
 	MaxIdleTimeout    time.Duration
+	MaxIdleConnTimeout time.Duration
 }
 
 const (

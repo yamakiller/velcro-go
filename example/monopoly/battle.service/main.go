@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	guard := application.Guardian{
 		Name:        "battle.service",
 		Display:     "对战服务",

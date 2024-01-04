@@ -6,38 +6,57 @@ func NewLinked(mutex sync.Locker) *Linked {
 	return &Linked{mutex: mutex, head: nil, tail: nil}
 }
 
+type INode interface {
+	Prev() INode
+	Next() INode
+	WithPrev(INode)
+	WithNext(INode)
+}
+
 type LinkedNode struct {
-	prev  *LinkedNode
-	next  *LinkedNode
-	Value interface{}
+	prev INode
+	next INode
+}
+
+func (n *LinkedNode) Prev() INode {
+	return n.prev
+}
+
+func (n *LinkedNode) Next() INode {
+	return n.next
+}
+
+func (n *LinkedNode) WithPrev(node INode) {
+	n.prev = node
+}
+
+func (n *LinkedNode) WithNext(node INode) {
+	n.next = node
 }
 
 type Linked struct {
-	head  *LinkedNode
-	tail  *LinkedNode
+	head  INode
+	tail  INode
 	mutex sync.Locker
 }
 
 // Push 尾部加入一条数据并返回这个节点
-func (linked *Linked) Push(value interface{}) *LinkedNode {
+func (linked *Linked) Push(node INode) {
 	linked.mutex.Lock()
 	defer linked.mutex.Unlock()
 
-	newNode := &LinkedNode{Value: value}
 	if linked.head == nil {
-		linked.head = newNode
-		linked.tail = newNode
+		linked.head = node
+		linked.tail = node
 	} else {
-		newNode.prev = linked.tail
-		linked.tail.next = newNode
-		linked.tail = newNode
+		node.WithPrev( linked.tail)
+		linked.tail.WithNext(node)
+		linked.tail = node
 	}
-
-	return newNode
 }
 
 // Pop 弹出尾部的节点
-func (linked *Linked) Pop() *LinkedNode {
+func (linked *Linked) Pop() INode {
 	linked.mutex.Lock()
 	defer linked.mutex.Unlock()
 
@@ -47,37 +66,54 @@ func (linked *Linked) Pop() *LinkedNode {
 
 	popNode := linked.tail
 
-	if popNode.prev != nil {
-		popNode.prev.next = nil
+	if popNode.Prev() != nil {
+		popNode.Prev().WithNext(nil)
 	}
 
-	linked.tail = popNode.prev
-	popNode.prev = nil
+	linked.tail = popNode.Prev()
+	popNode.WithPrev(nil)
 
 	return popNode
 }
 
 // Remove 删除这个节点
-func (linked *Linked) Remove(node *LinkedNode) {
+func (linked *Linked) Remove(node INode) {
 	linked.mutex.Lock()
 	defer linked.mutex.Unlock()
 
-	if node.prev != nil {
-		node.prev.next = node.next
+	if node.Prev() != nil {
+		node.Prev().WithNext(node.Next())
 	}
 
-	if node.next != nil {
-		node.next.prev = node.prev
+	if node.Next() != nil {
+		node.Next() .WithPrev(node.Prev())
 	}
 
 	if node == linked.head {
-		linked.head = node.next
+		linked.head = node.Next()
 	}
 
 	if node == linked.tail {
-		linked.tail = node.prev
+		linked.tail = node.Prev()
 	}
 
-	node.prev = nil
-	node.next = nil
+	node.WithPrev(nil)
+	node.WithNext(nil)
+}
+
+func (linked *Linked) Foreach(f func(INode)bool){
+	if f == nil{
+		return
+	}
+	linked.mutex.Lock()
+	defer linked.mutex.Unlock()
+	if linked.head == nil {
+		return
+	}
+
+	tmp := linked.head
+	for tmp != nil{
+		f(tmp)
+		tmp = tmp.Next()
+	}
 }

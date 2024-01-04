@@ -100,7 +100,7 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 	var (
 		host   string
 		err    error
-		future *asyn.Future
+		future interface{}
 	)
 
 	startMills := time.Now().UnixMilli()
@@ -118,9 +118,9 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 		goto try_again_label
 	}
 
-	future.Wait()
-	if future.Error() != nil {
-		if future.Error() == errs.ErrorRequestTimeout {
+	future.(*asyn.Future).Wait()
+	if future.(*asyn.Future).Error() != nil {
+		if future.(*asyn.Future).Error() == errs.ErrorRequestTimeout {
 			return nil, errs.ErrorRequestTimeout
 		}
 
@@ -131,7 +131,7 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 		goto try_again_label
 	}
 
-	return future.Result(), nil
+	return future.(*asyn.Future).Result(), nil
 try_again_label:
 	var result proto.Message = nil
 	var resultErr error = nil
@@ -161,9 +161,9 @@ try_again_label:
 			return resultErr
 		}
 
-		future.Wait()
-		if future.Error() != nil {
-			if future.Error() == errs.ErrorRequestTimeout {
+		future.(*asyn.Future).Wait()
+		if future.(*asyn.Future).Error() != nil {
+			if future.(*asyn.Future).Error() == errs.ErrorRequestTimeout {
 				resultErr = errs.ErrorRequestTimeout
 				return nil
 			}
@@ -171,7 +171,7 @@ try_again_label:
 			resultErr = err
 			return resultErr
 		}
-		result = future.Result()
+		result = future.(*asyn.Future).Result()
 		return nil
 	}),
 		repeat.StopOnSuccess(),
