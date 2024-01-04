@@ -1,4 +1,4 @@
-package asyn
+package client
 
 // ConnConfigOption 是一个配置rpc connector 的函数
 type ConnConfigOption func(config *ConnConfig)

@@ -3,17 +3,23 @@ package clientpool
 import "time"
 
 type IdleConfig struct {
-	MinIdlePerAddress int
-	MaxIdlePerAddress int
-	MaxIdleGlobal     int
-	MaxIdleTimeout    time.Duration
+	MaxMessageTimeout  time.Duration
+	MaxIdleGlobal      int
+	MaxIdleTimeout     time.Duration
+	MaxIdleConnTimeout time.Duration
+
+	Kleepalive int32
+
+	Connected func()
+	Closed    func()
 }
 
 const (
-	defaultMaxIdleTimeout = 30 * time.Second
-	minMaxIdleTimeout     = 2 * time.Second
-	maxMinIdlePerAddress  = 5
-	defaultMaxIdleGlobal  = 1 << 20 // no limit
+	defaultMaxMessageTimeout = 2 * time.Second
+	defaultMaxIdleTimeout    = 30 * time.Second
+	minMaxIdleTimeout        = 2 * time.Second
+	maxIdleConnTimeout       = 2 * time.Second
+	defaultMaxIdleGlobal     = 1 << 20 // no limit
 )
 
 // CheckPoolConfig to check invalid param.
@@ -27,24 +33,17 @@ func CheckPoolConfig(config IdleConfig) *IdleConfig {
 	}
 
 	// idlePerAddress
-	if config.MinIdlePerAddress < 0 {
-		config.MinIdlePerAddress = 0
-	}
-	if config.MinIdlePerAddress > maxMinIdlePerAddress {
-		config.MinIdlePerAddress = maxMinIdlePerAddress
-	}
-	if config.MaxIdlePerAddress <= 0 {
-		config.MaxIdlePerAddress = 1
-	}
-	if config.MaxIdlePerAddress < config.MinIdlePerAddress {
-		config.MaxIdlePerAddress = config.MinIdlePerAddress
+	if config.MaxIdleConnTimeout == 0 {
+		config.MaxIdleConnTimeout = maxIdleConnTimeout
 	}
 
 	// globalIdle
 	if config.MaxIdleGlobal <= 0 {
 		config.MaxIdleGlobal = defaultMaxIdleGlobal
-	} else if config.MaxIdleGlobal < config.MaxIdlePerAddress {
-		config.MaxIdleGlobal = config.MaxIdlePerAddress
+	}
+
+	if config.MaxMessageTimeout <= 0 {
+		config.MaxMessageTimeout = defaultMaxMessageTimeout
 	}
 	return &config
 }

@@ -1,4 +1,4 @@
-package asyn
+package client
 
 import (
 	"context"
@@ -32,15 +32,16 @@ func NewConn(options ...ConnConfigOption) *Conn {
 
 func NewConnConfig(config *ConnConfig) *Conn {
 	return &Conn{
-		Config:   config,
-		sendbox:  intrusive.NewLinked(&syncx.NoMutex{}),
-		sendcon:  sync.NewCond(&sync.Mutex{}),
-		waitbox:  cmap.New(),
-		methods:  make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
-		stopper:  make(chan struct{}),
-		sequence: 1,
-		mailbox:  make(chan interface{}, 1),
-		state:    Disconnected,
+		BaseConnect: &BaseConnect{},
+		Config:      config,
+		sendbox:     intrusive.NewLinked(&syncx.NoMutex{}),
+		sendcon:     sync.NewCond(&sync.Mutex{}),
+		waitbox:     cmap.New(),
+		methods:     make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
+		stopper:     make(chan struct{}),
+		sequence:    1,
+		mailbox:     make(chan interface{}, 1),
+		state:       Disconnected,
 	}
 }
 
@@ -53,7 +54,13 @@ const (
 	Disconnecting
 )
 
+type IntervalLinkNode struct {
+	intrusive.LinkedNode
+	Value interface{}
+}
+
 type Conn struct {
+	*BaseConnect
 	Config  *ConnConfig
 	conn    net.Conn
 	address *net.TCPAddr
@@ -133,11 +140,7 @@ func (rc *Conn) Register(key interface{}, f func(ctx context.Context, message pr
 }
 
 func (rc *Conn) IsConnected() bool {
-	if rc.state == Connected {
-		return true
-	}
-
-	return false
+	return rc.state == Connected
 }
 
 func (rc *Conn) ToAddress() string {
@@ -235,10 +238,13 @@ func (rc *Conn) responseMessage(sequenceID int32, message proto.Message) error {
 	return nil
 }
 
-func (rc *Conn) pushSendBox(msg interface{}) *intrusive.LinkedNode {
+func (rc *Conn) pushSendBox(msg interface{}) *IntervalLinkNode {
 	rc.sendcon.L.Lock()
 	// TODO: 是否已关闭
-	node := rc.sendbox.Push(msg)
+	node := &IntervalLinkNode{
+		Value: msg,
+	}
+	rc.sendbox.Push(node)
 	switch msgType := msg.(type) {
 	case *Future:
 		rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(msgType.sequenceID), 10), node)
@@ -252,7 +258,7 @@ func (rc *Conn) pushSendBox(msg interface{}) *intrusive.LinkedNode {
 }
 
 // getFuture 获取并删除
-func (rc *Conn) getFuture(id int32) *intrusive.LinkedNode {
+func (rc *Conn) getFuture(id int32) *IntervalLinkNode {
 
 	v, ok := rc.waitbox.Get(strconv.FormatInt(int64(id), 10))
 	if !ok {
@@ -260,7 +266,7 @@ func (rc *Conn) getFuture(id int32) *intrusive.LinkedNode {
 	}
 
 	rc.waitbox.Remove(strconv.FormatInt(int64(id), 10))
-	return v.(*intrusive.LinkedNode)
+	return v.(*IntervalLinkNode)
 }
 
 func (rc *Conn) Close() {
@@ -360,12 +366,14 @@ func (rc *Conn) sender() {
 			rc.sendcon.L.Lock()
 			msgNode := rc.sendbox.Pop()
 			rc.sendcon.L.Unlock()
-
-			if msgNode.Value == nil {
+			if msgNode == nil {
+				continue
+			}
+			if msgNode.(*IntervalLinkNode).Value == nil {
 				goto exit_sender_lable
 			}
 
-			switch msg := msgNode.Value.(type) {
+			switch msg := msgNode.(*IntervalLinkNode).Value.(type) {
 			case *Future:
 				msg.cond.L.Lock()
 				if msg.done {
@@ -492,6 +500,7 @@ func (rc *Conn) reader() {
 			if msg != nil {
 				switch message := msg.(type) {
 				case *messages.RpcPingMessage:
+
 				default:
 					rc.mailbox <- message
 				}
@@ -571,6 +580,8 @@ func (rc *Conn) guardian() {
 exit_guardian_lable:
 	rc.done.Wait() // 等待读写线程结束
 	rc.state = Disconnected
+	rc.BaseConnect.Affiliation().Remove(rc.node)
+
 	for {
 		rc.sendcon.L.Lock()
 		sendMsgNode := rc.sendbox.Pop()
@@ -580,7 +591,7 @@ exit_guardian_lable:
 			break
 		}
 
-		switch sendMsg := sendMsgNode.Value.(type) {
+		switch sendMsg := sendMsgNode.(*IntervalLinkNode).Value.(type) {
 		case *Future:
 			sendMsg.cond.L.Lock()
 			if !sendMsg.done {
@@ -596,7 +607,7 @@ exit_guardian_lable:
 		default:
 		}
 
-		sendMsgNode.Value = nil
+		sendMsgNode.(*IntervalLinkNode).Value = nil
 	}
 
 	/*rc.requestbox.Range(func(key, value any) bool {

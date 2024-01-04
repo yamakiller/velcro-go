@@ -1,14 +1,14 @@
 package proxy
 
 import (
-	"github.com/yamakiller/velcro-go/rpc/client/asyn"
+	"github.com/yamakiller/velcro-go/rpc/client"
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
 type RpcProxyConn struct {
 	proxy *RpcProxy
 	repe  *RpcProxyConnRepeat
-	*asyn.Conn
+	*client.Conn
 }
 
 func (rcc *RpcProxyConn) Close() {
