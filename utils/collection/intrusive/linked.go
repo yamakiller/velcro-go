@@ -63,8 +63,10 @@ func (linked *Linked) Pop() INode {
 	if linked.tail == nil {
 		return nil
 	}
-
 	popNode := linked.tail
+	if linked.tail == linked.head{
+		linked.head = nil
+	}
 
 	if popNode.Prev() != nil {
 		popNode.Prev().WithNext(nil)

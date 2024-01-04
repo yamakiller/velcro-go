@@ -6,16 +6,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/yamakiller/velcro-go/rpc/client"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
 	"github.com/yamakiller/velcro-go/utils/syncx"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+var (
+	sharedTickers sync.Map
+)
 
-
-func getSharedTicker1(p *ConnectPool, refreshInterval time.Duration) *utils.SharedTicker {
+func getSharedTicker(p *ConnectPool, refreshInterval time.Duration) *utils.SharedTicker {
 	sti, ok := sharedTickers.Load(refreshInterval)
 	if ok {
 		st := sti.(*utils.SharedTicker)
@@ -28,52 +30,46 @@ func getSharedTicker1(p *ConnectPool, refreshInterval time.Duration) *utils.Shar
 	return st
 }
 
-func NewConnectPool(serviceName string, connType interface{}, idlConfig IdleConfig) *ConnectPool {
+func NewConnectPool(serviceName string, idlConfig IdleConfig) *ConnectPool {
+	
 	res := &ConnectPool{
-		connType:     reflect.TypeOf(connType),
-		openingConns: 0,
-		maxIdleConn:  idlConfig.MaxIdlePerAddress,
-		pls:          intrusive.NewLinked(&syncx.NoMutex{}),
-		plscon:       sync.NewCond(&sync.Mutex{}),
+		openingConns:  0,
+		pls:           intrusive.NewLinked(&syncx.NoMutex{}),
+		plscon:        sync.NewCond(&sync.Mutex{}),
 	}
 	res.address = serviceName
-	res.config = idlConfig
-	getSharedTicker1(res, idlConfig.MaxIdleTimeout)
+	res.config = CheckPoolConfig(idlConfig)
+	getSharedTicker(res, res.config.MaxIdleTimeout)
 	return res
 }
 
-
-
 type ConnectPool struct {
-	pls          *intrusive.Linked
-	plscon       *sync.Cond
-	openingConns int
-	maxIdleConn  int
-	connType     reflect.Type
-	address string
-	config  IdleConfig
+	pls           *intrusive.Linked
+	plscon        *sync.Cond
+	openingConns  int
+	connType      reflect.Type
+	address       string
+	config        *IdleConfig
 }
 
-func (cp *ConnectPool) RequestMessage(msg proto.Message) (*client.Future, error) {
+func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage) (*client.Future, error) {
 	var (
 		conn client.IConnect
-		res *client.Future
-		err error
+		res  *client.Future
+		err  error
 	)
 	conn, err = cp.Get()
 	if err != nil {
 		return nil, err
 	}
-	res, err = conn.RequestMessage(msg,cp.config.MaxMessageTimeout.Milliseconds())
+	res, err = conn.RequestMessage(msg, cp.config.MaxMessageTimeout.Milliseconds())
 	if err == errors.New("closed") {
 		cp.Close(conn)
 	} else {
 		cp.Put(conn)
 	}
-	return res,nil
+	return res, nil
 }
-
-
 
 func (cp *ConnectPool) Tick() {
 	cp.plscon.L.Lock()
@@ -86,7 +82,7 @@ func (cp *ConnectPool) Tick() {
 		if node == nil {
 			return false
 		}
-		if node.(client.IConnect).Timeout()-time.Now().UnixMilli() <= 0 {
+		if node.(*client.PoolLinkNode).Conn.Timeout()-time.Now().UnixMilli() <= 0 {
 			remove_list = append(remove_list, node)
 		}
 		return true
@@ -96,7 +92,6 @@ func (cp *ConnectPool) Tick() {
 		cp.Close(node.(*client.PoolLinkNode).Conn)
 	}
 }
-
 
 func (cp *ConnectPool) Get() (client.IConnect, error) {
 	cp.plscon.L.Lock()
@@ -110,7 +105,11 @@ func (cp *ConnectPool) Get() (client.IConnect, error) {
 		conn.WithTimeout(time.Now().Add(time.Duration(cp.config.MaxIdleConnTimeout)).UnixMilli())
 		return conn, nil
 	} else {
-		conn := reflect.New(cp.connType.Elem()).Interface().(client.IConnect)
+		conn := client.NewConn(
+			client.WithConnected(cp.config.Connected),
+			client.WithClosed(cp.config.Closed),
+			client.WithKleepalive(cp.config.Kleepalive),
+		)
 		err := conn.Dial(cp.address, cp.config.MaxIdleConnTimeout)
 		if err != nil {
 			return nil, err
@@ -132,12 +131,12 @@ func (cp *ConnectPool) Put(conn client.IConnect) error {
 		cp.plscon.Signal()
 	}()
 	// 超过最大空闲连接数，关闭连接
-	if cp.openingConns >= cp.maxIdleConn {
+	if cp.openingConns >= cp.config.MaxIdleGlobal {
 		cp.Close(conn)
 		cp.Remove(conn.Node())
 		return nil
 	}
-	cp.pls.Push(&client.PoolLinkNode{Conn: conn})
+	cp.pls.Push(conn.Node())
 	return nil
 }
 
@@ -145,7 +144,7 @@ func (cp *ConnectPool) Len() int {
 	return cp.openingConns
 }
 
-func (cp *ConnectPool)Remove(node intrusive.INode){
+func (cp *ConnectPool) Remove(node intrusive.INode) {
 	cp.pls.Remove(node)
 	cp.openingConns--
 }
@@ -156,4 +155,13 @@ func (cp *ConnectPool) Close(conn client.IConnect) error {
 	}
 	conn.Close()
 	return nil
+}
+func (cp *ConnectPool) Shudown() {
+	for {
+		conn, err := cp.Get()
+		if err != nil {
+			return
+		}
+		cp.Close(conn)
+	}
 }

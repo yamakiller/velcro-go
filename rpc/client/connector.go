@@ -32,15 +32,16 @@ func NewConn(options ...ConnConfigOption) *Conn {
 
 func NewConnConfig(config *ConnConfig) *Conn {
 	return &Conn{
-		Config:   config,
-		sendbox:  intrusive.NewLinked(&syncx.NoMutex{}),
-		sendcon:  sync.NewCond(&sync.Mutex{}),
-		waitbox:  cmap.New(),
-		methods:  make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
-		stopper:  make(chan struct{}),
-		sequence: 1,
-		mailbox:  make(chan interface{}, 1),
-		state:    Disconnected,
+		BaseConnect: &BaseConnect{},
+		Config:      config,
+		sendbox:     intrusive.NewLinked(&syncx.NoMutex{}),
+		sendcon:     sync.NewCond(&sync.Mutex{}),
+		waitbox:     cmap.New(),
+		methods:     make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
+		stopper:     make(chan struct{}),
+		sequence:    1,
+		mailbox:     make(chan interface{}, 1),
+		state:       Disconnected,
 	}
 }
 
@@ -53,13 +54,13 @@ const (
 	Disconnecting
 )
 
-type IntervalLinkNode struct{
+type IntervalLinkNode struct {
 	intrusive.LinkedNode
 	Value interface{}
 }
 
 type Conn struct {
-	BaseConnect
+	*BaseConnect
 	Config  *ConnConfig
 	conn    net.Conn
 	address *net.TCPAddr
@@ -365,7 +366,9 @@ func (rc *Conn) sender() {
 			rc.sendcon.L.Lock()
 			msgNode := rc.sendbox.Pop()
 			rc.sendcon.L.Unlock()
-
+			if msgNode == nil {
+				continue
+			}
 			if msgNode.(*IntervalLinkNode).Value == nil {
 				goto exit_sender_lable
 			}

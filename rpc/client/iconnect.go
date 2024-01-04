@@ -1,11 +1,10 @@
 package client
 
 import (
-
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type IConnectPool interface { //连接池
@@ -16,17 +15,17 @@ type IConnect interface {
 	WithNode(intrusive.INode)
 	Node() intrusive.INode
 	WithAffiliation(IConnectPool)
-	WithTimeout(t int64)
+	WithTimeout(int64)
 	Timeout() int64
 	Dial(string, time.Duration) error
 	Redial() error
-	RequestMessage(message proto.Message, timeout int64) (*Future, error)
+	RequestMessage(protoreflect.ProtoMessage, int64) (*Future, error)
 	Close()
 }
 
 
 type BaseConnect struct {
-	node intrusive.INode
+	node        intrusive.INode
 	affiliation IConnectPool
 	timeout     int64
 }
@@ -43,7 +42,7 @@ func (pc *BaseConnect) WithAffiliation(aff IConnectPool) {
 	pc.affiliation = aff
 }
 
-func (pc *BaseConnect) Affiliation() IConnectPool{
+func (pc *BaseConnect) Affiliation() IConnectPool {
 	return pc.affiliation
 }
 
@@ -59,6 +58,3 @@ type PoolLinkNode struct {
 	intrusive.LinkedNode
 	Conn IConnect
 }
-
-
-

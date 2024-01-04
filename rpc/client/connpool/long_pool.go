@@ -1,6 +1,6 @@
 package clientpool
 
-import (
+/*import (
 	"context"
 	"fmt"
 	"net"
@@ -379,7 +379,7 @@ func (lp *LongPool) EnableReporter() {
 }*/
 
 // Evict cleanups the idle connections in peers.
-func (lp *LongPool) Evict() {
+/*func (lp *LongPool) Evict() {
 	if atomic.LoadInt32(&lp.closed) == 0 {
 		// Evict idle connections
 		lp.peerMap.Range(func(key, value interface{}) bool {
@@ -404,3 +404,4 @@ func (lp *LongPool) getPeer(addr netAddr) *peer {
 	p, _ = lp.peerMap.LoadOrStore(addr, lp.newPeer(addr))
 	return p.(*peer)
 }
+*/
