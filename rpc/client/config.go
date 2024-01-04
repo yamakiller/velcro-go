@@ -1,4 +1,4 @@
-package asyn
+package client
 
 type ConnConfig struct {
 	Kleepalive int32

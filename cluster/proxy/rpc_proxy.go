@@ -6,7 +6,7 @@ import (
 
 	"github.com/yamakiller/velcro-go/cluster/balancer"
 	"github.com/yamakiller/velcro-go/cluster/repeat"
-	"github.com/yamakiller/velcro-go/rpc/client/asyn"
+	"github.com/yamakiller/velcro-go/rpc/client"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
@@ -28,10 +28,10 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 
 		//创建连接
 		conn := &RpcProxyConn{}
-		conn.Conn = asyn.NewConn(
-			asyn.WithKleepalive(option.Kleepalive),
-			asyn.WithConnected(conn.Connected),
-			asyn.WithClosed(conn.Closed))
+		conn.Conn = client.NewConn(
+			client.WithKleepalive(option.Kleepalive),
+			client.WithConnected(conn.Connected),
+			client.WithClosed(conn.Closed))
 
 		alive[targetHost.VAddr] = false
 		hostMap[targetHost.VAddr] = conn
@@ -100,7 +100,7 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 	var (
 		host   string
 		err    error
-		future interface{}
+		future *client.Future
 	)
 
 	startMills := time.Now().UnixMilli()
@@ -118,9 +118,9 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 		goto try_again_label
 	}
 
-	future.(*asyn.Future).Wait()
-	if future.(*asyn.Future).Error() != nil {
-		if future.(*asyn.Future).Error() == errs.ErrorRequestTimeout {
+	future.Wait()
+	if future.Error() != nil {
+		if future.Error() == errs.ErrorRequestTimeout {
 			return nil, errs.ErrorRequestTimeout
 		}
 
@@ -131,7 +131,7 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 		goto try_again_label
 	}
 
-	return future.(*asyn.Future).Result(), nil
+	return future.Result(), nil
 try_again_label:
 	var result proto.Message = nil
 	var resultErr error = nil
@@ -161,9 +161,9 @@ try_again_label:
 			return resultErr
 		}
 
-		future.(*asyn.Future).Wait()
-		if future.(*asyn.Future).Error() != nil {
-			if future.(*asyn.Future).Error() == errs.ErrorRequestTimeout {
+		future.Wait()
+		if future.Error() != nil {
+			if future.Error() == errs.ErrorRequestTimeout {
 				resultErr = errs.ErrorRequestTimeout
 				return nil
 			}
@@ -171,7 +171,7 @@ try_again_label:
 			resultErr = err
 			return resultErr
 		}
-		result = future.(*asyn.Future).Result()
+		result = future.Result()
 		return nil
 	}),
 		repeat.StopOnSuccess(),

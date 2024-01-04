@@ -1,4 +1,4 @@
-package asyn
+package client
 
 import (
 	"context"
@@ -14,7 +14,6 @@ import (
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
-	clientpool "github.com/yamakiller/velcro-go/rpc/client/connpool"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils"
@@ -60,7 +59,7 @@ type IntervalLinkNode struct{
 }
 
 type Conn struct {
-	clientpool.BaseConnect
+	BaseConnect
 	Config  *ConnConfig
 	conn    net.Conn
 	address *net.TCPAddr
@@ -153,7 +152,7 @@ func (rc *Conn) ToAddress() string {
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
 // proto.Message
-func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (interface{}, error) {
+func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (*Future, error) {
 	if rc.currentGoroutineId == utils.GetCurrentGoroutineID() {
 		panic("RequestMessage cannot block calls in its own thread")
 	}
@@ -578,7 +577,7 @@ func (rc *Conn) guardian() {
 exit_guardian_lable:
 	rc.done.Wait() // 等待读写线程结束
 	rc.state = Disconnected
-	rc.BaseConnect.Affiliation().Close(rc.BaseConnect.Node())
+	rc.BaseConnect.Affiliation().Remove(rc.node)
 
 	for {
 		rc.sendcon.L.Lock()

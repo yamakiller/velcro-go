@@ -1,4 +1,4 @@
-package clientpool
+package client
 
 import (
 
@@ -8,22 +8,26 @@ import (
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
 )
 
+type IConnectPool interface { //连接池
+	Remove(intrusive.INode)
+}
+
 type IConnect interface {
 	WithNode(intrusive.INode)
-	WithAffiliation(perant *ConnectPool)
+	Node() intrusive.INode
+	WithAffiliation(IConnectPool)
 	WithTimeout(t int64)
 	Timeout() int64
 	Dial(string, time.Duration) error
 	Redial() error
-	RequsetMessage(message proto.Message, timeout int64) (interface{}, error)
-	Ping() error
-	Close() error
+	RequestMessage(message proto.Message, timeout int64) (*Future, error)
+	Close()
 }
 
 
 type BaseConnect struct {
 	node intrusive.INode
-	affiliation *ConnectPool
+	affiliation IConnectPool
 	timeout     int64
 }
 
@@ -35,11 +39,11 @@ func (pc *BaseConnect) Node() intrusive.INode {
 	return pc.node
 }
 
-func (pc *BaseConnect) WithAffiliation(aff *ConnectPool) {
+func (pc *BaseConnect) WithAffiliation(aff IConnectPool) {
 	pc.affiliation = aff
 }
 
-func (pc *BaseConnect) Affiliation() *ConnectPool{
+func (pc *BaseConnect) Affiliation() IConnectPool{
 	return pc.affiliation
 }
 
@@ -53,7 +57,7 @@ func (pc *BaseConnect) Timeout() int64 {
 
 type PoolLinkNode struct {
 	intrusive.LinkedNode
-	value IConnect
+	Conn IConnect
 }
 
 
