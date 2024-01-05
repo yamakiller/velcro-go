@@ -451,8 +451,7 @@ func (b *LinkBuffer) WriteBinary(p []byte) (n int, err error) {
 	// here will copy
 	b.growth(n)
 	buf := b.write.Malloc(n)
-	ret :=copy(buf, p)
-	return ret, nil
+	return copy(buf, p), nil
 }
 
 // WriteDirect cannot be mixed with WriteString or WriteBinary functions.

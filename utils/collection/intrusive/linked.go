@@ -45,11 +45,13 @@ func (linked *Linked) Push(node INode) {
 	linked.mutex.Lock()
 	defer linked.mutex.Unlock()
 
+	node.WithNext(nil)
+	node.WithPrev(nil)
 	if linked.head == nil {
 		linked.head = node
 		linked.tail = node
 	} else {
-		node.WithPrev( linked.tail)
+		node.WithPrev(linked.tail)
 		linked.tail.WithNext(node)
 		linked.tail = node
 	}
@@ -64,17 +66,17 @@ func (linked *Linked) Pop() INode {
 		return nil
 	}
 	popNode := linked.tail
-	if linked.tail == linked.head{
-		linked.head = nil
-	}
 
 	if popNode.Prev() != nil {
 		popNode.Prev().WithNext(nil)
+		linked.tail = popNode.Prev()
+	}else{
+		linked.head = nil
+		linked.tail = nil
 	}
-
-	linked.tail = popNode.Prev()
+	
 	popNode.WithPrev(nil)
-
+	popNode.WithNext(nil)
 	return popNode
 }
 
@@ -82,20 +84,23 @@ func (linked *Linked) Pop() INode {
 func (linked *Linked) Remove(node INode) {
 	linked.mutex.Lock()
 	defer linked.mutex.Unlock()
-
+	if node == nil{
+		return
+	}
 	if node.Prev() != nil {
 		node.Prev().WithNext(node.Next())
 	}
 
 	if node.Next() != nil {
-		node.Next() .WithPrev(node.Prev())
+		node.Next().WithPrev(node.Prev())
 	}
 
 	if node == linked.head {
-		linked.head = node.Next()
+		linked.head = nil
+		linked.tail = nil
 	}
 
-	if node == linked.tail {
+	if node == linked.tail && node.Prev() != nil {
 		linked.tail = node.Prev()
 	}
 

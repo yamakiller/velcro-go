@@ -19,7 +19,6 @@ import (
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
-	"github.com/yamakiller/velcro-go/utils/syncx"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -34,14 +33,14 @@ func NewConnConfig(config *ConnConfig) *Conn {
 	return &Conn{
 		BaseConnect: &BaseConnect{},
 		Config:      config,
-		sendbox:     intrusive.NewLinked(&syncx.NoMutex{}),
-		sendcon:     sync.NewCond(&sync.Mutex{}),
-		waitbox:     cmap.New(),
-		methods:     make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
-		stopper:     make(chan struct{}),
-		sequence:    1,
-		mailbox:     make(chan interface{}, 1),
-		state:       Disconnected,
+		// sendbox:     intrusive.NewLinked(&syncx.NoMutex{}),
+		sendcon:  sync.NewCond(&sync.Mutex{}),
+		waitbox:  cmap.New(),
+		methods:  make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
+		stopper:  make(chan struct{}),
+		sequence: 1,
+		mailbox:  make(chan interface{}, 1),
+		state:    Disconnected,
 	}
 }
 
@@ -65,7 +64,7 @@ type Conn struct {
 	conn    net.Conn
 	address *net.TCPAddr
 	timeout time.Duration
-	sendbox *intrusive.Linked
+	// sendbox *intrusive.Linked
 	waitbox cmap.ConcurrentMap
 	sendcon *sync.Cond
 
@@ -103,7 +102,7 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 	//1.启动发送及接收
 	rc.done.Add(2)
 
-	go rc.sender()
+	// go rc.sender()
 	go rc.reader()
 
 	rc.mailboxDone.Add(1)
@@ -126,7 +125,7 @@ func (rc *Conn) Redial() error {
 	//1.启动发送及接收
 	rc.done.Add(2)
 
-	go rc.sender()
+	// go rc.sender()
 	go rc.reader()
 
 	rc.mailboxDone.Add(1)
@@ -185,7 +184,44 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (*Future, e
 		t:          time.NewTimer(time.Duration(timeout) * time.Millisecond),
 	}
 
-	futureNode := rc.pushSendBox(future)
+	b, err := messages.MarshalRequestProtobuf(req.SequenceID, req.Timeout, req.Message)
+	if err != nil {
+		return future, nil
+	}
+
+	rc.sendcon.L.Lock()
+	_, err = rc.conn.Write(b)
+	rc.sendcon.L.Unlock()
+	rc.sendcon.Signal()
+
+	if err != nil {
+		// 发送失败
+		signal := false
+		future.cond.L.Lock()
+		if !future.done {
+			future.done = true
+			future.err = err
+			tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
+			if tp != nil {
+				tp.Stop()
+			}
+			// 删除映射表
+			rc.waitbox.Remove(strconv.FormatInt(int64(future.sequenceID), 10))
+			signal = true
+		}
+		future.cond.L.Unlock()
+		if signal {
+			future.cond.Signal()
+		}
+
+		return future, nil
+	}
+
+	rc.sendcon.L.Lock()
+	rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(future.sequenceID), 10), nil)
+	rc.sendcon.L.Unlock()
+	rc.sendcon.Signal()
+
 	if timeout > 0 {
 		tp := time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
 			future.cond.L.Lock()
@@ -201,7 +237,7 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (*Future, e
 				tp.Stop()
 			}
 
-			rc.sendbox.Remove(futureNode)
+			// rc.sendbox.Remove(futureNode)
 			rc.waitbox.Remove(strconv.FormatInt(int64(future.sequenceID), 10))
 
 			future.cond.L.Unlock()
@@ -230,32 +266,44 @@ func (rc *Conn) responseMessage(sequenceID int32, message proto.Message) error {
 		}
 	}
 
-	rc.pushSendBox(&messages.RpcResponseMessage{
+	req := &messages.RpcResponseMessage{
 		SequenceID: sequenceID,
 		Result:     resultAny,
-	})
+	}
+
+	b, err := messages.MarshalResponseProtobuf(req.SequenceID, req.Result)
+	if err != nil {
+		return errs.ErrorRpcConnectorClosed
+	}
+	rc.sendcon.L.Lock()
+	_, err = rc.conn.Write(b)
+	rc.sendcon.L.Unlock()
+	rc.sendcon.Signal()
+	if err != nil {
+		return errs.ErrorRpcConnectorClosed
+	}
 
 	return nil
 }
 
-func (rc *Conn) pushSendBox(msg interface{}) *IntervalLinkNode {
-	rc.sendcon.L.Lock()
-	// TODO: 是否已关闭
-	node := &IntervalLinkNode{
-		Value: msg,
-	}
-	rc.sendbox.Push(node)
-	switch msgType := msg.(type) {
-	case *Future:
-		rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(msgType.sequenceID), 10), node)
-	default:
-	}
+// func (rc *Conn) pushSendBox(msg interface{}) *IntervalLinkNode {
+// 	rc.sendcon.L.Lock()
+// 	// TODO: 是否已关闭
+// 	node := &IntervalLinkNode{
+// 		Value: msg,
+// 	}
+// 	rc.sendbox.Push(node)
+// 	switch msgType := msg.(type) {
+// 	case *Future:
+// 		rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(msgType.sequenceID), 10), node)
+// 	default:
+// 	}
 
-	rc.sendcon.L.Unlock()
-	rc.sendcon.Signal()
+// 	rc.sendcon.L.Unlock()
+// 	rc.sendcon.Signal()
 
-	return node
-}
+// 	return node
+// }
 
 // getFuture 获取并删除
 func (rc *Conn) getFuture(id int32) *IntervalLinkNode {
@@ -270,17 +318,17 @@ func (rc *Conn) getFuture(id int32) *IntervalLinkNode {
 }
 
 func (rc *Conn) Close() {
-	rc.sendcon.L.Lock()
-	rc.sendbox.Push(nil)
-	rc.sendcon.L.Unlock()
-	rc.sendcon.Signal()
+	// rc.sendcon.L.Lock()
+	// rc.sendbox.Push(&IntervalLinkNode{Value: nil})
+	// rc.sendcon.L.Unlock()
+	// rc.sendcon.Signal()
 	rc.done.Wait()
 	rc.mailboxDone.Wait()
 }
 
 func (rc *Conn) Destory() {
 	close(rc.mailbox)
-	rc.sendbox = nil
+	// rc.sendbox = nil
 }
 
 func (rc *Conn) nextID() int32 {
@@ -343,109 +391,110 @@ func (rc *Conn) onResponse(msg *messages.RpcResponseMessage) {
 	future.cond.Signal()
 }
 
-func (rc *Conn) sender() {
-	defer rc.done.Done()
+// func (rc *Conn) sender() {
+// 	defer rc.done.Done()
 
-	for {
-		rc.sendcon.L.Lock()
-		if !rc.isStopped() {
-			rc.sendcon.Wait()
-		}
-		rc.sendcon.L.Unlock()
+// 	for {
+// 		rc.sendcon.L.Lock()
+// 		if !rc.isStopped() {
+// 			rc.sendcon.Wait()
+// 		}
+// 		rc.sendcon.L.Unlock()
 
-		for {
-			if rc.isStopped() {
-				goto exit_sender_lable
-			}
+// 		for {
+// 			if rc.isStopped() {
+// 				goto exit_sender_lable
+// 			}
 
-			var (
-				b   []byte
-				err error
-			)
+// 			var (
+// 				b   []byte
+// 				err error
+// 			)
 
-			rc.sendcon.L.Lock()
-			msgNode := rc.sendbox.Pop()
-			rc.sendcon.L.Unlock()
-			if msgNode == nil {
-				continue
-			}
-			if msgNode.(*IntervalLinkNode).Value == nil {
-				goto exit_sender_lable
-			}
+// 			rc.sendcon.L.Lock()
+// 			msgNode := rc.sendbox.Pop()
+// 			rc.sendcon.L.Unlock()
+// 			if msgNode == nil {
+// 				continue
+// 			}
+// 			if msgNode.(*IntervalLinkNode).Value == nil {
+// 				goto exit_sender_lable
+// 			}
 
-			switch msg := msgNode.(*IntervalLinkNode).Value.(type) {
-			case *Future:
-				msg.cond.L.Lock()
-				if msg.done {
-					msg.cond.L.Unlock()
-					continue
-				}
+// 			switch msg := msgNode.(*IntervalLinkNode).Value.(type) {
+// 			case *Future:
+// 				msg.cond.L.Lock()
+// 				if msg.done {
+// 					msg.cond.L.Unlock()
+// 					continue
+// 				}
 
-				// 剩余时间小于超时20%无再发送意义,直接等待超时
-				diff := int64(msg.request.Timeout) - (time.Now().UnixMilli() - int64(msg.request.ForwardTime))
-				if diff < int64(float64(msg.request.Timeout)*0.2) {
-					msg.cond.L.Unlock()
-					continue
-				}
-				msg.cond.L.Unlock()
+// 				// 剩余时间小于超时20%无再发送意义,直接等待超时
+// 				diff := int64(msg.request.Timeout) - (time.Now().UnixMilli() - int64(msg.request.ForwardTime))
+// 				if diff < int64(float64(msg.request.Timeout)*0.2) {
+// 					msg.cond.L.Unlock()
+// 					continue
+// 				}
+// 				msg.cond.L.Unlock()
 
-				b, err = messages.MarshalRequestProtobuf(msg.request.SequenceID, msg.request.Timeout, msg.request.Message)
-				if err != nil {
-					goto exit_sender_lable
-				}
+// 				b, err = messages.MarshalRequestProtobuf(msg.request.SequenceID, msg.request.Timeout, msg.request.Message)
+// 				if err != nil {
+// 					goto exit_sender_lable
+// 				}
 
-				_, err = rc.conn.Write(b)
-				if err != nil {
-					// 发送失败
-					signal := false
-					msg.cond.L.Lock()
-					if !msg.done {
-						msg.done = true
-						msg.err = err
-						tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&msg.t))))
-						if tp != nil {
-							tp.Stop()
-						}
-						// 删除映射表
-						rc.waitbox.Remove(strconv.FormatInt(int64(msg.sequenceID), 10))
-						signal = true
-					}
-					msg.cond.L.Unlock()
-					if signal {
-						msg.cond.Signal()
-					}
+// 				_, err = rc.conn.Write(b)
+// 				if err != nil {
+// 					// 发送失败
+// 					signal := false
+// 					msg.cond.L.Lock()
+// 					if !msg.done {
+// 						msg.done = true
+// 						msg.err = err
+// 						tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&msg.t))))
+// 						if tp != nil {
+// 							tp.Stop()
+// 						}
+// 						// 删除映射表
+// 						rc.waitbox.Remove(strconv.FormatInt(int64(msg.sequenceID), 10))
+// 						signal = true
+// 					}
+// 					msg.cond.L.Unlock()
+// 					if signal {
+// 						msg.cond.Signal()
+// 					}
 
-					goto exit_sender_lable
-				}
-			case *messages.RpcResponseMessage:
-				b, err = messages.MarshalResponseProtobuf(msg.SequenceID, msg.Result)
-				if err != nil {
-					goto exit_sender_lable
-				}
+// 					goto exit_sender_lable
+// 				}
 
-				_, err = rc.conn.Write(b)
-				if err != nil {
-					goto exit_sender_lable
-				}
-			case *messages.RpcPingMessage:
-				b, err = messages.MarshalPingProtobuf(msg.VerifyKey)
-				if err != nil {
-					goto exit_sender_lable
-				}
-				_, err = rc.conn.Write(b)
-				if err != nil {
-					goto exit_sender_lable
-				}
-			default:
-				panic("sender: unknown rpc message")
-			}
+// 			case *messages.RpcResponseMessage:
+// 				b, err = messages.MarshalResponseProtobuf(msg.SequenceID, msg.Result)
+// 				if err != nil {
+// 					goto exit_sender_lable
+// 				}
 
-		}
-	}
-exit_sender_lable:
-	rc.state = Disconnecting
-	rc.conn.Close()
-}
+// 				_, err = rc.conn.Write(b)
+// 				if err != nil {
+// 					goto exit_sender_lable
+// 				}
+// 			case *messages.RpcPingMessage:
+// 				b, err = messages.MarshalPingProtobuf(msg.VerifyKey)
+// 				if err != nil {
+// 					goto exit_sender_lable
+// 				}
+// 				_, err = rc.conn.Write(b)
+// 				if err != nil {
+// 					goto exit_sender_lable
+// 				}
+// 			default:
+// 				panic("sender: unknown rpc message")
+// 			}
+
+// 		}
+// 	}
+// exit_sender_lable:
+// 	rc.state = Disconnecting
+// 	rc.conn.Close()
+// }
 
 func (rc *Conn) reader() {
 	defer rc.done.Done()
@@ -474,8 +523,15 @@ func (rc *Conn) reader() {
 				//发送心跳
 				uid := uuid.New()
 				rc.ping, _ = strconv.ParseUint(uid.String(), 10, 64)
-				pingMessage := &messages.RpcPingMessage{VerifyKey: rc.ping}
-				rc.pushSendBox(pingMessage)
+				// pingMessage := &messages.RpcPingMessage{VerifyKey: rc.ping}
+				b, err := messages.MarshalPingProtobuf(rc.ping)
+				if err != nil {
+					goto exit_reader_lable
+				}
+				_, err = rc.conn.Write(b)
+				if err != nil {
+					goto exit_reader_lable
+				}
 				continue
 			}
 			goto exit_reader_lable
@@ -582,33 +638,33 @@ exit_guardian_lable:
 	rc.state = Disconnected
 	rc.BaseConnect.Affiliation().Remove(rc.node)
 
-	for {
-		rc.sendcon.L.Lock()
-		sendMsgNode := rc.sendbox.Pop()
-		rc.sendcon.L.Unlock()
+	// for {
+	// 	rc.sendcon.L.Lock()
+	// 	sendMsgNode := rc.sendbox.Pop()
+	// 	rc.sendcon.L.Unlock()
 
-		if sendMsgNode == nil {
-			break
-		}
+	// 	if sendMsgNode == nil {
+	// 		break
+	// 	}
 
-		switch sendMsg := sendMsgNode.(*IntervalLinkNode).Value.(type) {
-		case *Future:
-			sendMsg.cond.L.Lock()
-			if !sendMsg.done {
-				sendMsg.done = true
-				sendMsg.err = errs.ErrorRpcConnectorClosed
-				tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&sendMsg.t))))
-				if tp != nil {
-					tp.Stop()
-				}
-			}
-			sendMsg.cond.L.Unlock()
-			sendMsg.cond.Signal()
-		default:
-		}
+	// 	switch sendMsg := sendMsgNode.(*IntervalLinkNode).Value.(type) {
+	// 	case *Future:
+	// 		sendMsg.cond.L.Lock()
+	// 		if !sendMsg.done {
+	// 			sendMsg.done = true
+	// 			sendMsg.err = errs.ErrorRpcConnectorClosed
+	// 			tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&sendMsg.t))))
+	// 			if tp != nil {
+	// 				tp.Stop()
+	// 			}
+	// 		}
+	// 		sendMsg.cond.L.Unlock()
+	// 		sendMsg.cond.Signal()
+	// 	default:
+	// 	}
 
-		sendMsgNode.(*IntervalLinkNode).Value = nil
-	}
+	// 	sendMsgNode.(*IntervalLinkNode).Value = nil
+	// }
 
 	/*rc.requestbox.Range(func(key, value any) bool {
 		future := value.(*Future)

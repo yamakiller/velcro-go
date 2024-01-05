@@ -13,6 +13,8 @@ import (
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func NewRpcClientConn(s *RpcServer) RpcClient {
@@ -70,6 +72,11 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 	offset := 0
 	for {
 		n, err := rcc.recvice.WriteBinary(ctx.Message()[offset:])
+		if err != nil{
+			ctx.Close(ctx.Self())
+			return
+		}
+		rcc.recvice.Flush()
 		offset += n
 
 		_, msg, msgErr := messages.UnMarshalProtobuf(rcc.recvice)
@@ -92,10 +99,17 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 		case *messages.RpcPingMessage:
 			rcc.onRpcPing(ctx, message)
 		case *messages.RpcRequestMessage:
-			reqMsg, err := message.Message.UnmarshalNew()
+			msg, err := message.Message.UnmarshalNew()
 			if err != nil {
 				goto rpc_client_offset_label
 			}
+
+			msgType, err := protoregistry.GlobalTypes.FindMessageByName(msg.(*anypb.Any).MessageName())
+			if err != nil {
+				goto rpc_client_offset_label
+			}
+			reqMsg := msgType.New().Interface()
+			proto.Unmarshal(msg.(*anypb.Any).GetValue(), reqMsg)
 
 			f, ok := rcc.methods[reflect.TypeOf(reqMsg)]
 			if !ok {
