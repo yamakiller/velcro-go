@@ -1,8 +1,10 @@
 package apps
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/kardianos/service"
@@ -34,14 +36,20 @@ func (p *Program) Start(s service.Service) error {
 	p._c = clientpool.NewConnectPool(config.TargetAddr, clientpool.IdleConfig{
 		Closed:internet.Closed,
 	})
-	t1 := time.NewTicker(time.Second * 1)
-	for {
-		select{
-		case <-t1.C:
-			p._c.RequestMessage(&protos.Auth{Msg: "123456"})
-		default:
-
-		}
+	
+	index := int32(0)
+	for i := 0; i < 5; i++{
+		go func(){
+			id := atomic.AddInt32(&index,1)
+			t1 := time.NewTicker(time.Millisecond * 300)
+			for {
+				select{
+				case <-t1.C:
+					p._c.RequestMessage(&protos.Auth{Msg: fmt.Sprintf("test-00%d",id)})
+				default:
+				}
+			}
+		}()
 	}
 
 	return nil

@@ -27,12 +27,12 @@ func MarshalRequestProtobuf(sequenceID int32, timeout uint64, message proto.Mess
 		return nil, err
 	}
 
-	data := make([]byte, utils.AlignOf(uint32(len(msgBytes)+3), uint32(4)))
+	data := make([]byte, utils.AlignOf(uint32(len(msgBytes)+RpcHeaderLength), uint32(4)))
 	data[0] = RpcRequest
 	binary.BigEndian.PutUint16(data[1:3], uint16(len(msgBytes)))
-	n := copy(data[3:len(msgBytes)+3], msgBytes)
+	n := copy(data[RpcHeaderLength:len(msgBytes)+RpcHeaderLength], msgBytes)
 
-	return data[:n], nil
+	return data[:n+RpcHeaderLength], nil
 }
 
 func MarshalResponseProtobuf(sequenceID int32, result proto.Message) ([]byte, error) {

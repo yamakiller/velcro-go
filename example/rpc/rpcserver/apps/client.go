@@ -15,6 +15,6 @@ type TestClient struct {
 
 func (tc *TestClient) OnAuth(ctx *server.RpcClientContext) (proto.Message, error) {
 	requst := ctx.Message().(*protos.Auth)
-	fmt.Fprintf(os.Stderr, "123456")
+	fmt.Fprintf(os.Stderr,"%s\n", requst.Msg)
 	return requst, nil
 }

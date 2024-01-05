@@ -1,7 +1,6 @@
 package apps
 
 import (
-	"reflect"
 	"sync"
 
 	"github.com/yamakiller/velcro-go/example/rpc/protos"
@@ -12,7 +11,7 @@ func NewClientPools(s *server.RpcServer) server.RpcPool {
 	return &ClientPools{pls: sync.Pool{
 		New: func() interface{} {
 			c := &TestClient{RpcClient: server.NewRpcClientConn(s)}
-			c.Register(reflect.TypeOf(&protos.Auth{}), c.OnAuth)
+			c.Register(&protos.Auth{}, c.OnAuth)
 			return c
 		},
 	}}

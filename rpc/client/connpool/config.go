@@ -4,7 +4,7 @@ import "time"
 
 type IdleConfig struct {
 	MaxMessageTimeout  time.Duration
-	MaxIdleGlobal      int
+	MaxIdleGlobal      int32
 	MaxIdleTimeout     time.Duration
 	MaxIdleConnTimeout time.Duration
 
