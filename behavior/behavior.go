@@ -16,3 +16,10 @@ const (
 	RUNNING Status = 3
 	ERROR   Status = 4
 )
+
+func MinInt(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

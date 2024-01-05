@@ -649,7 +649,6 @@ func (b *LinkBuffer) resetTail(maxSize int) {
 	b.write.next = newLinkBufferNode(0)
 	b.write = b.write.next
 	b.flush = b.write
-	return
 }
 
 // recalLen re-calculate the length
@@ -708,7 +707,6 @@ func (node *linkBufferNode) Reset() {
 	}
 	node.off, node.malloc = 0, 0
 	node.buf = node.buf[:0]
-	return
 }
 
 func (node *linkBufferNode) Next(n int) (p []byte) {
