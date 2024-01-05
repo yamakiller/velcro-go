@@ -31,26 +31,26 @@ func getSharedTicker(p *ConnectPool, refreshInterval time.Duration) *utils.Share
 	return st
 }
 
-func NewConnectPool(serviceName string, idlConfig IdleConfig) *ConnectPool {
-	
+func NewConnectPool(address string, idlConfig IdleConfig) *ConnectPool {
+
 	res := &ConnectPool{
-		openingConns:  0,
-		pls:           intrusive.NewLinked(&sync.RWMutex{}),
+		openingConns: 0,
+		pls:          intrusive.NewLinked(&sync.RWMutex{}),
 	}
-	res.address = serviceName
+	res.address = address
 	res.config = CheckPoolConfig(idlConfig)
 	getSharedTicker(res, res.config.MaxIdleTimeout)
 	return res
 }
 
 type ConnectPool struct {
-	pls           *intrusive.Linked
-	openingConns  int32
-	address       string
-	config        *IdleConfig
+	pls          *intrusive.Linked
+	openingConns int32
+	address      string
+	config       *IdleConfig
 }
 
-func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage) (*client.Future, error) {
+func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int64) (*client.Future, error) {
 	var (
 		conn client.IConnect
 		res  *client.Future
@@ -60,7 +60,7 @@ func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage) (*client.Fu
 	if err != nil {
 		return nil, err
 	}
-	res, err = conn.RequestMessage(msg, cp.config.MaxMessageTimeout.Milliseconds())
+	res, err = conn.RequestMessage(msg, timeout)
 	cp.Put(conn)
 	return res, err
 }
@@ -84,7 +84,7 @@ func (cp *ConnectPool) Tick() {
 }
 
 func (cp *ConnectPool) Get() (client.IConnect, error) {
-	
+
 	node := cp.pls.Pop()
 
 	if node != nil {
@@ -105,8 +105,8 @@ func (cp *ConnectPool) Get() (client.IConnect, error) {
 		conn.WithAffiliation(cp)
 		conn.WithTimeout(time.Now().Add(time.Duration(cp.config.MaxIdleConnTimeout)).UnixMilli())
 		conn.WithNode(node)
-		atomic.AddInt32(&cp.openingConns,1)
-		fmt.Fprintf(os.Stderr,"ConnectPool ++ %d\n", cp.openingConns)
+		atomic.AddInt32(&cp.openingConns, 1)
+		fmt.Fprintf(os.Stderr, "ConnectPool ++ %d\n", cp.openingConns)
 		cp.pls.Push(node)
 		return conn, nil
 	}
@@ -130,8 +130,8 @@ func (cp *ConnectPool) Len() int32 {
 
 func (cp *ConnectPool) Remove(node intrusive.INode) {
 	cp.pls.Remove(node)
-	atomic.AddInt32(&cp.openingConns,-1)
-	fmt.Fprintf(os.Stderr,"ConnectPool -- %d\n", cp.openingConns)
+	atomic.AddInt32(&cp.openingConns, -1)
+	fmt.Fprintf(os.Stderr, "ConnectPool -- %d\n", cp.openingConns)
 }
 
 func (cp *ConnectPool) Close(conn client.IConnect) error {

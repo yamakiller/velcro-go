@@ -7,6 +7,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/balancer"
 	"github.com/yamakiller/velcro-go/cluster/repeat"
 	"github.com/yamakiller/velcro-go/rpc/client"
+	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
@@ -25,13 +26,7 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 	alive := make(map[string]bool)
 
 	for _, targetHost := range option.TargetHost {
-
-		//创建连接
 		conn := &RpcProxyConn{}
-		conn.Conn = client.NewConn(
-			client.WithKleepalive(option.Kleepalive),
-			client.WithConnected(conn.Connected),
-			client.WithClosed(conn.Closed))
 
 		alive[targetHost.VAddr] = false
 		hostMap[targetHost.VAddr] = conn
@@ -44,26 +39,24 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 	}
 
 	return &RpcProxy{
-		dialTimeouot: time.Millisecond * time.Duration(option.DialTimeout),
-		hostMap:      hostMap,
-		hostAddrMap:  hostAddrMap,
-		balancer:     lb,
-		alive:        alive,
-		stopper:      make(chan struct{}),
+		poolConfig:  &option.PoolConfig,
+		hostMap:     hostMap,
+		hostAddrMap: hostAddrMap,
+		balancer:    lb,
+		alive:       alive,
+		stopper:     make(chan struct{}),
 	}, nil
 }
 
 // RpcProxy rpc 代理
 type RpcProxy struct {
 	// 连接等待超时
-	dialTimeouot time.Duration
+	poolConfig *clientpool.IdleConfig
 	// 连接器
 	hostMap     map[string]*RpcProxyConn
 	hostAddrMap map[string]string
 	// 均衡器
 	balancer balancer.Balancer
-	// 代理连接成功回调函数
-	connected func(*RpcProxyConn)
 	// 活着的目标
 	sync.RWMutex
 	alive   map[string]bool
@@ -74,20 +67,16 @@ type RpcProxy struct {
 func (rpx *RpcProxy) Open() {
 	for host, conn := range rpx.hostMap {
 		conn.proxy = rpx
-		conn.repe = &RpcProxyConnRepeat{
-			host:         rpx.hostAddrMap[host],
-			conn:         conn,
-			dialTimeouot: rpx.dialTimeouot,
-		}
+		conn.ConnectPool = clientpool.NewConnectPool(rpx.hostAddrMap[host], clientpool.IdleConfig{
+			MaxIdleGlobal:      rpx.poolConfig.MaxIdleGlobal,
+			MaxIdleTimeout:     rpx.poolConfig.MaxIdleTimeout,
+			MaxIdleConnTimeout: rpx.poolConfig.MaxIdleConnTimeout,
+			Kleepalive:         rpx.poolConfig.Kleepalive,
+			Connected:          rpx.poolConfig.Connected,
+			Closed:             rpx.poolConfig.Closed,
+		})
 
 		vlog.Infof("%s connecting", rpx.hostAddrMap[host])
-		if err := conn.Dial(rpx.hostAddrMap[host], rpx.dialTimeouot); err != nil {
-			vlog.Errorf("%s connect fail[error:%s]", rpx.hostAddrMap[host], err.Error())
-			// 启动退避启动器
-			conn.repe.start()
-			continue
-		}
-
 		vlog.Infof("%s connected", rpx.hostAddrMap[host])
 
 		rpx.alive[host] = true
@@ -185,8 +174,7 @@ func (rpx *RpcProxy) Shutdown() {
 	//释放资源
 	close(rpx.stopper)
 	for _, conn := range rpx.hostMap {
-		conn.Close()
-		conn.Destory()
+		conn.Shudown()
 	}
 	rpx.hostMap = make(map[string]*RpcProxyConn)
 	rpx.alive = make(map[string]bool)

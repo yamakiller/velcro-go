@@ -3,15 +3,17 @@ package router
 import (
 	"fmt"
 	"os"
+	"time"
 
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/yamakiller/velcro-go/cluster/proxy"
 	"github.com/yamakiller/velcro-go/cluster/router/material"
+	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
 	"github.com/yamakiller/velcro-go/utils/files"
 	"gopkg.in/yaml.v2"
 )
 
-func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGroup, error) {
+func Loader(filePath string, algorithm string) (*RouterGroup, error) {
 	if !files.IsFileExist(filePath) {
 		return nil, fmt.Errorf("file %s unfound", filePath)
 	}
@@ -20,8 +22,6 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 	if err != nil {
 		return nil, err
 	}
-
-	opt := Configure(options...)
 
 	yamlGroup := &material.RouterGroup{}
 	if err := yaml.Unmarshal(b, yamlGroup); err != nil {
@@ -32,9 +32,13 @@ func Loader(filePath string, options ...RouterRpcProxyConfigOption) (*RouterGrou
 	for _, router := range yamlGroup.Routes {
 		// TODO: 构建代理对象
 		p, err := proxy.NewRpcProxy(
-			proxy.WithAlgorithm(opt.Algorithm),
-			proxy.WithKleepalive(opt.Kleepalive),
-			proxy.WithDialTimeout(opt.DialTimeout),
+			proxy.WithAlgorithm(algorithm),
+			proxy.WithPoolConfig(clientpool.IdleConfig{
+				MaxIdleGlobal:      router.MaxIdleGlobal,
+				MaxIdleTimeout:     time.Duration(router.MaxIdleTimeout) * time.Minute,
+				MaxIdleConnTimeout: time.Duration(router.MaxIdleConnTimeout) * time.Second,
+				Kleepalive:         router.Kleepalive,
+			}),
 			proxy.WithTargetHost(router.Endpoints))
 		if err != nil {
 			return nil, err

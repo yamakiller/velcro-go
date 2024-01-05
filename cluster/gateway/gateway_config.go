@@ -116,10 +116,8 @@ func defaultGatewayConfig() *GatewayConfig {
 		RequestDefautTimeout: 1000,
 		OnlineOfNumber:       2000,
 		Router: &router.RouterConfig{
-			URI:         files.NewLocalPathFull("routes.yaml"),
-			DialTimeout: 2000,
-			Kleepalive:  4000,
-			Algorithm:   "p2c",
+			URI:       files.NewLocalPathFull("routes.yaml"),
+			Algorithm: "p2c",
 		},
 	}
 }

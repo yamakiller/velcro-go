@@ -12,7 +12,7 @@ import (
 	"github.com/yamakiller/velcro-go/example/rpc/protos"
 	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/configs"
 	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/internet"
-	clientpool "github.com/yamakiller/velcro-go/rpc/client/connpool"
+	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
 )
 
 var appName string = "test-rpc-client"
@@ -34,18 +34,18 @@ func (p *Program) Start(s service.Service) error {
 		return err
 	}
 	p._c = clientpool.NewConnectPool(config.TargetAddr, clientpool.IdleConfig{
-		Closed:internet.Closed,
+		Closed: internet.Closed,
 	})
-	
+
 	index := int32(0)
-	for i := 0; i < 5; i++{
-		go func(){
-			id := atomic.AddInt32(&index,1)
+	for i := 0; i < 5; i++ {
+		go func() {
+			id := atomic.AddInt32(&index, 1)
 			t1 := time.NewTicker(time.Millisecond * 300)
 			for {
-				select{
+				select {
 				case <-t1.C:
-					p._c.RequestMessage(&protos.Auth{Msg: fmt.Sprintf("test-00%d",id)})
+					p._c.RequestMessage(&protos.Auth{Msg: fmt.Sprintf("test-00%d", id)}, 2000)
 				default:
 				}
 			}

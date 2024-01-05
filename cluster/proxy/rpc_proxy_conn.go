@@ -1,11 +1,15 @@
 package proxy
 
 import (
-	"github.com/yamakiller/velcro-go/rpc/client"
-	"github.com/yamakiller/velcro-go/vlog"
+	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
 )
 
 type RpcProxyConn struct {
+	proxy *RpcProxy
+	*clientpool.ConnectPool
+}
+
+/*type RpcProxyConn struct {
 	proxy *RpcProxy
 	repe  *RpcProxyConnRepeat
 	*client.Conn
@@ -41,4 +45,4 @@ func (rpcx *RpcProxyConn) Closed() {
 	}
 
 	vlog.Errorf("%s closed", rpcx.ToAddress())
-}
+}*/

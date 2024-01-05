@@ -3,7 +3,6 @@ package clientpool
 import "time"
 
 type IdleConfig struct {
-	MaxMessageTimeout  time.Duration
 	MaxIdleGlobal      int32
 	MaxIdleTimeout     time.Duration
 	MaxIdleConnTimeout time.Duration
@@ -15,11 +14,10 @@ type IdleConfig struct {
 }
 
 const (
-	defaultMaxMessageTimeout = 2 * time.Second
-	defaultMaxIdleTimeout    = 30 * time.Second
-	minMaxIdleTimeout        = 2 * time.Second
-	maxIdleConnTimeout       = 2 * time.Second
-	defaultMaxIdleGlobal     = 1 << 20 // no limit
+	defaultMaxIdleTimeout = 30 * time.Second
+	minMaxIdleTimeout     = 2 * time.Second
+	maxIdleConnTimeout    = 2 * time.Second
+	defaultMaxIdleGlobal  = 1 << 20 // no limit
 )
 
 // CheckPoolConfig to check invalid param.
@@ -42,8 +40,5 @@ func CheckPoolConfig(config IdleConfig) *IdleConfig {
 		config.MaxIdleGlobal = defaultMaxIdleGlobal
 	}
 
-	if config.MaxMessageTimeout <= 0 {
-		config.MaxMessageTimeout = defaultMaxMessageTimeout
-	}
 	return &config
 }

@@ -1,5 +1,7 @@
 package proxy
 
+import "github.com/yamakiller/velcro-go/rpc/client/clientpool"
+
 // ConnConfigOption 是一个配置rpc connector 的函数
 type RpcProxyConfigOption func(option *RpcProxyOption)
 
@@ -12,18 +14,10 @@ func Configure(options ...RpcProxyConfigOption) *RpcProxyOption {
 	return config
 }
 
-// WithKleepalive 设置连接器保活时间(单位:毫秒)
-func WithKleepalive(kleepalive int32) RpcProxyConfigOption {
-
+// WithPoolConfig 连接池配置
+func WithPoolConfig(cfg clientpool.IdleConfig) RpcProxyConfigOption {
 	return func(opt *RpcProxyOption) {
-		opt.Kleepalive = kleepalive
-	}
-}
-
-// WithDialTimeout 设置连接器连接等待超时时间(单位:毫秒)
-func WithDialTimeout(timeout int32) RpcProxyConfigOption {
-	return func(opt *RpcProxyOption) {
-		opt.DialTimeout = timeout
+		opt.PoolConfig = cfg
 	}
 }
 
@@ -44,10 +38,9 @@ func WithAlgorithm(algorithm string) RpcProxyConfigOption {
 
 // RpcProxyOption
 type RpcProxyOption struct {
-	Kleepalive  int32 // 连接器保活时间(单位:毫秒)
-	DialTimeout int32 // 连接器连接等待超时时间(单位:毫秒)
-	TargetHost  []ResolveAddress
-	Algorithm   string
+	PoolConfig clientpool.IdleConfig
+	TargetHost []ResolveAddress
+	Algorithm  string
 }
 
 type ResolveAddress struct {
@@ -57,8 +50,7 @@ type ResolveAddress struct {
 
 func defaultRpcProxyOption() *RpcProxyOption {
 	return &RpcProxyOption{
-		Kleepalive:  10 * 1000,
-		DialTimeout: 2 * 1000,
-		Algorithm:   "p2c",
+		PoolConfig: clientpool.IdleConfig{},
+		Algorithm:  "p2c",
 	}
 }

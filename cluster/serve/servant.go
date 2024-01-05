@@ -34,9 +34,7 @@ type Servant struct {
 func (s *Servant) Start() error {
 	if s.Config.Router != nil {
 		routeGroup, err := router.Loader(s.Config.Router.URI,
-			router.WithAlgorithm(s.Config.Router.Algorithm),
-			router.WithDialTimeout(s.Config.Router.DialTimeout),
-			router.WithKleepalive(s.Config.Router.Kleepalive))
+			s.Config.Router.Algorithm)
 		if err != nil {
 			return nil
 		}
@@ -85,7 +83,7 @@ func (s *Servant) FindRouter(message proto.Message) *router.Router {
 	return s.routeGroup.Get(string(protoreflect.FullName(proto.MessageName(message))))
 }
 
-func (s *Servant) FindAddrRouter(addr string) *router.Router{
+func (s *Servant) FindAddrRouter(addr string) *router.Router {
 	if s.routeGroup == nil {
 		return nil
 	}
