@@ -108,10 +108,6 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 		if offset < len(ctx.Message()) {
 			n, werr = dl.recvice.WriteBinary(ctx.Message()[offset:])
 			offset += n
-			if err := dl.recvice.Flush(); err != nil {
-				ctx.Close(ctx.Self())
-				return
-			}
 		}
 
 		msg, err := protomessge.UnMarshal(dl.recvice, dl.secret)
@@ -133,7 +129,7 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 			}
 			continue
 		}
-		
+
 		switch message := msg.(type) {
 		case *pubs.PingMsg:
 			dl.onPingReply(ctx, message)
@@ -162,7 +158,7 @@ func (dl *ClientConn) Closed(ctx network.Context) {
 
 func (dl *ClientConn) Destory() {
 	dl.clientID = nil
-	// dl.gateway = nil
+	dl.gateway = nil
 	dl.secret = nil
 	dl.recvice.Release()
 }

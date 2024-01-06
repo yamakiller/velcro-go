@@ -23,7 +23,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func NewConn(options ...ConnConfigOption) IConnect {
+func NewConn(options ...ConnConfigOption) *Conn {
 	config := Configure(options...)
 
 	return NewConnConfig(config)
@@ -152,7 +152,7 @@ func (rc *Conn) ToAddress() string {
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
 // proto.Message
-func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, error) {
+func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (*Future, error) {
 	if rc.currentGoroutineId == utils.GetCurrentGoroutineID() {
 		panic("RequestMessage cannot block calls in its own thread")
 	}
@@ -192,7 +192,7 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 	rc.sendcon.L.Lock()
 	_, err = rc.conn.Write(b)
 	rc.sendcon.L.Unlock()
-
+	rc.sendcon.Signal()
 
 	if err != nil {
 		// 发送失败
@@ -218,12 +218,9 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 	}
 
 	rc.sendcon.L.Lock()
-	node := &IntervalLinkNode{
-		Value: future,
-	}
-	rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(future.sequenceID), 10), node)
+	rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(future.sequenceID), 10), nil)
 	rc.sendcon.L.Unlock()
-	
+	rc.sendcon.Signal()
 
 	if timeout > 0 {
 		tp := time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
@@ -242,15 +239,13 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 
 			// rc.sendbox.Remove(futureNode)
 			rc.waitbox.Remove(strconv.FormatInt(int64(future.sequenceID), 10))
+
 			future.cond.L.Unlock()
 			future.cond.Signal()
 		})
 		atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&future.t)), unsafe.Pointer(tp))
 	}
-	future.cond.L.Lock()
-	future.cond.Wait()
-	future.cond.L.Unlock()
-	
+
 	return future, nil
 }
 
@@ -283,7 +278,7 @@ func (rc *Conn) responseMessage(sequenceID int32, message proto.Message) error {
 	rc.sendcon.L.Lock()
 	_, err = rc.conn.Write(b)
 	rc.sendcon.L.Unlock()
-	// rc.sendcon.Signal()
+	rc.sendcon.Signal()
 	if err != nil {
 		return errs.ErrorRpcConnectorClosed
 	}
@@ -547,9 +542,7 @@ func (rc *Conn) reader() {
 		for {
 			nw, err := readbuffer.WriteBinary(readtemp[offset:nr])
 			offset += nw
-			if err := readbuffer.Flush();err != nil {
-				goto exit_reader_lable
-			}
+
 			_, msg, uerr := messages.UnMarshalProtobuf(readbuffer)
 			if uerr != nil {
 				goto exit_reader_lable

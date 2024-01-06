@@ -23,7 +23,7 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 	}
 
 	readDataLen := binary.BigEndian.Uint16(HeaderByte[:])
-	if readDataLen+HeaderSize > uint16(reader.Len()) {
+	if readDataLen+HeaderSize < uint16(reader.Len()) {
 		return nil, nil
 	}
 

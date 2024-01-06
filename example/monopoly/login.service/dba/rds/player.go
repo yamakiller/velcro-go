@@ -41,7 +41,7 @@ func RegisterPlayer(ctx context.Context,
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 
-	// pipe.Do(ctx, "MULTI")
+	pipe.Do(ctx, "MULTI")
 
 	pipe.Set(ctx, rdsconst.GetPlayerUidKey(uid), clientId.ToString(), 0)
 	pipe.Set(ctx, rdsconst.GetPlayerDisplayNameKey(displayName), uid, 0)
@@ -74,7 +74,7 @@ func RegisterPlayer(ctx context.Context,
 		pipe.HMSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), member)
 	}
 
-	// pipe.Do(ctx, "exec")
+	pipe.Do(ctx, "exec")
 
 	_, err = pipe.Exec(ctx)
 	if err != nil {

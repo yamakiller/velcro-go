@@ -89,7 +89,7 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 	var (
 		host   string
 		err    error
-		future client.IFuture
+		future *client.Future
 	)
 
 	startMills := time.Now().UnixMilli()

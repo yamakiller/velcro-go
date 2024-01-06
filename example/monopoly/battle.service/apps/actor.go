@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	defaultRequestTimeout = 2000
+	defaultRequestTimeout = 1000
 )
 
 type BattleActor struct {
@@ -101,7 +101,7 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx context.Context) (proto.Messa
 		}
 		res.Spaces = append(res.Spaces, spacse)
 	}
-	return res, nil
+	return nil, nil
 }
 
 func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message, error) {

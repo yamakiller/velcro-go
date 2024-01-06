@@ -3,7 +3,6 @@ package rds
 import (
 	"context"
 	"errors"
-	"fmt"
 	"runtime"
 	"time"
 
@@ -93,28 +92,4 @@ func Disconnect() {
 		client.Close()
 		client = nil
 	}
-}
-func Test(){
-	ctx :=context.Background()
-	pipe := client.TxPipeline()
-	defer pipe.Close()
-	// pipe.Do(ctx, "MULTI")
-	pipe.Set(ctx,"name","123456",0)
-	// pipe.Do(ctx, "exec")
-
-	cmds, err := pipe.Exec(ctx)
-	if err != nil {
-		pipe.Discard()
-		for _, cmd := range cmds {
-			switch cmd.(type){
-			case *redis.Cmd:
-				fmt.Println(cmd.(*redis.Cmd).Val())
-			case *redis.StatusCmd:	
-				fmt.Println(cmd.(*redis.StatusCmd).Val())
-			}
-			
-		}
-		return 
-	}
-	// fmt.Println(cmds)
 }

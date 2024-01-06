@@ -19,7 +19,7 @@ type IConnect interface {
 	Timeout() int64
 	Dial(string, time.Duration) error
 	Redial() error
-	RequestMessage(protoreflect.ProtoMessage, int64) (IFuture, error)
+	RequestMessage(protoreflect.ProtoMessage, int64) (*Future, error)
 	Close()
 }
 

@@ -25,9 +25,6 @@ func (p *Program) Start(s service.Service) error {
 		vlog.Fatal("[PROGRAM]", "Failed to load environment variables", err)
 		return err
 	}
-
-	vlog.Info("[PROGRAM]", "BattleService Start Successfully ",envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
-
 	return nil
 }
 

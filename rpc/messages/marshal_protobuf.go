@@ -51,12 +51,12 @@ func MarshalResponseProtobuf(sequenceID int32, result proto.Message) ([]byte, er
 		return nil, err
 	}
 
-	data := make([]byte, utils.AlignOf(uint32(len(respBytes)+RpcHeaderLength), uint32(4)))
+	data := make([]byte, utils.AlignOf(uint32(len(respBytes)+3), uint32(4)))
 	data[0] = RpcResponse
 	binary.BigEndian.PutUint16(data[1:3], uint16(len(respBytes)))
-	n := copy(data[RpcHeaderLength:len(respBytes)+RpcHeaderLength], respBytes)
+	n := copy(data[3:len(respBytes)+3], respBytes)
 
-	return data[:n+RpcHeaderLength], nil
+	return data[:n], nil
 }
 
 /*func MarshalMessageProtobuf(sequenceID int32, message proto.Message) ([]byte, error) {

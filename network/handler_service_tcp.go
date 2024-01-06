@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"net"
+	"runtime"
 	sync "sync"
 	"time"
 
 	"github.com/yamakiller/velcro-go/gofunc"
+	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 var _ Handler = &tcpClientHandler{}
@@ -15,7 +18,7 @@ var _ Handler = &tcpClientHandler{}
 // ClientHandler TCP服务客户端处理程序
 type tcpClientHandler struct {
 	conn           net.Conn
-	// sendbox        *circbuf.LinkBuffer
+	sendbox        *circbuf.LinkBuffer
 	sendcond       *sync.Cond
 	mailbox        chan interface{}
 	keepalive      uint32
@@ -30,11 +33,11 @@ type tcpClientHandler struct {
 
 func (c *tcpClientHandler) start() {
 	c.refdone.Add(3)
-	c.done.Add(1)
+	c.done.Add(2)
 
-	// gofunc.RecoverGoFuncWithInfo(context.Background(),
-	// 	c.sender,
-	// 	gofunc.NewBasicInfo("sender", c.invoker.invokerEscalateFailure))
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		c.sender,
+		gofunc.NewBasicInfo("sender", c.invoker.invokerEscalateFailure))
 
 	gofunc.RecoverGoFuncWithInfo(context.Background(),
 		c.reader,
@@ -53,8 +56,8 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return errors.New("client: closed")
 	}
-	c.conn.Write(b)
-	// c.sendbox.WriteBinary(b)
+
+	c.sendbox.WriteBinary(b)
 	c.sendcond.L.Unlock()
 
 	c.sendcond.Signal()
@@ -90,7 +93,6 @@ func (c *tcpClientHandler) isStopped() bool {
 		return false
 	}
 }
-
 
 func (c *tcpClientHandler) sender() {
 	defer c.done.Done()
@@ -147,10 +149,9 @@ tcp_sender_exit_label:
 }
 
 func (c *tcpClientHandler) reader() {
-	defer func ()  {
-		c.done.Done()
-		c.refdone.Done()
-	}()
+	defer c.done.Done()
+	defer c.refdone.Done()
+
 	c.mailbox <- &AcceptMessage{}
 
 	var tmp [512]byte
@@ -216,9 +217,9 @@ tcp_guardian_exit_lable:
 	c.done.Wait()
 
 	// 释放资源
-	// c.sendbox.Close()
-	// c.sendbox = nil
-	// c.sendcond = nil
+	c.sendbox.Close()
+	c.sendbox = nil
+	c.sendcond = nil
 
 	c.invoker.invokerClosed()
 }

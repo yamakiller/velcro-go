@@ -2,15 +2,15 @@ package clientpool
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/yamakiller/velcro-go/rpc/client"
-	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
-	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -50,10 +50,10 @@ type ConnectPool struct {
 	config       *IdleConfig
 }
 
-func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int64) (client.IFuture, error) {
+func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int64) (*client.Future, error) {
 	var (
 		conn client.IConnect
-		res  client.IFuture
+		res  *client.Future
 		err  error
 	)
 	conn, err = cp.Get()
@@ -61,14 +61,7 @@ func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int
 		return nil, err
 	}
 	res, err = conn.RequestMessage(msg, timeout)
-	if err == errs.ErrorRpcConnectorClosed{
-		cp.Remove(conn.Node())
-	}else if err ==nil{
-		cp.Put(conn)
-	}else{
-		vlog.Errorf("PROGRAM","ConnectPool error: %v", err)
-	}
-	
+	cp.Put(conn)
 	return res, err
 }
 
@@ -99,12 +92,11 @@ func (cp *ConnectPool) Get() (client.IConnect, error) {
 		conn.WithTimeout(time.Now().Add(time.Duration(cp.config.MaxIdleConnTimeout)).UnixMilli())
 		return conn, nil
 	} else {
-		conn :=cp.config.NewConn(
+		conn := client.NewConn(
 			client.WithConnected(cp.config.Connected),
 			client.WithClosed(cp.config.Closed),
 			client.WithKleepalive(cp.config.Kleepalive),
 		)
-		
 		err := conn.Dial(cp.address, cp.config.MaxIdleConnTimeout)
 		if err != nil {
 			return nil, err
@@ -114,6 +106,8 @@ func (cp *ConnectPool) Get() (client.IConnect, error) {
 		conn.WithTimeout(time.Now().Add(time.Duration(cp.config.MaxIdleConnTimeout)).UnixMilli())
 		conn.WithNode(node)
 		atomic.AddInt32(&cp.openingConns, 1)
+		fmt.Fprintf(os.Stderr, "ConnectPool ++ %d\n", cp.openingConns)
+		cp.pls.Push(node)
 		return conn, nil
 	}
 }
@@ -137,6 +131,7 @@ func (cp *ConnectPool) Len() int32 {
 func (cp *ConnectPool) Remove(node intrusive.INode) {
 	cp.pls.Remove(node)
 	atomic.AddInt32(&cp.openingConns, -1)
+	fmt.Fprintf(os.Stderr, "ConnectPool -- %d\n", cp.openingConns)
 }
 
 func (cp *ConnectPool) Close(conn client.IConnect) error {

@@ -32,11 +32,11 @@ type Servant struct {
 }
 
 func (s *Servant) Start() error {
-	if s.Config.Router.URI != "" {
+	if s.Config.Router != nil {
 		routeGroup, err := router.Loader(s.Config.Router.URI,
 			s.Config.Router.Algorithm)
 		if err != nil {
-			return err
+			return nil
 		}
 
 		s.routeGroup = routeGroup
@@ -79,6 +79,7 @@ func (s *Servant) FindRouter(message proto.Message) *router.Router {
 	if s.routeGroup == nil {
 		return nil
 	}
+
 	return s.routeGroup.Get(string(protoreflect.FullName(proto.MessageName(message))))
 }
 
@@ -94,6 +95,5 @@ func (s *Servant) spawConn(system *network.NetworkSystem) network.Client {
 	return &ServantClientConn{
 		Servant: s,
 		recvice: circbuf.NewLinkBuffer(4096),
-		events: make(map[interface{}]interface{}),
 	}
 }

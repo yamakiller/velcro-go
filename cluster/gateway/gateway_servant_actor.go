@@ -63,11 +63,10 @@ func (actor *GatewayServantActor) onRequestGatewayCloseClient(ctx context.Contex
 	if c == nil {
 		return nil, fmt.Errorf("RequestGatewayCloseClient unfound client %s", closing.Target.ToString())
 	}
-	// vlog.Infof("RequestGatewayCloseClient : ", closing.Target.ToString())
 	defer actor.gateway.ReleaseClient(c)
-	go c.ClientID().UserClose()
+	c.ClientID().UserClose()
 
-	return closing, nil
+	return nil, nil
 }
 
 func (actor *GatewayServantActor) Closed(ctx context.Context) {

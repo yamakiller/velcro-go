@@ -36,8 +36,6 @@ func New(options ...GatewayConfigOption) *Gateway {
 		serve.WithRoute(config.Router),
 	)
 
-	g.Config = config
-	
 	return g
 }
 
