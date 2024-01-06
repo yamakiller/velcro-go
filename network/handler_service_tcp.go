@@ -14,7 +14,7 @@ var _ Handler = &tcpClientHandler{}
 
 // ClientHandler TCP服务客户端处理程序
 type tcpClientHandler struct {
-	conn           net.Conn
+	conn net.Conn
 	// sendbox        *circbuf.LinkBuffer
 	sendcond       *sync.Cond
 	mailbox        chan interface{}
@@ -91,8 +91,7 @@ func (c *tcpClientHandler) isStopped() bool {
 	}
 }
 
-
-func (c *tcpClientHandler) sender() {
+/*func (c *tcpClientHandler) sender() {
 	defer c.done.Done()
 	defer c.refdone.Done()
 
@@ -144,10 +143,10 @@ tcp_sender_exit_label:
 	}
 	c.sendcond.L.Unlock()
 	c.conn.Close()
-}
+}*/
 
 func (c *tcpClientHandler) reader() {
-	defer func ()  {
+	defer func() {
 		c.done.Done()
 		c.refdone.Done()
 	}()
