@@ -53,6 +53,7 @@ func (p *Program) Start(s service.Service) error {
 	p.service = clientpool.NewConnectPool(envs.Instance().Get("configs").(*configs.Config).TargetAddr,clientpool.IdleConfig{
 		NewConn: tcpclient.NewConn,
 	})
+
 	// if err := p.service.Start(); err != nil {
 	// 	vlog.Info("[PROGRAM]", "client.test Failed to start network service", err)
 	// 	return err

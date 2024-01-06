@@ -1,5 +1,6 @@
 server:
   laddr: 0.0.0.0:8800
+  laddr_servant: 0.0.0.0:8801
   vaddr: 0.0.0.0:8800
   encryption-enabled: false
   online-number: 5000

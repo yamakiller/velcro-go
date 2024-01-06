@@ -27,6 +27,9 @@ func (p *Program) Start(s service.Service) error {
 		vlog.Info("[PROGRAM]", "LoginService Failed to start network service", err)
 		return err
 	}
+
+	// rds.Test()
+
 	vlog.Info("[PROGRAM]", "LoginService Start network service completed")
 
 	return nil

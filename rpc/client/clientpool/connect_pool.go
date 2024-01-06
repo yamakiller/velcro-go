@@ -12,6 +12,7 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -64,8 +65,10 @@ func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int
 	res, err = conn.RequestMessage(msg, timeout)
 	if err == errs.ErrorRpcConnectorClosed{
 		cp.Remove(conn.Node())
-	}else{
+	}else if err ==nil{
 		cp.Put(conn)
+	}else{
+		vlog.Errorf("PROGRAM","ConnectPool error: %v", err)
 	}
 	
 	return res, err
@@ -114,7 +117,6 @@ func (cp *ConnectPool) Get() (client.IConnect, error) {
 		conn.WithNode(node)
 		atomic.AddInt32(&cp.openingConns, 1)
 		fmt.Fprintf(os.Stderr, "ConnectPool ++ %d\n", cp.openingConns)
-		cp.pls.Push(node)
 		return conn, nil
 	}
 }

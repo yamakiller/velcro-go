@@ -15,6 +15,9 @@ type GatewayClientPool interface {
 func NewDefaultGatewayClientPool(g *Gateway, request_timeout int64) GatewayClientPool {
 	return &defaultGatewayClientPool{pls: sync.Pool{
 		New: func() interface{} {
+			if g == nil{
+				return nil
+			}
 			return &ClientConn{gateway: g,
 				requestTimeout: request_timeout,
 				recvice:        circbuf.NewLinkBuffer(4096)}

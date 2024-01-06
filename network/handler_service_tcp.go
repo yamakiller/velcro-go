@@ -4,13 +4,10 @@ import (
 	"context"
 	"errors"
 	"net"
-	"runtime"
 	sync "sync"
 	"time"
 
 	"github.com/yamakiller/velcro-go/gofunc"
-	"github.com/yamakiller/velcro-go/utils/circbuf"
-	"github.com/yamakiller/velcro-go/vlog"
 )
 
 var _ Handler = &tcpClientHandler{}
@@ -18,7 +15,7 @@ var _ Handler = &tcpClientHandler{}
 // ClientHandler TCP服务客户端处理程序
 type tcpClientHandler struct {
 	conn           net.Conn
-	sendbox        *circbuf.LinkBuffer
+	// sendbox        *circbuf.LinkBuffer
 	sendcond       *sync.Cond
 	mailbox        chan interface{}
 	keepalive      uint32
@@ -33,11 +30,11 @@ type tcpClientHandler struct {
 
 func (c *tcpClientHandler) start() {
 	c.refdone.Add(3)
-	c.done.Add(2)
+	c.done.Add(1)
 
-	gofunc.RecoverGoFuncWithInfo(context.Background(),
-		c.sender,
-		gofunc.NewBasicInfo("sender", c.invoker.invokerEscalateFailure))
+	// gofunc.RecoverGoFuncWithInfo(context.Background(),
+	// 	c.sender,
+	// 	gofunc.NewBasicInfo("sender", c.invoker.invokerEscalateFailure))
 
 	gofunc.RecoverGoFuncWithInfo(context.Background(),
 		c.reader,
@@ -56,8 +53,8 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return errors.New("client: closed")
 	}
-
-	c.sendbox.WriteBinary(b)
+	c.conn.Write(b)
+	// c.sendbox.WriteBinary(b)
 	c.sendcond.L.Unlock()
 
 	c.sendcond.Signal()
@@ -94,60 +91,65 @@ func (c *tcpClientHandler) isStopped() bool {
 	}
 }
 
-func (c *tcpClientHandler) sender() {
-	defer c.done.Done()
-	defer c.refdone.Done()
+// func (c *tcpClientHandler) sender() {
+// 	defer func ()  {
+// 		c.done.Done()
+// 		c.refdone.Done()
+// 	}()
+ 
+// 	var (
+// 		err       error
+// 		readbytes []byte = nil
+// 	)
+// 	for {
+// 		c.sendcond.L.Lock()
+// 		if !c.isStopped() {
+// 			c.sendcond.Wait()
+// 		}
+// 		c.sendcond.L.Unlock()
+// 		i := 0
+// 		for {
+// 			if c.isStopped() {
+// 				goto tcp_sender_exit_label
+// 			}
 
-	var (
-		err       error
-		readbytes []byte = nil
-	)
-	for {
-		c.sendcond.L.Lock()
-		if !c.isStopped() {
-			c.sendcond.Wait()
-		}
-		c.sendcond.L.Unlock()
-		i := 0
-		for {
-			if c.isStopped() {
-				goto tcp_sender_exit_label
-			}
+// 			c.sendcond.L.Lock()
+// 			if c.sendbox.Len() > 0 {
+// 				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
+// 				if err != nil {
+// 					c.sendcond.L.Unlock()
+// 					vlog.Errorf("tcp handler error sendbuffer readbinary fail %s", err.Error())
+// 					goto tcp_sender_exit_label
+// 				}
+// 			}
+// 			c.sendcond.L.Unlock()
 
-			c.sendcond.L.Lock()
-			if c.sendbox.Len() > 0 {
-				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
-				if err != nil {
-					c.sendcond.L.Unlock()
-					vlog.Errorf("tcp handler error sendbuffer readbinary fail %s", err.Error())
-					goto tcp_sender_exit_label
-				}
-			}
-			c.sendcond.L.Unlock()
+// 			if readbytes != nil {
+// 				if i > 1 {
+// 					runtime.Gosched()
+// 					i = 0
+// 				}
 
-			if readbytes != nil {
-				if i > 1 {
-					runtime.Gosched()
-					i = 0
-				}
-
-				if _, err := c.conn.Write(readbytes); err != nil {
-					goto tcp_sender_exit_label
-				}
-				readbytes = nil
-				i++
-			}
-		}
-	}
-tcp_sender_exit_label:
-	close(c.stopper)
-	c.conn.Close()
-}
+// 				if _, err := c.conn.Write(readbytes); err != nil {
+// 					goto tcp_sender_exit_label
+// 				}
+// 				readbytes = nil
+// 				i++
+// 			}else{
+// 				break
+// 			}
+// 		}
+// 	}
+// tcp_sender_exit_label:
+// 	close(c.stopper)
+// 	c.conn.Close()
+// }
 
 func (c *tcpClientHandler) reader() {
-	defer c.done.Done()
-	defer c.refdone.Done()
-
+	defer func ()  {
+		c.done.Done()
+		c.refdone.Done()
+	}()
 	c.mailbox <- &AcceptMessage{}
 
 	var tmp [512]byte
@@ -213,9 +215,9 @@ tcp_guardian_exit_lable:
 	c.done.Wait()
 
 	// 释放资源
-	c.sendbox.Close()
-	c.sendbox = nil
-	c.sendcond = nil
+	// c.sendbox.Close()
+	// c.sendbox = nil
+	// c.sendcond = nil
 
 	c.invoker.invokerClosed()
 }

@@ -94,8 +94,6 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 				messageEnvelope = NewMessageEnvelopePool(message.SequenceID, rs.Sender, reqMsg)
 			default:
 				messageEnvelope = NewMessageEnvelopePool(message.SequenceID, nil, reqMsg)
-
-
 			}
 
 			evt, ok := c.events[reflect.TypeOf(reqMsg)]

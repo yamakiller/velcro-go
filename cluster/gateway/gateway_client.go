@@ -133,7 +133,7 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 			}
 			continue
 		}
-
+		
 		switch message := msg.(type) {
 		case *pubs.PingMsg:
 			dl.onPingReply(ctx, message)
@@ -162,7 +162,7 @@ func (dl *ClientConn) Closed(ctx network.Context) {
 
 func (dl *ClientConn) Destory() {
 	dl.clientID = nil
-	dl.gateway = nil
+	// dl.gateway = nil
 	dl.secret = nil
 	dl.recvice.Release()
 }

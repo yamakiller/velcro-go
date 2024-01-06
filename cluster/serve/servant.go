@@ -79,7 +79,6 @@ func (s *Servant) FindRouter(message proto.Message) *router.Router {
 	if s.routeGroup == nil {
 		return nil
 	}
-
 	return s.routeGroup.Get(string(protoreflect.FullName(proto.MessageName(message))))
 }
 

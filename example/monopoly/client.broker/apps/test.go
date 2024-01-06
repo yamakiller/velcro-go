@@ -21,11 +21,12 @@ func Test(cp *clientpool.ConnectPool) {
 
 func clientRun(cp *clientpool.ConnectPool,i int32) {
 	
-	t1 := time.NewTicker(time.Millisecond*300)
+	t1 := time.NewTicker(time.Millisecond*500)
+	// singin(cp ,fmt.Sprintf("test_00%d&123456",i))
 	for {
 		select{
 		case <-t1.C:
-			singin(cp ,fmt.Sprintf("test_00%d&123456",i))
+			getlist(cp)
 		}
 	}
 }
@@ -34,13 +35,16 @@ func singin(cp *clientpool.ConnectPool,token string){
 	req := &mpubs.SignIn{
 		Token: token,
 	}
-	res,err:= cp.RequestMessage(req,2000)
+	res,err:= cp.RequestMessage(req,3000)
 	if err != nil {
 		vlog.Info("[PROGRAM]", "singin failed  ",err.Error())
 		return
 	}
-	fmt.Println("singin : ",res)
-	getlist(cp)
+	if res.Result() != nil{
+		vlog.Info("[PROGRAM]", token,"  singin : ",res.Result().(*mpubs.SignInResp).Uid)
+	}else if res.Error() != nil{
+		vlog.Info("[PROGRAM]", token,"  singin : ", res.Error().Error())
+	}
 }
 
 func getlist(cp *clientpool.ConnectPool){
@@ -52,5 +56,7 @@ func getlist(cp *clientpool.ConnectPool){
 	if err != nil {
 		vlog.Info("[PROGRAM]", "getlist failed  ",err.Error())
 	}
-	fmt.Println("getlist : ",res)	
+	if res !=nil{
+		fmt.Println("getlist : ",res.Result().(*mpubs.GetBattleSpaceListResp).Count)	
+	}
 }
