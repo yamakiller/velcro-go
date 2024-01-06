@@ -140,7 +140,11 @@ func (c *tcpClientHandler) sender() {
 		}
 	}
 tcp_sender_exit_label:
-	close(c.stopper)
+	c.sendcond.L.Lock()
+	if !c.isStopped() {
+		close(c.stopper)
+	}
+	c.sendcond.L.Unlock()
 	c.conn.Close()
 }
 

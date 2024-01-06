@@ -3,6 +3,7 @@ package decorators
 import (
 	"github.com/yamakiller/velcro-go/behavior"
 	"github.com/yamakiller/velcro-go/behavior/core"
+	"github.com/yamakiller/velcro-go/behavior/datas"
 )
 
 // Repeater是一个装饰器, 它会重复tick信号, 直到子节点返回
@@ -17,12 +18,12 @@ type Repeater struct {
 //
 //	      key: maxLoop
 //		  value: 循环次数
-func (rp *Repeater) Initialize() {
-	rp.Decorator.Initialize()
-	//this.maxLoop = setting.GetPropertyAsInt("maxLoop")
-	//if this.maxLoop < 1 {
-	//	panic("maxLoop parameter in MaxTime decorator is an obligatory parameter")
-	//}
+func (rp *Repeater) Initialize(data *datas.Behavior3Node) {
+	rp.Decorator.Initialize(data)
+	rp.maxLoop = data.GetInt("maxLoop")
+	if rp.maxLoop < 1 {
+		panic("maxLoop parameter in MaxTime decorator is an obligatory parameter")
+	}
 }
 
 func (rp *Repeater) OnOpen(tick *core.Tick) {
