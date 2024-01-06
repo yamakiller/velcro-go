@@ -29,7 +29,7 @@ type tcpClientHandler struct {
 }
 
 func (c *tcpClientHandler) start() {
-	c.refdone.Add(3)
+	c.refdone.Add(2)
 	c.done.Add(1)
 
 	// gofunc.RecoverGoFuncWithInfo(context.Background(),
