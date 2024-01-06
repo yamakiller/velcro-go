@@ -1,6 +1,5 @@
 package apps
 
-/*
 import (
 	"fmt"
 	"net"
@@ -11,17 +10,15 @@ import (
 	"time"
 
 	"github.com/kardianos/service"
-	"github.com/sirupsen/logrus"
-	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
-
-	protocolss "github.com/yamakiller/velcro-go/cluster/protocols"
 	"github.com/yamakiller/velcro-go/envs"
-	"github.com/yamakiller/velcro-go/example/monopoly/pub/protocols"
-	"github.com/yamakiller/velcro-go/example/tcpclient/configs"
-	"github.com/yamakiller/velcro-go/logs"
+	"github.com/yamakiller/velcro-go/example/monopoly/client.broker/configs"
+	"github.com/yamakiller/velcro-go/example/monopoly/client.broker/tcpclient"
+	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
+	"github.com/yamakiller/velcro-go/utils/files"
+	"github.com/yamakiller/velcro-go/vlog"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var appName string = "test-client"
@@ -40,84 +37,31 @@ type Program struct {
 	success        int64
 	failed         int64
 	writeBytes     []byte
-	logAgent       *logs.DefaultAgent
+	service *clientpool.ConnectPool
 }
 
 func (p *Program) Start(s service.Service) error {
 
-	logLevel := logrus.DebugLevel
-	if os.Getenv("DEBUG") != "" {
-		logLevel = logrus.InfoLevel
-	}
+	vlog.Info("[PROGRAM]", "client.test Start loading environment variables")
 
-	pLogHandle := logs.SpawnFileLogrus(logLevel, "", "")
-	p.logAgent = &logs.DefaultAgent{}
-	p.logAgent.WithHandle(pLogHandle)
-
-	cfgFilePath, err := p.GetLocalConfigFilePath()
-	if err != nil {
-		p.logAgent.Error(appName, "load config fail:[error:%s]", err.Error())
-		p.logAgent.Close()
+	envs.With(&envs.YAMLEnv{})
+	if err := envs.Instance().Load("configs", files.NewLocalPathFull("config.yaml"), &configs.Config{}); err != nil {
+		vlog.Fatal("[PROGRAM]", "Failed to load environment variables", err)
 		return err
 	}
 
-	config := configs.Config{}
-	envs.With(config.IEnv())
-	if err := envs.Instance().Load("config", cfgFilePath, &config); err != nil {
-		p.logAgent.Error(appName, "Load %s config file fail-%s", cfgFilePath, err.Error())
-		p.logAgent.Close()
-		return err
-	}
-
-	register := protocols.RegisterAccountRequest{
-		Account: "test-001",
-		Pass:    "123456",
-	}
-
-	data, _ := anypb.New(&register)
-	req := protocolss.ClientRequestMessage{
-		RequestID:      1,
-		RequestMessage: data,
-		RequestTimeout: 2000,
-		RequestTime:    uint64(time.Now().UnixMilli()),
-	}
-
-	b, _ := protomessge.Marshal(&req, nil)
-	p.writeBytes = b
-	p.stopper = make(chan struct{})
-	p.stopped.Add(1)
-	go func() {
-		defer p.stopped.Done()
-		for i := 0; i < config.ClientNumber; i++ {
-			p.spawnClient(&config, p.writeBytes)
-		}
-
-		for {
-			if p.isStoped() {
-				break
-			}
-
-			var print string = ""
-			print += fmt.Sprintf("\r 连接成功次数:%d\n", atomic.LoadInt32(&p.connSuccess))
-			print += fmt.Sprintf("\r 连接失败次数:%d\n", atomic.LoadInt32(&p.connFailed))
-			print += fmt.Sprintf("\r 发送数据成功次数:%d\n", atomic.LoadInt32(&p.sendSuccess))
-			print += fmt.Sprintf("\r 发送数据失败次数:%d\n", atomic.LoadInt32(&p.sendFailed))
-			print += fmt.Sprintf("\r 接收数据成功次数:%d\n", atomic.LoadInt32(&p.recviceSuccess))
-			print += fmt.Sprintf("\r 接收数据失败次数:%d\n", atomic.LoadInt32(&p.recviceFailed))
-			print += fmt.Sprintf("\r 发送字节数:%d 字节\n", atomic.LoadInt64(&p.sendBytes))
-			print += fmt.Sprintf("\r 接收字节数:%d 字节\n", atomic.LoadInt64(&p.recvBytes))
-			print += fmt.Sprintf("\r 总成功数:%d\n", atomic.LoadInt64(&p.success))
-			print += fmt.Sprintf("\r 总失败数:%d\n", atomic.LoadInt64(&p.failed))
-
-			fmt.Printf("%s", print)
-
-			time.Sleep(time.Duration(config.ScreenRefreshFrequency) * time.Millisecond)
-
-		}
-	}()
-
+	p.service = clientpool.NewConnectPool(envs.Instance().Get("configs").(*configs.Config).TargetAddr,clientpool.IdleConfig{
+		NewConn: tcpclient.NewConn,
+	})
+	// if err := p.service.Start(); err != nil {
+	// 	vlog.Info("[PROGRAM]", "client.test Failed to start network service", err)
+	// 	return err
+	// }
+	vlog.Info("[PROGRAM]", "client.test Start network service completed")
+	Test(p.service)
 	return nil
 }
+
 func getMessageTypeFromTypeURL(typeURL string) (protoreflect.Message, error) {
 	// 解析 typeURL
 
@@ -211,4 +155,4 @@ func (p *Program) GetLocalConfigFilePath() (string, error) {
 
 	return cfgFilePath, nil
 }
-*/
+

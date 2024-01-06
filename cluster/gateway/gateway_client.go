@@ -108,6 +108,10 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 		if offset < len(ctx.Message()) {
 			n, werr = dl.recvice.WriteBinary(ctx.Message()[offset:])
 			offset += n
+			if err := dl.recvice.Flush(); err != nil {
+				ctx.Close(ctx.Self())
+				return
+			}
 		}
 
 		msg, err := protomessge.UnMarshal(dl.recvice, dl.secret)

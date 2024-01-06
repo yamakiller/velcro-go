@@ -1,4 +1,4 @@
-package client
+package tcpclient
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
+	"github.com/yamakiller/velcro-go/rpc/client"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils"
@@ -21,17 +22,18 @@ import (
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
 )
 
-func NewConn(options ...ConnConfigOption) IConnect {
-	config := Configure(options...)
+func NewConn(options ...client.ConnConfigOption) client.IConnect {
+	config := client.Configure(options...)
 
 	return NewConnConfig(config)
 }
 
-func NewConnConfig(config *ConnConfig) *Conn {
+func NewConnConfig(config *client.ConnConfig) *Conn {
 	return &Conn{
-		BaseConnect: &BaseConnect{},
+		BaseConnect: &client.BaseConnect{},
 		Config:      config,
 		// sendbox:     intrusive.NewLinked(&syncx.NoMutex{}),
 		sendcon:  sync.NewCond(&sync.Mutex{}),
@@ -59,8 +61,8 @@ type IntervalLinkNode struct {
 }
 
 type Conn struct {
-	*BaseConnect
-	Config  *ConnConfig
+	*client.BaseConnect
+	Config  *client.ConnConfig
 	conn    net.Conn
 	address *net.TCPAddr
 	timeout time.Duration
@@ -81,6 +83,7 @@ type Conn struct {
 	kleepaliveError    int32
 	currentGoroutineId int
 	state              ConnState
+	secret []byte
 }
 
 func (rc *Conn) Dial(addr string, timeout time.Duration) error {
@@ -152,7 +155,8 @@ func (rc *Conn) ToAddress() string {
 
 // RequestMessage 请求消息并等待回复，超时时间单位为毫秒
 // proto.Message
-func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, error) {
+
+func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (client.IFuture, error) {
 	if rc.currentGoroutineId == utils.GetCurrentGoroutineID() {
 		panic("RequestMessage cannot block calls in its own thread")
 	}
@@ -161,30 +165,30 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 		return nil, errs.ErrorRpcConnectorClosed
 	}
 
-	msgAny, err := anypb.New(message)
-	if err != nil {
-		panic(err)
-	}
+	// msgAny, err := anypb.New(message)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	seq := rc.nextID()
-	req := &messages.RpcRequestMessage{
-		SequenceID:  seq,
-		ForwardTime: uint64(time.Now().UnixMilli()),
-		Timeout:     uint64(timeout),
-		Message:     msgAny,
-	}
+	// req := &messages.RpcRequestMessage{
+	// 	SequenceID:  seq,
+	// 	ForwardTime: uint64(time.Now().UnixMilli()),
+	// 	Timeout:     uint64(timeout),
+	// 	Message:     msgAny,
+	// }
 
 	future := &Future{
 		sequenceID: seq,
 		cond:       sync.NewCond(&sync.Mutex{}),
 		done:       false,
-		request:    req,
+		request:    message,
 		result:     nil,
 		err:        nil,
 		t:          time.NewTimer(time.Duration(timeout) * time.Millisecond),
 	}
-
-	b, err := messages.MarshalRequestProtobuf(req.SequenceID, req.Timeout, req.Message)
+	
+	b, err := protomessge.Marshal(message.(proto.Message),rc.secret)
 	if err != nil {
 		return future, nil
 	}
@@ -218,10 +222,7 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 	}
 
 	rc.sendcon.L.Lock()
-	node := &IntervalLinkNode{
-		Value: future,
-	}
-	rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(future.sequenceID), 10), node)
+	rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(future.sequenceID), 10), nil)
 	rc.sendcon.L.Unlock()
 	rc.sendcon.Signal()
 
@@ -639,54 +640,7 @@ func (rc *Conn) guardian() {
 exit_guardian_lable:
 	rc.done.Wait() // 等待读写线程结束
 	rc.state = Disconnected
-	rc.BaseConnect.Affiliation().Remove(rc.node)
+	rc.BaseConnect.Affiliation().Remove(rc.Node())
 
-	// for {
-	// 	rc.sendcon.L.Lock()
-	// 	sendMsgNode := rc.sendbox.Pop()
-	// 	rc.sendcon.L.Unlock()
-
-	// 	if sendMsgNode == nil {
-	// 		break
-	// 	}
-
-	// 	switch sendMsg := sendMsgNode.(*IntervalLinkNode).Value.(type) {
-	// 	case *Future:
-	// 		sendMsg.cond.L.Lock()
-	// 		if !sendMsg.done {
-	// 			sendMsg.done = true
-	// 			sendMsg.err = errs.ErrorRpcConnectorClosed
-	// 			tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&sendMsg.t))))
-	// 			if tp != nil {
-	// 				tp.Stop()
-	// 			}
-	// 		}
-	// 		sendMsg.cond.L.Unlock()
-	// 		sendMsg.cond.Signal()
-	// 	default:
-	// 	}
-
-	// 	sendMsgNode.(*IntervalLinkNode).Value = nil
-	// }
-
-	/*rc.requestbox.Range(func(key, value any) bool {
-		future := value.(*Future)
-		future.cond.L.Lock()
-		if future.done {
-			future.cond.L.Unlock()
-			return true
-		}
-
-		future.done = true
-		future.result = nil
-		future.err = errs.ErrorRpcConnectorClosed
-		future.done = true
-		future.cond.L.Unlock()
-		future.cond.Signal()
-
-		rc.removeFuture(key.(int32))
-
-		return true
-	})*/
 	rc.Config.Closed()
 }

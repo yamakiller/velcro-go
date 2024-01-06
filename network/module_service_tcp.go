@@ -39,7 +39,7 @@ func (t *tcpNetworkServerModule) Open(addr string) error {
 		vlog.Infof("VELCRO: network server listen failed, addr=%s error=%s", addr, err)
 		return err
 	}
-	vlog.Errorf("VELCRO: network server listen at addr=%s", addr)
+	vlog.Infof("VELCRO: network server listen at addr=%s", addr)
 
 	t.waitGroup.Add(1)
 	gofunc.GoFunc(context.Background(), func() {

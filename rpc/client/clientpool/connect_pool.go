@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/yamakiller/velcro-go/rpc/client"
+	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -50,10 +51,10 @@ type ConnectPool struct {
 	config       *IdleConfig
 }
 
-func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int64) (*client.Future, error) {
+func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int64) (client.IFuture, error) {
 	var (
 		conn client.IConnect
-		res  *client.Future
+		res  client.IFuture
 		err  error
 	)
 	conn, err = cp.Get()
@@ -61,7 +62,12 @@ func (cp *ConnectPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int
 		return nil, err
 	}
 	res, err = conn.RequestMessage(msg, timeout)
-	cp.Put(conn)
+	if err == errs.ErrorRpcConnectorClosed{
+		cp.Remove(conn.Node())
+	}else{
+		cp.Put(conn)
+	}
+	
 	return res, err
 }
 
@@ -92,11 +98,12 @@ func (cp *ConnectPool) Get() (client.IConnect, error) {
 		conn.WithTimeout(time.Now().Add(time.Duration(cp.config.MaxIdleConnTimeout)).UnixMilli())
 		return conn, nil
 	} else {
-		conn := client.NewConn(
+		conn :=cp.config.NewConn(
 			client.WithConnected(cp.config.Connected),
 			client.WithClosed(cp.config.Closed),
 			client.WithKleepalive(cp.config.Kleepalive),
 		)
+		
 		err := conn.Dial(cp.address, cp.config.MaxIdleConnTimeout)
 		if err != nil {
 			return nil, err

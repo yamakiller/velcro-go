@@ -1,6 +1,7 @@
 package apps
 
 import (
+
 	"github.com/kardianos/service"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
@@ -31,7 +32,7 @@ func (p *Program) Start(s service.Service) error {
 		vlog.Info("[PROGRAM]", "Gateway Failed to start network service", err)
 		return err
 	}
-	vlog.Info("[PROGRAM]", "Gateway Start network service completed")
+	vlog.Info("[PROGRAM]", "Gateway Start network service completed",envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
 	return nil
 }
 
