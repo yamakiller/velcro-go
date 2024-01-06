@@ -2,8 +2,6 @@ package clientpool
 
 import (
 	"errors"
-	"fmt"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -116,7 +114,6 @@ func (cp *ConnectPool) Get() (client.IConnect, error) {
 		conn.WithTimeout(time.Now().Add(time.Duration(cp.config.MaxIdleConnTimeout)).UnixMilli())
 		conn.WithNode(node)
 		atomic.AddInt32(&cp.openingConns, 1)
-		fmt.Fprintf(os.Stderr, "ConnectPool ++ %d\n", cp.openingConns)
 		return conn, nil
 	}
 }
@@ -140,7 +137,6 @@ func (cp *ConnectPool) Len() int32 {
 func (cp *ConnectPool) Remove(node intrusive.INode) {
 	cp.pls.Remove(node)
 	atomic.AddInt32(&cp.openingConns, -1)
-	fmt.Fprintf(os.Stderr, "ConnectPool -- %d\n", cp.openingConns)
 }
 
 func (cp *ConnectPool) Close(conn client.IConnect) error {
