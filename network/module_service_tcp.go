@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yamakiller/velcro-go/gofunc"
-	"github.com/yamakiller/velcro-go/utils/circbuf"
+	// "github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
@@ -39,7 +39,7 @@ func (t *tcpNetworkServerModule) Open(addr string) error {
 		vlog.Infof("VELCRO: network server listen failed, addr=%s error=%s", addr, err)
 		return err
 	}
-	vlog.Errorf("VELCRO: network server listen at addr=%s", addr)
+	vlog.Infof("VELCRO: network server listen at addr=%s", addr)
 
 	t.waitGroup.Add(1)
 	gofunc.GoFunc(context.Background(), func() {
@@ -115,7 +115,7 @@ func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	ctx := clientContext{system: t.system, state: stateAccept}
 	handler := &tcpClientHandler{
 		conn:      conn,
-		sendbox:   circbuf.NewLinkBuffer(4096),
+		// sendbox:   circbuf.NewLinkBuffer(4096),
 		sendcond:  sync.NewCond(&sync.Mutex{}),
 		keepalive: uint32(t.system.Config.Kleepalive),
 		invoker:   &ctx,
@@ -130,8 +130,8 @@ func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
 		// 释放资源
 		close(handler.mailbox)
 		close(handler.stopper)
-		handler.sendbox.Close()
-		handler.sendbox = nil
+		// handler.sendbox.Close()
+		// handler.sendbox = nil
 		handler.sendcond = nil
 
 		return errors.Errorf("client-id %s existed", cid.ToString())

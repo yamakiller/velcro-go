@@ -4,7 +4,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
-	"github.com/yamakiller/velcro-go/example/monopoly/login.service/dba/rds"
+	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/dba/rds"
 	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 )

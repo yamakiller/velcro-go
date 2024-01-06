@@ -1,6 +1,10 @@
 package clientpool
 
-import "time"
+import (
+	"time"
+
+	"github.com/yamakiller/velcro-go/rpc/client"
+)
 
 type IdleConfig struct {
 	MaxIdleGlobal      int32
@@ -11,6 +15,7 @@ type IdleConfig struct {
 
 	Connected func()
 	Closed    func()
+	NewConn      func(options ...client.ConnConfigOption)client.IConnect
 }
 
 const (
@@ -40,5 +45,8 @@ func CheckPoolConfig(config IdleConfig) *IdleConfig {
 		config.MaxIdleGlobal = defaultMaxIdleGlobal
 	}
 
+	if config.NewConn == nil {
+		config.NewConn = client.NewConn
+	}
 	return &config
 }

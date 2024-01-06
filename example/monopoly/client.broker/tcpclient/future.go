@@ -1,26 +1,17 @@
-package client
+package tcpclient
 
 import (
 	"sync"
 	"time"
 
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"google.golang.org/protobuf/proto"
 )
 
-
-type IFuture interface{
-	Error() error 
-	Result() proto.Message
-	Wait()
-}
-
-// 请求器
 type Future struct {
 	sequenceID int32
 	cond       *sync.Cond
 	done       bool
-	request    *messages.RpcRequestMessage
+	request    interface{}
 	result     proto.Message
 	err        error
 	t          *time.Timer

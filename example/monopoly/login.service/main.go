@@ -1,7 +1,14 @@
 package main
 
+import (
+	"log"
+
+	"github.com/yamakiller/velcro-go/application"
+	"github.com/yamakiller/velcro-go/example/monopoly/login.service/apps"
+)
+
 func main() {
-	/*guard := application.Guardian{
+	guard := application.Guardian{
 		Name:        "login.service",
 		Display:     "登录服务",
 		Description: "",
@@ -13,5 +20,5 @@ func main() {
 		log.Println(err.Error())
 	} else if o != "" {
 		log.Println(o)
-	}*/
+	}
 }

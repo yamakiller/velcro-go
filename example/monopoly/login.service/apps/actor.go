@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	defaultRequestTimeout = 1000
+	defaultRequestTimeout = 2000
 )
 
 type LoginActor struct {

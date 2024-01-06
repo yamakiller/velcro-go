@@ -11,6 +11,8 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // Background context.Context
@@ -39,7 +41,10 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 
 		n, err := c.recvice.WriteBinary(ctx.Message()[offset:])
 		offset += n
-
+		if err :=  c.recvice.Flush(); err != nil {
+			ctx.Close(ctx.Self())
+			return
+		}
 		_, msg, msgErr := messages.UnMarshalProtobuf(c.recvice)
 		if msgErr != nil {
 			ctx.Close(ctx.Self())
@@ -71,9 +76,15 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			if timeout <= 0 {
 				goto servant_client_offset_label
 			}
+			msgType, err := protoregistry.GlobalTypes.FindMessageByName(reqMsg.(*anypb.Any).MessageName())
+			if err != nil {
+				panic(err)
+			}
+			m := msgType.New().Interface()
+			proto.Unmarshal(reqMsg.(*anypb.Any).GetValue(), m)
+			reqMsg = m
 
 			var messageEnvelope *MessageEnvelope
-			messageEnvelope.sequenceId = message.SequenceID
 			switch rs := reqMsg.(type) {
 			case *prvs.ForwardBundle:
 				reqMsg, err = rs.Body.UnmarshalNew()
@@ -86,13 +97,13 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			}
 
 			evt, ok := c.events[reflect.TypeOf(reqMsg)]
-			if !ok || evt.(func(*context.Context) (proto.Message, error)) != nil {
+			if !ok || evt.(func(context.Context) (proto.Message, error)) == nil {
 				panic(fmt.Errorf("servant request unfound events %s", reflect.TypeOf(reqMsg)))
 			}
 
 			background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
 			background = NewCtxWithServantClientInfo(background, NewClientInfo(ctx, messageEnvelope))
-			result, err := evt.(func(*context.Context) (proto.Message, error))(&background)
+			result, err := evt.(func(context.Context) (proto.Message, error))(background)
 			background = FreeCtxWithServantClientInfo(background)
 			if err != nil {
 				result = &messages.RpcError{Err: err.Error()}
@@ -122,8 +133,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 // Register 注册方法映射
 func (c *ServantClientConn) Register(key, evt interface{}) {
 
-	if evt.(func(context.Context)) == nil &&
-		evt.(func(context.Context) (proto.Message, error)) == nil {
+	if evt.(func(context.Context) (proto.Message, error)) == nil {
 		panic("The input event must be func(context.Context) or " +
 			"func(context.Context) (proto.Message, error)")
 	}

@@ -16,9 +16,9 @@ func (ls *loginService) Start() error {
 
 	rds.WithAddr(envs.Instance().Get("configs").(*configs.Config).Redis.Addr)
 	rds.WithPwd(envs.Instance().Get("configs").(*configs.Config).Redis.Pwd)
-	rds.WithDialTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Dial)
-	rds.WithReadTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Read)
-	rds.WithWriteTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Write)
+	// rds.WithDialTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Dial)
+	// rds.WithReadTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Read)
+	// rds.WithWriteTimeout(envs.Instance().Get("configs").(*configs.Config).Redis.Timeout.Write)
 
 	if err := rds.Connection(); err != nil {
 		return err

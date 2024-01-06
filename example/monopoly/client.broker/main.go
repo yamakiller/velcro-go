@@ -1,6 +1,6 @@
 package main
 
-/*import (
+import (
 	"log"
 
 	"github.com/yamakiller/velcro-go/application"
@@ -21,4 +21,4 @@ func main() {
 		log.Println(o)
 	}
 }
-*/
+
