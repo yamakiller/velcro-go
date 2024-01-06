@@ -1,6 +1,9 @@
 package core
 
-import "github.com/yamakiller/velcro-go/behavior"
+import (
+	"github.com/yamakiller/velcro-go/behavior"
+	"github.com/yamakiller/velcro-go/behavior/datas"
+)
 
 type IBaseWrapper interface {
 	execute(tick *Tick) behavior.Status
@@ -15,7 +18,7 @@ type IBaseNode interface {
 	IBaseWrapper
 
 	Ctor()
-	Initialize()
+	Initialize(data *datas.Behavior3Node)
 	GetCategory() string
 	Execute(tick *Tick) behavior.Status
 	GetName() string
@@ -67,7 +70,7 @@ func (this *BaseNode) GetBaseNodeWorker() IBaseWorker {
  * @method Initialize
  * @construCtor
 **/
-func (this *BaseNode) Initialize() {
+func (this *BaseNode) Initialize(data *datas.Behavior3Node) {
 
 	this.description = ""
 	this.properties = make(map[string]interface{})
@@ -93,7 +96,6 @@ func (this *BaseNode) GetTitle() string {
 // 这是将信号传播到该节点的主要方法. 此方法调用所有回调：“enter”、“open”、“tick”、“close”和“exit”.
 // 它仅打开尚未打开的节点.同样，此方法仅在节点返回与"RUNNING"不同的状态时关闭该节点.
 // 返回 Tick 状态
-//
 func (this *BaseNode) execute(tick *Tick) behavior.Status {
 	//fmt.Println("_execute :", this.title)
 	// ENTER
@@ -117,8 +119,13 @@ func (this *BaseNode) execute(tick *Tick) behavior.Status {
 
 	return status
 }
+
 func (this *BaseNode) Execute(tick *Tick) behavior.Status {
 	return this.execute(tick)
+}
+
+func (this *BaseNode) Stop(tick *Tick) {
+
 }
 
 // 输入方法的包装

@@ -1,6 +1,9 @@
 package core
 
-import "github.com/yamakiller/velcro-go/behavior"
+import (
+	"github.com/yamakiller/velcro-go/behavior"
+	"github.com/yamakiller/velcro-go/behavior/datas"
+)
 
 type IDecorator interface {
 	IBaseNode
@@ -20,8 +23,8 @@ func (d *Decorator) Ctor() {
 }
 
 // Initialize 初始化方法
-func (d *Decorator) Initialize() {
-	d.BaseNode.Initialize()
+func (d *Decorator) Initialize(data *datas.Behavior3Node) {
+	d.BaseNode.Initialize(data)
 	//this.BaseNode.IBaseWorker = this
 }
 

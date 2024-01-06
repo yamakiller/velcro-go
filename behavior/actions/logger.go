@@ -5,6 +5,7 @@ import (
 
 	"github.com/yamakiller/velcro-go/behavior"
 	"github.com/yamakiller/velcro-go/behavior/core"
+	"github.com/yamakiller/velcro-go/behavior/datas"
 )
 
 type Log struct {
@@ -12,9 +13,9 @@ type Log struct {
 	info string
 }
 
-func (lg *Log) Initialize() {
-	lg.Action.Initialize()
-	//this.info = setting.GetPropertyAsString("info")
+func (lg *Log) Initialize(data *datas.Behavior3Node) {
+	lg.Action.Initialize(data)
+	lg.info = data.GetString("info")
 }
 
 func (lg *Log) OnTick(tick *core.Tick) behavior.Status {

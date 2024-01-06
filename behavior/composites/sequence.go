@@ -5,17 +5,25 @@ import (
 	"github.com/yamakiller/velcro-go/behavior/core"
 )
 
-// Sequence 顺序执行，只要一个不成功就返回
-type Sequence struct {
+// Sequenece 顺序执行节点,只要有一个子节点返回failed或running,当前节点也返回failed或running.
+type Sequenece struct {
 	core.Composite
 }
 
-// OnTick
-func (seq *Sequence) OnTick(tick *core.Tick) behavior.Status {
-	//fmt.Println("tick Sequence :", this.GetTitle())
-	for i := 0; i < seq.GetChildCount(); i++ {
-		var status = seq.GetChild(i).Execute(tick)
+func (sn *Sequenece) OnOpen(tick *core.Tick) {
+	tick.Blackboard.Set("runningChild", 0, tick.GetTree().GetID(), sn.GetID())
+}
+
+func (ms *Sequenece) OnTick(tick *core.Tick) behavior.Status {
+	var child = tick.Blackboard.GetInt("runningChild", tick.GetTree().GetID(), ms.GetID())
+	for i := child; i < ms.GetChildCount(); i++ {
+		var status = ms.GetChild(i).Execute(tick)
+
 		if status != behavior.SUCCESS {
+			if status == behavior.RUNNING {
+				tick.Blackboard.Set("runningChild", i, tick.GetTree().GetID(), ms.GetID())
+			}
+
 			return status
 		}
 	}

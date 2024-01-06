@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/yamakiller/velcro-go/behavior"
+	"github.com/yamakiller/velcro-go/behavior/datas"
 )
 
 type IAction interface {
@@ -25,10 +26,10 @@ type Action struct {
 func (at *Action) Ctor() {
 	at.category = behavior.ACTION
 }
-func (at *Action) Initialize() {
+func (at *Action) Initialize(data *datas.Behavior3Node) {
 
 	//at.id = shortuuid.New()
-	at.BaseNode.Initialize()
+	at.BaseNode.Initialize(data)
 	//at.BaseNode.IBaseWorker = this
 	at.properties = make(map[string]interface{})
 }

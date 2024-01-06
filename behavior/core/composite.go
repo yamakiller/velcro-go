@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yamakiller/velcro-go/behavior"
+	"github.com/yamakiller/velcro-go/behavior/datas"
 )
 
 type IComposite interface {
@@ -26,8 +27,8 @@ func (cps *Composite) Ctor() {
 }
 
 // Initialize 初始化
-func (cps *Composite) Initialize() {
-	cps.BaseNode.Initialize()
+func (cps *Composite) Initialize(data *datas.Behavior3Node) {
+	cps.BaseNode.Initialize(data)
 	//cps.BaseNode.IBaseWorker = cps
 	cps.children = make([]IBaseNode, 0)
 	//fmt.Println("Composite Initialize")

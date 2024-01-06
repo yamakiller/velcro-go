@@ -1,14 +1,17 @@
 package core
 
-import "github.com/yamakiller/velcro-go/behavior"
+import (
+	"github.com/yamakiller/velcro-go/behavior"
+	"github.com/yamakiller/velcro-go/behavior/datas"
+)
 
 type SubTree struct {
 	Action
 }
 
 // Initialize 初始化子树木
-func (sbt *SubTree) Initialize() {
-	sbt.Action.Initialize()
+func (sbt *SubTree) Initialize(data *datas.Behavior3Node) {
+	sbt.Action.Initialize(data)
 }
 
 // OnTick 执行子树

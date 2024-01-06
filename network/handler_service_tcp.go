@@ -91,59 +91,60 @@ func (c *tcpClientHandler) isStopped() bool {
 	}
 }
 
-// func (c *tcpClientHandler) sender() {
-// 	defer func ()  {
-// 		c.done.Done()
-// 		c.refdone.Done()
-// 	}()
- 
-// 	var (
-// 		err       error
-// 		readbytes []byte = nil
-// 	)
-// 	for {
-// 		c.sendcond.L.Lock()
-// 		if !c.isStopped() {
-// 			c.sendcond.Wait()
-// 		}
-// 		c.sendcond.L.Unlock()
-// 		i := 0
-// 		for {
-// 			if c.isStopped() {
-// 				goto tcp_sender_exit_label
-// 			}
 
-// 			c.sendcond.L.Lock()
-// 			if c.sendbox.Len() > 0 {
-// 				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
-// 				if err != nil {
-// 					c.sendcond.L.Unlock()
-// 					vlog.Errorf("tcp handler error sendbuffer readbinary fail %s", err.Error())
-// 					goto tcp_sender_exit_label
-// 				}
-// 			}
-// 			c.sendcond.L.Unlock()
+func (c *tcpClientHandler) sender() {
+	defer c.done.Done()
+	defer c.refdone.Done()
 
-// 			if readbytes != nil {
-// 				if i > 1 {
-// 					runtime.Gosched()
-// 					i = 0
-// 				}
+	var (
+		err       error
+		readbytes []byte = nil
+	)
+	for {
+		c.sendcond.L.Lock()
+		if !c.isStopped() {
+			c.sendcond.Wait()
+		}
+		c.sendcond.L.Unlock()
+		i := 0
+		for {
+			if c.isStopped() {
+				goto tcp_sender_exit_label
+			}
 
-// 				if _, err := c.conn.Write(readbytes); err != nil {
-// 					goto tcp_sender_exit_label
-// 				}
-// 				readbytes = nil
-// 				i++
-// 			}else{
-// 				break
-// 			}
-// 		}
-// 	}
-// tcp_sender_exit_label:
-// 	close(c.stopper)
-// 	c.conn.Close()
-// }
+			c.sendcond.L.Lock()
+			if c.sendbox.Len() > 0 {
+				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
+				if err != nil {
+					c.sendcond.L.Unlock()
+					vlog.Errorf("tcp handler error sendbuffer readbinary fail %s", err.Error())
+					goto tcp_sender_exit_label
+				}
+			}
+			c.sendcond.L.Unlock()
+
+			if readbytes != nil {
+				if i > 1 {
+					runtime.Gosched()
+					i = 0
+				}
+
+				if _, err := c.conn.Write(readbytes); err != nil {
+					goto tcp_sender_exit_label
+				}
+				readbytes = nil
+				i++
+			}
+		}
+	}
+tcp_sender_exit_label:
+	c.sendcond.L.Lock()
+	if !c.isStopped() {
+		close(c.stopper)
+	}
+	c.sendcond.L.Unlock()
+	c.conn.Close()
+}
 
 func (c *tcpClientHandler) reader() {
 	defer func ()  {

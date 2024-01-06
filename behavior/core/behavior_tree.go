@@ -5,6 +5,8 @@ import (
 
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/yamakiller/velcro-go/behavior"
+	"github.com/yamakiller/velcro-go/behavior/datas"
+	"github.com/yamakiller/velcro-go/behavior/registers"
 )
 
 type BehaviorTree struct {
@@ -46,6 +48,54 @@ func (bb *BehaviorTree) SetDebug(debug interface{}) {
 
 func (bb *BehaviorTree) GetRoot() IBaseNode {
 	return bb.root
+}
+
+func (bb *BehaviorTree) Load(data *datas.Behavior3Tree) {
+	bb.title = data.Title
+	bb.description = data.Description
+	bb.properties = data.Properties
+	nodes := make(map[string]IBaseNode)
+
+	for id, s := range data.Nodes {
+		spec := s
+		var node IBaseNode
+		if spec.Category == "tree" {
+			node = new(SubTree)
+		} else {
+			if tnode, err := registers.New(spec.Name); err != nil {
+				node = tnode.(IBaseNode)
+			}
+		}
+
+		if node == nil {
+			panic("BehaviorTree.load: Invalid node name:" + spec.Name + ",title:" + spec.Title)
+		}
+
+		node.Ctor()
+		node.Initialize(spec)
+		node.SetBaseNodeWorker(node.(IBaseWorker))
+		nodes[id] = node
+	}
+
+	// Connect the nodes
+	for id, spec := range data.Nodes {
+		node := nodes[id]
+
+		if node.GetCategory() == behavior.COMPOSITE && spec.Children != nil {
+			for i := 0; i < len(spec.Children); i++ {
+				var cid = spec.Children[i]
+				comp := node.(IComposite)
+				if nodes[cid] == nil {
+					panic("BehaviorTree.load: Invalid node id: " + cid)
+				}
+				comp.AddChild(nodes[cid])
+			}
+		} else if node.GetCategory() == behavior.DECORATOR && len(spec.Child) > 0 {
+			dec := node.(IDecorator)
+			dec.SetChild(nodes[spec.Child])
+		}
+	}
+	bb.root = nodes[data.Root]
 }
 
 // 从根部开始在树中传播刻度信号
