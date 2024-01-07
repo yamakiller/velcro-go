@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI" Version="19.5.39" />
+    <PackageReference Include="ReactiveUI.WPF" Version="19.5.39" />
+    <PackageReference Include="Splat.Drawing" Version="14.8.12" />
+  </ItemGroup>
+
+</Project>
