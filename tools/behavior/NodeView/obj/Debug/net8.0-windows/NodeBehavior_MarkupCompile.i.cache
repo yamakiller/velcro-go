@@ -16,5 +16,5 @@ TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 204-423357959
 Views\BehaviorView.xaml;Views\Controls\ArrowToggleButton.xaml;
 
-True
+False
 
