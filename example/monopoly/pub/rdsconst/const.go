@@ -24,6 +24,7 @@ const (
 )
 
 const (
+	battle_space_lock        = "battle_space_lock_"
 	battle_space_online_data = "battle_space_online_data_"
 	BattleSpaceId            = "space_id"
 	BattleSpaceMapURi        = "space_map_uri"
@@ -75,6 +76,11 @@ func GetBattleSpaceOnlineDataKey(spaceid string) string {
 // GetBattleSpacePlayerDataKey
 func GetBattleSpacePlayerDataKey(uid string) string {
 	return BattleSpacePlayer + uid
+}
+
+// GetBattleSpaceLockKey 获取battle级共享锁Key
+func GetBattleSpaceLockKey(id string) string {
+	return battle_space_lock + id
 }
 
 func MakeData(list []string) string {

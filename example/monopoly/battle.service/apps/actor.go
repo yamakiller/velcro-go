@@ -221,14 +221,16 @@ func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.M
 	} else if ok {
 		// 房主离开，解散房间
 		players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
-		if err := rds.DeleteBattleSpace(ctx, sender); err == nil {
-			res := &mpubs.DissBattleSpaceNotify{
-				SpaceId: request.BattleSpaceID,
-			}
-			for _, v := range players {
-				if !sender.Equal(v) {
-					actor.submitRequestGatewayPush(ctx, v, res)
-				}
+		if err := rds.DeleteBattleSpace(ctx, sender); err !=nil {
+			return nil,nil
+		}
+		
+		res := &mpubs.DissBattleSpaceNotify{
+			SpaceId: request.BattleSpaceID,
+		}
+		for _, v := range players {
+			if !sender.Equal(v) {
+				actor.submitRequestGatewayPush(ctx, v, res)
 			}
 		}
 	} else {

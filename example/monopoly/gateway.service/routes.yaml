@@ -22,5 +22,14 @@ routes:
     commands:
       - pubs.GetBattleSpaceList
       - pubs.GetBattleSpaceListResp
+      - pubs.CreateBattleSpace
+      - pubs.CreateBattleSpaceResp
+      - pubs.EnterBattleSpace
+      - pubs.EnterBattleSpaceResp
+      - pubs.ReadyBattleSpace
+      - pubs.ReadyBattleSpaceResp
+      - pubs.RequsetStartBattleSpace
+      - pubs.RequsetStartBattleSpaceResp
+      - prvs.RequestExitBattleSpace
     rules:
       - 1

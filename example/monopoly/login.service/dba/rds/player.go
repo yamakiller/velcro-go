@@ -115,7 +115,7 @@ func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID, uid strin
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 
-	pipe.Do(ctx, "MULTI")
+	// pipe.Do(ctx, "MULTI")
 
 	pipe.Del(ctx, rdsconst.GetPlayerUidKey(uid))
 	pipe.Del(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString()))
@@ -124,7 +124,7 @@ func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID, uid strin
 
 	pipe.Del(ctx, rdsconst.GetPlayerOnlineDataKey(uid))
 
-	pipe.Do(ctx, "exec")
+	// pipe.Do(ctx, "exec")
 
 	_, err = pipe.Exec(ctx)
 	if err != nil {
