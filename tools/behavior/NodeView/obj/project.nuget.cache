@@ -1,29 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "WGY1AMhVbOnsDhyQgxrz7cCl6BWp27lRbfgfw2ofEmt34f4YbBEmhKNYuWQzgVbtQhS07Fu51rzdPjMA21C9Eg==",
+  "dgSpecHash": "kpY8WEfXX7+eS7FmU3NOZJ3QIHbWDfnB8cb4r2QWirgw7mOdKUetgM4cCMx2t+TGlcSsP2jr4ZPKTLets5F83g==",
   "success": true,
   "projectFilePath": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\NodeView\\NodeBehavior.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\Administrator\\.nuget\\packages\\dynamicdata\\8.3.27\\dynamicdata.8.3.27.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\reactiveui\\19.5.39\\reactiveui.19.5.39.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\reactiveui.wpf\\19.5.39\\reactiveui.wpf.19.5.39.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\splat\\14.8.12\\splat.14.8.12.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\splat.drawing\\14.8.12\\splat.drawing.14.8.12.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\system.reactive\\6.0.0\\system.reactive.6.0.0.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\system.text.encodings.web\\8.0.0\\system.text.encodings.web.8.0.0.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\system.text.json\\8.0.0\\system.text.json.8.0.0.nupkg.sha512"
-  ],
-  "logs": [
-    {
-      "code": "NU1701",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "已使用“.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1”而不是项目目标框架“net8.0-windows7.0”还原包“ReactiveUI.WPF 19.5.39”。此包可能与项目不完全兼容。",
-      "libraryId": "ReactiveUI.WPF",
-      "targetGraphs": [
-        "net8.0-windows7.0"
-      ]
-    }
-  ]
+  "expectedPackageFiles": [],
+  "logs": []
 }

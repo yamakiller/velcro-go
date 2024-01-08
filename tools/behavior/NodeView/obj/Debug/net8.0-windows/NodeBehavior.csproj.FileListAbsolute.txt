@@ -1,0 +1,12 @@
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\bin\Debug\net8.0-windows\NodeBehavior.deps.json
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\bin\Debug\net8.0-windows\NodeBehavior.dll
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\bin\Debug\net8.0-windows\NodeBehavior.pdb
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\NodeBehavior.GeneratedMSBuildEditorConfig.editorconfig
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\NodeBehavior.AssemblyInfoInputs.cache
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\NodeBehavior.AssemblyInfo.cs
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\NodeBehavior.csproj.CoreCompileInputs.cache
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\NodeBehavior.sourcelink.json
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\NodeBehavior.dll
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\refint\NodeBehavior.dll
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\NodeBehavior.pdb
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\obj\Debug\net8.0-windows\ref\NodeBehavior.dll

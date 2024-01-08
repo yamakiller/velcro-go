@@ -39,20 +39,6 @@
       "frameworks": {
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
-          "dependencies": {
-            "ReactiveUI": {
-              "target": "Package",
-              "version": "[19.5.39, )"
-            },
-            "ReactiveUI.WPF": {
-              "target": "Package",
-              "version": "[19.5.39, )"
-            },
-            "Splat.Drawing": {
-              "target": "Package",
-              "version": "[14.8.12, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",

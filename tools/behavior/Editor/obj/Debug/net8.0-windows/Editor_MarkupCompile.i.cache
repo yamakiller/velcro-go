@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\App.xaml
-11407045341
+2957961489
 
-6382518709
-198-688555687
-MainWindow.xaml;
+6590986727
+1991438288901
+Views\BehaviorEditor.xaml;Views\BehaviorNodeBar.xaml;
 
 False
 

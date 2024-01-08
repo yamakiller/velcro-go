@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Editor/1.0.0": {
+        "dependencies": {
+          "NodeBehavior": "1.0.0"
+        },
+        "runtime": {
+          "Editor.dll": {}
+        }
+      },
+      "NodeBehavior/1.0.0": {
+        "runtime": {
+          "NodeBehavior.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Editor/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "NodeBehavior/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

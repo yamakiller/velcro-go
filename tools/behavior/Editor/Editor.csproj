@@ -8,4 +8,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NodeView\NodeBehavior.csproj" />
+  </ItemGroup>
+
 </Project>
