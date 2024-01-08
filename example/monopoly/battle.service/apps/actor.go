@@ -177,7 +177,7 @@ func (actor *BattleActor) onReadyBattleSpace(ctx context.Context) (proto.Message
 func (actor *BattleActor) onRequestStartBattleSpace(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.RequsetStartBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
-	if err := rds.StartBattleSpace(ctx,request.SpaceId, sender); err != nil {
+	if err := rds.StartBattleSpace(ctx, request.SpaceId, sender); err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
 		vlog.Debugf("onRequestStartBattleSpace error %s", err.Error())
 		return nil, err
@@ -214,6 +214,7 @@ func (actor *BattleActor) onReportNat(ctx context.Context) (proto.Message, error
 func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mprvs.RequestExitBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
+	
 	// request := ctx.Message.(*mprvs.RequestExitBattleSpace)
 	if ok, err := rds.IsMaster(ctx, sender); err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
@@ -221,10 +222,10 @@ func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.M
 	} else if ok {
 		// 房主离开，解散房间
 		players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
-		if err := rds.DeleteBattleSpace(ctx, sender); err !=nil {
-			return nil,nil
+		if err := rds.DeleteBattleSpace(ctx, sender); err != nil {
+			return nil, nil
 		}
-		
+
 		res := &mpubs.DissBattleSpaceNotify{
 			SpaceId: request.BattleSpaceID,
 		}

@@ -152,14 +152,20 @@ func DeleteBattleSpace(ctx context.Context, clientId *network.ClientID) (err err
 
 	// pipe.Do(ctx, "MULTI")
 
-	pipe.HSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, "")
-	pipe.HDel(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid))
+	pipe.HMSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, "")
+	pipe.Del(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid))
 	pipe.LRem(ctx, rdsconst.BattleSpaceOnlinetable, 1, spaceid)
 	// pipe.Do(ctx, "exec")
 
-	_, err = pipe.Exec(ctx)
+	cmds, err := pipe.Exec(ctx)
 	if err != nil {
 		pipe.Discard()
+		for _,v := range cmds {
+			switch v.(type){
+			case *redis.StatusCmd:
+				fmt.Println(v.(*redis.StatusCmd).Val())
+			}
+		}
 		return
 	}
 	return
@@ -494,7 +500,7 @@ func GetBattleSpacePlayers(ctx context.Context, spaceid string) []*network.Clien
 	if err := space_mutex.Lock(); err != nil {
 		return nil
 	}
-	defer space_mutex.Lock()
+	defer space_mutex.Unlock()
 
 
 	results, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos).Result()
