@@ -27,6 +27,7 @@ func (rg *RouterGroup) Shutdown() {
 	}
 	rg.routes = rg.routes[:0]
 	rg.cmaps.Clear()
+	rg.vmaps.Clear()
 }
 
 // Push 插入路由器
@@ -37,7 +38,6 @@ func (rg *RouterGroup) Push(router *Router) error {
 			return fmt.Errorf("router group push fail %s existed", scmd)
 		}
 	}
-
 	return nil
 }
 

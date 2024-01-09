@@ -6,7 +6,7 @@ routes:
     kleepalive-millisec: 4000
     endpoints:
       - laddr: 0.0.0.0:8801
-        vaddr: 0.0.0.0:8801
+        vaddr: Gateway@0.0.0.0:8800
     commands:
       - prvs.RequestGatewayCloseClient
     rules:

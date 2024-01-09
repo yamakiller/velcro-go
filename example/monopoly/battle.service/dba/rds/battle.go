@@ -191,7 +191,7 @@ func EnterBattleSpace(ctx context.Context, spaceid string, clientId *network.Cli
 	if len(playerResults) != 3 {
 		return errs.ErrorPlayerOnlineDataLost
 	}
-	if playerResults[1] != "" {
+	if playerResults[1] != "" && playerResults[1] != nil{
 		return errs.ErrorPlayerAlreadyInBattleSpace
 	}
 
@@ -200,39 +200,52 @@ func EnterBattleSpace(ctx context.Context, spaceid string, clientId *network.Cli
 		return err
 	}
 	defer space_mutex.Unlock()
-	player_results, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.GetBattleSpacePlayerDataKey("")).Result()
+
+	pos_result, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos).Result()
 	if err != nil {
 		return err
 	}
-	for _, player := range player_results {
-		if player == rdsconst.GetBattleSpacePlayerDataKey(uid) {
+	players := rdsconst.SplitData(pos_result[0].(string))
+	count := 0
+	for _,id := range players {
+		if id == uid{
 			return errs.ErrorPlayerAlreadyInBattleSpace
+		}
+		if id != ""{
+			count++
 		}
 	}
 
-	max_count, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.GetBattleSpacePlayerDataKey("")).Result()
+	max_player_count, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerCount).Result()
 	if err != nil {
 		return err
-	}
-	count, _ := strconv.Atoi(max_count[0].(string))
-	if count <= len(player_results) {
-		return errs.ErrorSpacePlayerIsFull
 	}
 
-	pos_result, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.GetBattleSpacePlayerDataKey("")).Result()
-	if err != nil {
-		return err
+	max_count, _ := strconv.Atoi(max_player_count[0].(string))
+
+	if max_count <= count {
+		return errs.ErrorSpacePlayerIsFull
 	}
+	player_icon := ""
+	if playerResults[0] != nil {
+		player_icon = playerResults[0].(string)
+	}
+
+	player_display := ""
+	if playerResults[2] != nil {
+		player_display = playerResults[2].(string)
+	}
+
 	space_pos, index := rdsconst.EnterData(rdsconst.SplitData(pos_result[0].(string)), uid)
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 
 	// pipe.Do(ctx, "MULTI")
-	pipe.HSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, spaceid)
-	pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos, space_pos)
-	pipe.HSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),
+	pipe.HMSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, spaceid)
+	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos, space_pos)
+	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),
 		rdsconst.GetBattleSpacePlayerDataKey(uid),
-		fmt.Sprintf("%s&%s&%s&%s&%s", uid, playerResults[0].(string), playerResults[2].(string), rdsconst.BattleSpaceStateReady, strconv.FormatInt(int64(index), 10)),
+		fmt.Sprintf("%s&%s&%s&%s&%s", uid, player_icon, player_display, rdsconst.BattleSpaceStateReady, strconv.FormatInt(int64(index), 10)),
 	)
 
 	// pipe.Do(ctx, "exec")
@@ -403,7 +416,7 @@ func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) (uid stri
 		err = errs.ErrorPlayerOnlineDataLost
 		return
 	}
-	if playerResults[0] == "" {
+	if playerResults[0] == "" || playerResults[0]== nil{
 		err = errs.ErrorPlayerIsNotInBattleSpace
 		return
 	}
@@ -413,20 +426,29 @@ func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) (uid stri
 		return
 	}
 	defer space_mutex.Unlock()
-	// results, err := client.HGetAll(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid)).Result()
-	// if err != nil {
-	// 	space_mutex.Unlock()
-	// 	return err
-	// }
 
+	results, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),rdsconst.BattleSpacePlayerPos).Result()
+	if err != nil {
+		return 
+	}
+	if len(results)!= 1{
+		err = errs.ErrorSpaceOnlineDataLost
+		return 
+	}
+	if results[0] == nil{
+		err = errs.ErrorSpaceOnlineDataLost
+		return
+	}
+	player_pos := results[0].(string)
+	player_pos = rdsconst.ReplaceData(rdsconst.SplitData(player_pos),uid,"")
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 
 	// pipe.Do(ctx, "MULTI")
 
-	pipe.SRem(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.GetBattleSpacePlayerDataKey(uid))
-	pipe.HSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, "")
-
+	pipe.HDel(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.GetBattleSpacePlayerDataKey(uid))
+	pipe.HMSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, nil)
+	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),rdsconst.BattleSpacePlayerPos,player_pos)
 	// pipe.Do(ctx, "exec")
 
 	_, err = pipe.Exec(ctx)
@@ -513,7 +535,11 @@ func GetBattleSpacePlayers(ctx context.Context, spaceid string) []*network.Clien
 		if uid == "" {
 			continue
 		}
-		list = append(list, getBattleSpacePlayerClientID(ctx, uid))
+		cli := getBattleSpacePlayerClientID(ctx, uid)
+		if cli == nil {
+			continue
+		}
+		list = append(list, cli)
 	}
 	return list
 }
@@ -630,6 +656,9 @@ func getBattleSpacePlayerClientID(ctx context.Context, uid string) *network.Clie
 	if len(results) != 2 {
 		return nil
 	}
-
+	
+	if results[0] == nil || results[1] == nil {
+		return nil
+	}
 	return &network.ClientID{Address: results[0].(string), Id: results[1].(string)}
 }
