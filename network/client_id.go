@@ -74,7 +74,7 @@ func (cid *ClientID) ToString() string {
 }
 
 func (cid *ClientID) Equal(other *ClientID) bool {
-	if cid != nil && other != nil {
+	if cid == nil || other == nil {
 		return false
 	}
 
