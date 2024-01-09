@@ -10,12 +10,39 @@
     <Compile Update="Views\BehaviorEditor.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\BehaviorEditorMenu.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\BehaviorEditorView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\BehaviorNodeTree.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\BehaviorProperty.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\BehaviorWorkspace.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\BehaviorEditor.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Views\BehaviorNodeBar.xaml">
+    <Page Update="Views\BehaviorEditorMenu.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\BehaviorEditorView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\BehaviorNodeTree.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\BehaviorProperty.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\BehaviorWorkspace.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

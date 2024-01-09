@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="ViewModels\" />
     <Folder Include="Adorner\" />
+    <Folder Include="ViewModels\" />
   </ItemGroup>
 
 </Project>

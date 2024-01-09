@@ -9,7 +9,102 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\CancelDebug.png" />
+    <None Remove="Resources\Collapse.png" />
+    <None Remove="Resources\Connect.png" />
+    <None Remove="Resources\Crashdump.ico" />
+    <None Remove="Resources\DeleteFilderOrFile.png" />
+    <None Remove="Resources\Disconnect.png" />
+    <None Remove="Resources\Edit.png" />
+    <None Remove="Resources\Expand.ico" />
+    <None Remove="Resources\Expand.png" />
+    <None Remove="Resources\Export.ico" />
+    <None Remove="Resources\Export.png" />
+    <None Remove="Resources\Eye.ico" />
+    <None Remove="Resources\File-Open.png" />
+    <None Remove="Resources\Newfile.png" />
+    <None Remove="Resources\Newfolder.png" />
+    <None Remove="Resources\OpenBehavior.png" />
+    <None Remove="Resources\OpenWorkspace.png" />
+    <None Remove="Resources\ReloadWorkspace.png" />
+    <None Remove="Resources\Save.ico" />
+    <None Remove="Resources\Saveall.ico" />
+    <None Remove="Resources\Saveall.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\DeleteFilderOrFile.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Newfile.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Expand.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\CancelDebug.png" />
+    <Resource Include="Resources\Connect.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Crashdump.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Collapse.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Disconnect.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Edit.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Expand.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Export.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Export.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Eye.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\File-Open.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Newfolder.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\OpenBehavior.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\OpenWorkspace.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\ReloadWorkspace.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Save.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Saveall.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Saveall.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NodeView\NodeBehavior.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Framework\" />
   </ItemGroup>
 
 </Project>

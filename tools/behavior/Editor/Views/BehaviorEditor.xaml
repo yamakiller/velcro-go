@@ -4,29 +4,43 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Editor.Views"
-      xmlns:node="clr-namespace:NodeBehavior.Views;assembly=NodeBehavior"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="BehaviorEditor">
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <local:BehaviorEditorMenu/>
+        </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="120"></ColumnDefinition>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-                <ColumnDefinition MinWidth="60" MaxWidth="120"></ColumnDefinition>
+                <ColumnDefinition Width="Auto" MinWidth="200"></ColumnDefinition>
+                <ColumnDefinition Width="2"></ColumnDefinition>
+                <ColumnDefinition MinWidth="100"/>
             </Grid.ColumnDefinitions>
-            <Border Grid.Column="1" BorderBrush="Black" BorderThickness="1" DockPanel.Dock="Right">
-                <node:NodeBehaviorScrollView>
-                    <node:NodeBehaviorView AllowDrop="True" ShowGrid="True" GridCellSize="20,20" DocumentSize="2000,2000" VerticalAlignment="Bottom" DockPanel.Dock="Bottom">
-                    
-                    </node:NodeBehaviorView>
-                </node:NodeBehaviorScrollView>
-            </Border>
+            <Grid  Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition MinHeight="150"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition MinHeight="80"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition MinHeight="20"/>
+                </Grid.RowDefinitions>
+                <local:BehaviorWorkspace Grid.Row="0"/>
+                <GridSplitter Grid.Row="1"  Height="1" HorizontalAlignment="Stretch" Background="DarkGray"/>
+                <local:BehaviorNodeTree Grid.Row="2"/>
+                <GridSplitter Grid.Row="3"  Height="1" HorizontalAlignment="Stretch" Background="DarkGray"/>
+                <local:BehaviorProperty Grid.Row="4"/>
+            </Grid>
+            <GridSplitter Grid.Column="1"  Width="2" HorizontalAlignment="Stretch" Background="DarkGray"/>
+            <StackPanel  Grid.Column="2">
+                <local:BehaviorEditorView Visibility="Hidden"/>
+            </StackPanel>
+            <!--</Border>-->
         </Grid>
     </Grid>
 </Window>
