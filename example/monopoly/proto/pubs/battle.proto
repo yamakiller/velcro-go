@@ -67,13 +67,13 @@ message EnterBattleSpaceResp {
 message ReadyBattleSpace {
     string spaceId = 1;
     string uid = 2;
-    string ready = 3;
+    bool ready = 3;
 }
 
 message ReadyBattleSpaceResp {
     string spaceId = 1;
     string uid = 2;
-    string ready = 3;
+    bool ready = 3;
 }
 
 //解散房间

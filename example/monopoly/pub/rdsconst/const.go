@@ -100,6 +100,14 @@ func UpdateData(list []string, index int, val string) string {
 	return MakeData(list)
 }
 
+func ReplaceData(list []string, old, new string) string {
+	for i := 0; i < len(list); i++ {
+		if list[i] == old {
+			list[i] = new
+		}
+	}
+	return MakeData(list)
+}
 func EnterData(list []string, val string) (string, int32) {
 	index := int32(-1)
 	for i := 0; i < len(list); i++ {
