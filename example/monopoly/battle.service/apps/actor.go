@@ -301,43 +301,4 @@ func (actor *BattleActor) submitRequest(ctx context.Context, request proto.Messa
 }
 
 func (actor *BattleActor) Closed(ctx context.Context) {
-	sender := serve.GetServantClientInfo(ctx).Sender()
-	spaceId, err := rds.FindBattleSpaceIDByClientID(ctx, sender)
-	if err != nil {
-		actor.submitRequestCloseClient(ctx, sender)
-		return
-	}
-	players := rds.GetBattleSpacePlayers(ctx, spaceId)
-
-	if ok, err := rds.IsMaster(ctx, sender); err != nil {
-		actor.submitRequestCloseClient(ctx, sender)
-		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
-	} else if ok {
-
-		if err := rds.DeleteBattleSpace(ctx, sender); err == nil {
-			res := &mpubs.DissBattleSpaceNotify{
-				SpaceId: spaceId,
-			}
-			for _, v := range players {
-				if !sender.Equal(v) {
-					actor.submitRequestGatewayPush(ctx, v, res)
-				}
-			}
-		}
-	} else {
-
-		uid, spaceid, err := rds.LeaveBattleSpace(ctx, sender)
-		if err == nil {
-			res := &mprvs.RequestExitBattleSpace{
-				BattleSpaceID: spaceid,
-				UID:           uid,
-			}
-			for _, v := range players {
-				if !sender.Equal(v) {
-					actor.submitRequestGatewayPush(ctx, v, res)
-				}
-			}
-		}
-
-	}
 }

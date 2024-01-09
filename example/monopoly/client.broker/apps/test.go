@@ -26,17 +26,23 @@ func clientRun(cp *clientpool.ConnectPool,i int32) {
 	if uid != ""{
 		spaceid := createbattlespace(cp)
 		if spaceid != ""{
-			time.Sleep(5*time.Second)
-			exitbattlespace(cp,spaceid,uid)
+			time.Sleep(2*time.Second)
+			getlist(cp)
+			time.Sleep(3*time.Second)
+			readybattlespace(cp,uid,spaceid,true)
+			time.Sleep(6*time.Second)
+			readybattlespace(cp,uid,spaceid,false)
+			// time.Sleep(3*time.Second)
+			// exitbattlespace(cp,spaceid,uid)
 		}
 	}
-	// t1 := time.NewTicker(time.Millisecond*500)
-	// for {
-	// 	select{
-	// 	case <-t1.C:
-	// 		getlist(cp)
-	// 	}
-	// }
+	t1 := time.NewTicker(time.Millisecond*500)
+	for {
+		select{
+		case <-t1.C:
+			getlist(cp)
+		}
+	}
 }
 
 func singin(cp *clientpool.ConnectPool,token string)string{
@@ -71,9 +77,29 @@ func createbattlespace(cp *clientpool.ConnectPool)string{
 		fmt.Println("createbattlespace : ",res.Result().(*mpubs.CreateBattleSpaceResp))	
 		return res.Result().(*mpubs.CreateBattleSpaceResp).SpaceId
 	}else if res.Error() != nil{
-		vlog.Info("[PROGRAM]"," createbattlespace error: ", res.Error().Error())
+		vlog.Info("[PROGRAM]"," readybattlespace error: ", res.Error().Error())
 	}
 	return ""
+}
+
+func readybattlespace(cp *clientpool.ConnectPool,uid ,spaceid string,ready bool) bool {
+	req := &mpubs.ReadyBattleSpace{
+		SpaceId: spaceid,
+		Uid: uid,
+		Ready: ready,
+	}
+	res,err:= cp.RequestMessage(req,2000)
+	if err != nil {
+		vlog.Info("[PROGRAM]", "readybattlespace failed  ",err.Error())
+		return false
+	}
+	if res.Result() !=nil{
+		fmt.Println("readybattlespace : ",res.Result().(*mpubs.ReadyBattleSpaceResp))	
+		return res.Result().(*mpubs.ReadyBattleSpaceResp).Ready
+	}else if res.Error() != nil{
+		vlog.Info("[PROGRAM]"," readybattlespace error: ", res.Error().Error())
+	}
+	return false
 }
 
 func exitbattlespace(cp *clientpool.ConnectPool,spaceid string,uid string){

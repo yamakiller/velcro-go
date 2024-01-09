@@ -22,10 +22,9 @@ func RegisterPlayer(ctx context.Context,
 	if err := mutex.Lock(); err != nil {
 		return err
 	}
-
+	defer mutex.Unlock()
 	n, err := client.Exists(ctx, rdsconst.GetPlayerUidKey(uid)).Result()
 	if err != nil {
-		mutex.Unlock()
 		return err
 	}
 
@@ -33,7 +32,6 @@ func RegisterPlayer(ctx context.Context,
 	if n > 0 {
 		oldClientID, err = client.Get(ctx, rdsconst.GetPlayerUidKey(uid)).Result()
 		if err != nil {
-			mutex.Unlock()
 			return err
 		}
 	}
@@ -79,28 +77,33 @@ func RegisterPlayer(ctx context.Context,
 	_, err = pipe.Exec(ctx)
 	if err != nil {
 		pipe.Discard()
-		mutex.Unlock()
 		return err
 	}
-
-	mutex.Unlock()
 
 	// 加入监视器，监视getPlayerUidKey(uid) 超时删除
 	return nil
 }
 
-func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID, uid string) (map[string]string, error) {
+func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID) error {
+
+	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil
+		}
+		return err
+	}
 
 	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
 	if err := mutex.Lock(); err != nil {
-		return nil, err
+		return  err
 	}
+	defer mutex.Unlock()
 
 	results, err := client.HGetAll(ctx, rdsconst.GetPlayerOnlineDataKey(uid)).Result()
 
 	if err == redis.Nil {
-		mutex.Unlock()
-		return nil, nil
+		return nil
 	}
 
 	displayName := results[rdsconst.PlayerMapClientDisplayName]
@@ -109,7 +112,7 @@ func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID, uid strin
 	if !clientId.Equal(&network.ClientID{Address: results[rdsconst.PalyerMapClientIdAddress],
 		Id: results[rdsconst.PlayerMapClientIdId]}) {
 		mutex.Unlock()
-		return nil, errs.ErrPermissionsLost
+		return errs.ErrPermissionsLost
 	}
 
 	pipe := client.TxPipeline()
@@ -129,13 +132,11 @@ func UnRegisterPlayer(ctx context.Context, clientId *network.ClientID, uid strin
 	_, err = pipe.Exec(ctx)
 	if err != nil {
 		pipe.Discard()
-		mutex.Unlock()
-		return nil, err
+		return err
 	}
 
-	mutex.Unlock()
 
-	return results, nil
+	return nil
 }
 
 func IsAuth(ctx context.Context, clientId *network.ClientID) (bool, error) {
@@ -152,20 +153,17 @@ func IsAuth(ctx context.Context, clientId *network.ClientID) (bool, error) {
 	if err := mutex.Lock(); err != nil {
 		return false, err
 	}
-
+	defer mutex.Unlock()
 	values, err := client.HMGet(ctx,
 		rdsconst.GetPlayerOnlineDataKey(uid),
 		rdsconst.PalyerMapClientIdAddress,
 		rdsconst.PlayerMapClientIdId).Result()
 	if err != nil {
 		if err == redis.Nil {
-			mutex.Unlock()
 			return false, nil
 		}
-		mutex.Unlock()
 		return false, err
 	}
-	mutex.Unlock()
 
 	if len(values) != 2 {
 		return false, nil
@@ -175,6 +173,24 @@ func IsAuth(ctx context.Context, clientId *network.ClientID) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func FindPlayerData(ctx context.Context, clientId *network.ClientID)(map[string]string,error){
+	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	if err := mutex.Lock(); err != nil {
+		return nil, err
+	}
+	defer mutex.Unlock()
+	return client.HGetAll(ctx, rdsconst.GetPlayerOnlineDataKey(uid)).Result()
 }
 
 // GetPlayerUID 获取客户端绑定的UID

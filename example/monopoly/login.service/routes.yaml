@@ -11,3 +11,15 @@ routes:
       - prvs.RequestGatewayCloseClient
     rules:
       - 1
+  - virtual-address: battle.service
+    max-idle-conn: 1024
+    max-idle-timeout-minute: 30
+    max-idle-conn-timeout-second: 2
+    kleepalive-millisec: 4000
+    endpoints:
+      - laddr: 0.0.0.0:8870
+        vaddr: 0.0.0.0:8870
+    commands:
+      - prvs.RequestExitBattleSpace
+    rules:
+      - 1

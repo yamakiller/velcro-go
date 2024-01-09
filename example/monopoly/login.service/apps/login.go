@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
@@ -58,6 +59,6 @@ func (ls *loginService) newLoginActor(conn *serve.ServantClientConn) serve.Serva
 
 	conn.Register(&pubs.SignIn{}, actor.onSignIn)
 	conn.Register(&pubs.SignOut{}, actor.onSignOut)
-
+	conn.Register(&prvs.ClientClosed{},actor.onClientClosed)
 	return actor
 }
