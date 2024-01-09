@@ -54,7 +54,7 @@ namespace Editor.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Editor;component/views/behaviorworkspace.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Editor;V1.0.0.0;component/views/behaviorworkspace.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\BehaviorWorkspace.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
