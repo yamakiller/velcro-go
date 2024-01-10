@@ -8,3 +8,12 @@ server:
 router:
   uri: routes.yaml
   algorithm: p2c
+elastic:
+  elastic_address:
+  elastic_kafka:
+    broker: 0.0.0.0:9092
+    group: gateway
+    topics:
+      - gateway_logs
+    version: 2.2
+    

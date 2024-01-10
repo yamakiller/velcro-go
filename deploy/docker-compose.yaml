@@ -1,0 +1,119 @@
+version: '3'
+
+services:
+
+  # elasticsearch:
+  #   image: elasticsearch:7.17.11
+  #   container_name: elasticsearch
+  #   restart: always
+  #   environment:
+  #     # - network.host=0.0.0.0
+  #     - http.cors.enabled=true
+  #     - http.cors.allow-origin="*"
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #     - "discovery.type=single-node"
+  #     - "cluster.name=myes"
+  #     - "node.name=jeven"
+  #   # - xpack.security.enabled: "false"
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1 
+  #   networks:
+  #     efk-net:
+  #       ipv4_address: 172.29.120.10
+  #       aliases:
+  #       - elasticsearch
+  #       - jeven
+
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   volumes:
+  #     # - /logs/elasticsearch/conf/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml  # 将容器中es的配置文件映射到本地，设置跨域， 否则head插件无法连接该节点
+  #     - /logs/elasticsearch/data:/usr/share/elasticsearch/data  # 存放数据的文件
+  #     # - /logs/elasticsearch/logs:/usr/share/elasticsearch/logs  #存放日志文件
+  #     # - /logs/elasticsearch/plugins:/usr/share/elasticsearch/plugins #存放插件
+  # kibana:
+  #   container_name: kibana
+  #   image: kibana:7.17.11
+  #   restart: always
+  #   environment:
+  #     # 注意这里的配置，否则会导致kibana页面不能打开
+  #     ELASTICSEARCH.URL: http://127.0.0.1:9200
+  #     ELASTICSEARCH.HOSTS: '["http://127.0.0.1:9200"]'
+  #     I18N_LOCALE: zh-CN
+  #   networks:
+  #     efk-net:
+  #       ipv4_address: 172.29.120.20
+  #       aliases:
+  #         - kibana
+  #         - kib
+  #   ports:
+  #     - "5601:5601"
+  #   links:
+  #     - "elasticsearch"
+  # elasticsearch_head:
+  #   container_name:  elasticsearch_head
+  #   image: mobz/elasticsearch-head:5
+  #   restart: always
+  #   ports:
+  #     - "9100:9100"
+
+  elasticsearch:
+    image: elasticsearch:7.17.11
+    container_name: es
+    privileged: true
+    environment:
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      node.name: es-single
+      cluster.name: es-cluster
+      discovery.type: single-node
+      # 开启es跨域
+      http.cors.enabled: "true"
+      http.cors.allow-origin: "*"
+      http.cors.allow-headers: Authorization
+      # 安全控制（根据个人需要选择打开或关闭）
+      xpack.security.enabled: "true"
+      xpack.security.transport.ssl.enabled: "true"
+      ELASTIC_PASSWORD: "B6P0hW7x"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./es/data:/usr/share/elasticsearch/data
+      - ./es/plugins:/usr/share/elasticsearch/plugins
+      - ./es/logs:/usr/share/elasticsearch/logs
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ## 指定ip
+    networks:
+      efk-net:
+        ipv4_address: 172.29.120.100
+  #kibana
+  kibana:
+    image: kibana:7.17.11
+    restart: always
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    environment:
+      I18N_LOCALE: zh-CN
+      ELASTICSEARCH_HOSTS: '["http://192.168.0.115:9200"]'
+      ELASTICSEARCH_USERNAME: 'elastic'
+      ELASTICSEARCH_PASSWORD: 'B6P0hW7x'
+    ## 指定ip
+    networks:
+      efk-net:
+        ipv4_address: 172.29.120.120
+
+networks:
+  efk-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.120.0/24

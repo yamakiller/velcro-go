@@ -1,8 +1,8 @@
 package apps
 
 import (
-
 	"github.com/kardianos/service"
+	"github.com/yamakiller/velcro-go/cluster/elastic"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
 	"github.com/yamakiller/velcro-go/utils/files"
@@ -11,9 +11,11 @@ import (
 
 type Program struct {
 	service *gatewayService
+	eep *elastic.ElasticProducer
 }
 
 func (p *Program) Start(s service.Service) error {
+
 
 	vlog.Info("[PROGRAM]", "Gateway Start loading environment variables")
 
@@ -25,6 +27,12 @@ func (p *Program) Start(s service.Service) error {
 
 		return err
 	}
+
+	p.eep = elastic.NewElasticProducer(&envs.Instance().Get("configs").(*configs.Config).Elastic)
+	if p.eep != nil{
+		vlog.SetElasticProducerPostmessage(envs.Instance().Get("configs").(*configs.Config).Server.VAddr,p.eep.PostMessage)
+	}
+
 	vlog.Info("[PROGRAM]", "Gateway Loading environment variables is completed")
 	vlog.Info("[PROGRAM]", "Gateway Start the network service")
 	p.service = &gatewayService{}
