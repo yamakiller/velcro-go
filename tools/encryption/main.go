@@ -22,6 +22,7 @@ func main() {
 	fmt.Printf("公钥序发送到客户端Base64:%s\n", base64.StdEncoding.EncodeToString(pub1Byte))
 	prv2, _, _ := e.GenerateKey(rand.Reader)
 	//pub2Byte := e.Marshal(pub2)
+	fmt.Printf("客户端私钥:%v\n", prv2)
 
 	secret, _ := e.GenerateSharedSecret(prv2, pub1)
 	fmt.Printf("客户端生成的共享密钥Byte码:")
