@@ -1,6 +1,7 @@
 ﻿using Editor.Datas;
 using Editor.Framework;
 using Editor.ViewModels;
+using Microsoft.Win32;
 
 namespace Editor.Commands
 {
@@ -12,18 +13,27 @@ namespace Editor.Commands
 
         public override void Execute(BehaviorEditViewModel contextViewModel, object parameter)
         {
-            Random rd = new Random();   
-            Datas.Workspace workspace = new Datas.Workspace();
-            workspace.Name = "BehaviorWorkspace" + rd.Next(1, 100).ToString();
-            workspace.ModifyTime = DateTime.Now;
-            workspace.CreateTime = DateTime.Now;
-            BehaviorTree tree = new BehaviorTree();
-         
-            tree.id = (new Utils.ShortGuid()).ToString();
-            tree.title = "第一个行为树";
-            tree.nodes = new Dictionary<string, BehaviorNode>();
+            var folderDialog = new OpenFolderDialog() { 
+                Title = "Workspace",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                Multiselect = false, };
+            var result = folderDialog.ShowDialog();
+            if (result != true)
+            {
+                return;
+            }
 
-            workspace.Trees.Add(tree.id, tree);
+            contextViewModel.Workspace.WorkDir = folderDialog.FolderName;
+
+            Dialogs.ScanDialog scanDlg = new Dialogs.ScanDialog();
+            scanDlg.Scaning(contextViewModel.Workspace.WorkDir);
+
+            foreach(var file in scanDlg.Files)
+            {
+                contextViewModel.Workspace.AddBT(file);
+            }
+            contextViewModel.Caption = "Workspace:" + contextViewModel.Workspace.WorkDir;
+            contextViewModel.IsWorkspace = true;
         }
 
         public override bool CanExecute(BehaviorEditViewModel contextViewModel, object parameter)

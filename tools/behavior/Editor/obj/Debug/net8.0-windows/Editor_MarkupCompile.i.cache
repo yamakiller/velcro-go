@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\
 Editor
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
-D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\App.xaml
-6-301332626
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\App.xaml
+7-718237707
 
-221931087500
-1991438288901
-Views\BehaviorEditor.xaml;Views\BehaviorEditorMenu.xaml;Views\BehaviorEditorView.xaml;Views\BehaviorNodeTree.xaml;Views\BehaviorProperty.xaml;Views\BehaviorWorkspace.xaml;
+25519266899
+199-1774315692
+Dialogs\ScanDialog.xaml;Views\BehaviorEditor.xaml;Views\BehaviorEditorMenu.xaml;Views\BehaviorEditorView.xaml;Views\BehaviorNodeTree.xaml;Views\BehaviorProperty.xaml;Views\BehaviorWorkspace.xaml;
 
-False
+True
 

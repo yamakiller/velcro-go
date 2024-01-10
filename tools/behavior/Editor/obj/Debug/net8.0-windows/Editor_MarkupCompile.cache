@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\App.xaml
-6-301332626
+7-718237707
 
-10659587614
+23-1394023956
 199-1774315692
-Views\BehaviorEditor.xaml;Views\BehaviorEditorMenu.xaml;Views\BehaviorEditorView.xaml;Views\BehaviorNodeTree.xaml;Views\BehaviorProperty.xaml;Views\BehaviorWorkspace.xaml;
+Dialogs\ScanDialog.xaml;Views\BehaviorEditor.xaml;Views\BehaviorEditorMenu.xaml;Views\BehaviorEditorView.xaml;Views\BehaviorNodeTree.xaml;Views\BehaviorProperty.xaml;Views\BehaviorWorkspace.xaml;
 
 False
 

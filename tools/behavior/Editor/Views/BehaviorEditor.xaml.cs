@@ -23,6 +23,7 @@ namespace Editor.Views
         public BehaviorEditor()
         {
             InitializeComponent();
+            this.DataContext = new ViewModels.BehaviorEditViewModel();
         }
     }
 }

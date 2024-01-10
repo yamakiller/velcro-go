@@ -59,3 +59,5 @@ D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\De
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Views\BehaviorProperty.baml
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Views\BehaviorEditorView.g.cs
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Views\BehaviorEditorView.baml
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\ScanDialog.g.cs
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\ScanDialog.baml

@@ -7,21 +7,13 @@ using System.Threading.Tasks;
 
 namespace Editor.Utils
 {
-    public class ShortGuid
+    public static  class ShortGuid
     {
-        private string m_shortid;
-        public ShortGuid(Guid newGuid) 
+        public static string Next()
         {
-            m_shortid = toShortGuid(newGuid);
+            return toShortGuid(Guid.NewGuid());
         }
-
-        public ShortGuid() 
-        {
-            m_shortid = toShortGuid(Guid.NewGuid());
-        }
-
-        public string ToString() { return m_shortid; }
-        private string toShortGuid(this Guid newGuid)
+        private static string toShortGuid(this Guid newGuid)
         {
             string modifiedBase64 = Convert.ToBase64String(newGuid.ToByteArray())
                 .Replace('+', '-').Replace('/', '_')
