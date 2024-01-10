@@ -1,2 +1,2 @@
 protoc --go_out=./network --proto_path=./network/proto client_id.proto
-protoc --go_out=./cluster/protocols --proto_path=./cluster/proto --proto_path=./network/proto ping.proto pubkey.proto forward_message.proto
+protoc --go_out=./cluster/protocols --proto_path=./cluster/proto --proto_path=./network/proto ping.proto pubkey.proto forward_message.proto logs.proto
