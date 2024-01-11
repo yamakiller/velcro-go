@@ -25,11 +25,6 @@ func SetLevel(lv Level) {
 	logger.SetLevel(lv)
 }
 
-//SetElasticPostmessage sets the seivice vaddr and elastic producer postmessage
-func SetElasticProducerPostmessage(vaddr string, f func( string, []byte)error){
-	logger.SetElasticProducerPostmessage(vaddr,f)
-}
-
 // DefaultLogger return the default logger for velcro.
 func DefaultLogger() FullLogger {
 	return logger
@@ -150,8 +145,6 @@ func ContextTracef(ctx context.Context, format string, v ...interface{}) {
 type defaultLogger struct {
 	stdlog *log.Logger
 	level  Level
-	vaddr string
-	f func(vaddr string, message []byte) error
 }
 
 func (ll *defaultLogger) SetOutput(w io.Writer) {
@@ -160,11 +153,6 @@ func (ll *defaultLogger) SetOutput(w io.Writer) {
 
 func (ll *defaultLogger) SetLevel(lv Level) {
 	ll.level = lv
-}
-
-func (ll *defaultLogger) SetElasticProducerPostmessage(vaddr string,f func( string, []byte) error){
-	ll.vaddr = vaddr
-	ll.f = f
 }
 
 func (ll *defaultLogger) logf(lv Level, format *string, v ...interface{}) {
@@ -180,9 +168,6 @@ func (ll *defaultLogger) logf(lv Level, format *string, v ...interface{}) {
 	ll.stdlog.Output(4, msg)
 	if lv == LevelFatal {
 		os.Exit(1)
-	}
-	if ll.f != nil{
-		ll.f(ll.vaddr,[]byte(msg))
 	}
 }
 

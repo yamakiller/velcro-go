@@ -1,7 +1,7 @@
 package configs
 
-import "github.com/yamakiller/velcro-go/cluster/elastic"
 
 type Config struct {
-	Elastic elastic.ElasticConfig `yaml:"elastic"`
+	LogAcquisitionAddr string `yaml:"log_acquisition_addr"` // 日志获取地址
+	LogDeliveryAddr    string `yaml:"log_delivery_addr"`    //日志投递地址
 }

@@ -25,11 +25,11 @@ func clientRun(cp *clientpool.ConnectPool, i int32) {
 
 	uid := singin(cp, fmt.Sprintf("test_00%d&123456", i))
 	if uid != "" {
-		// spaceid := createbattlespace(cp)
-		spaceid := "ARq985AvzGojkcVfcAGwiN"
+		spaceid := createbattlespace(cp)
+		// spaceid := "ARq985AvzGojkcVfcAGwiN"
 		if spaceid != "" {
-			enterbattlespace(cp,spaceid)
-			time.Sleep(2 * time.Second)
+			// enterbattlespace(cp,spaceid)
+			// time.Sleep(2 * time.Second)
 			getlist(cp)
 			time.Sleep(3 * time.Second)
 			readybattlespace(cp, uid, spaceid, true)

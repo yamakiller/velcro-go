@@ -1,0 +1,3 @@
+docker network create ek-net
+docker run -d -p 9200:9200 -p 9300:9300 --name elasticsearch --network ek-net -e "discovery.type=single-node" -e ES_JAVA_OPTS="-Xms64m -Xmx512m"  elasticsearch:7.17.11
+docker run -d --name kibana -p 5601:5601 --network ek-net -e i18n.locale="zh-CN" kibana:7.17.11 

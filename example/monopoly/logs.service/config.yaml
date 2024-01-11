@@ -1,8 +1,2 @@
-elastic:
-  elastic_address: http://127.0.0.1:9200
-  elastic_kafka:
-    broker: 0.0.0.0:9092
-    group: gateway
-    topics:
-      - gateway_logs
-    version: 2.2.0
+log_acquisition_addr: 0.0.0.0:9092
+log_delivery_addr: http://127.0.0.1:9200

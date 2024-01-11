@@ -17,8 +17,8 @@ del .\cluster\protocols\pubs\*.pb.go /f /s /q
 ::%GO_COMPILER_PATH% --go_out=.\network --proto_path=.\network\proto client_id.proto
 
 ::生成cluster proto intrusive
-echo %GO_COMPILER_PATH% --go_out=.\cluster\protocols\prvs --proto_path=.\cluster\proto\prvs --proto_path=.\network\proto closing.proto bundle.proto alterrule.proto logs.proto
-%GO_COMPILER_PATH% --go_out=.\cluster\protocols\prvs --proto_path=.\cluster\proto\prvs --proto_path=.\network\proto closing.proto bundle.proto alterrule.proto logs.proto
+echo %GO_COMPILER_PATH% --go_out=.\cluster\protocols\prvs --proto_path=.\cluster\proto\prvs --proto_path=.\network\proto closing.proto bundle.proto alterrule.proto
+%GO_COMPILER_PATH% --go_out=.\cluster\protocols\prvs --proto_path=.\cluster\proto\prvs --proto_path=.\network\proto closing.proto bundle.proto alterrule.proto
 
 ::生成cluster proto pubs
 echo %GO_COMPILER_PATH% --go_out=.\cluster\protocols\pubs --proto_path=.\cluster\proto\pubs --proto_path=.\network\proto error.proto ping.proto pubkey.proto

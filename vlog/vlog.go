@@ -44,7 +44,6 @@ type ContextLogger interface {
 type Control interface {
 	SetLevel(Level)
 	SetOutput(io.Writer)
-	SetElasticProducerPostmessage(string,func(string,[]byte)error)
 }
 
 // FullLogger is the combination of Logger, FormatLogger, ContextLogger and Control.
