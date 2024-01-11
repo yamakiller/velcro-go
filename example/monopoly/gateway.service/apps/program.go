@@ -11,7 +11,6 @@ import (
 
 type Program struct {
 	service *gatewayService
-	eep *elastic.ElasticProducer
 }
 
 func (p *Program) Start(s service.Service) error {
@@ -27,12 +26,6 @@ func (p *Program) Start(s service.Service) error {
 
 		return err
 	}
-
-	p.eep = elastic.NewElasticProducer(&envs.Instance().Get("configs").(*configs.Config).Elastic)
-	if p.eep != nil{
-		vlog.SetElasticProducerPostmessage(envs.Instance().Get("configs").(*configs.Config).Server.VAddr,p.eep.PostMessage)
-	}
-
 	vlog.Info("[PROGRAM]", "Gateway Loading environment variables is completed")
 	vlog.Info("[PROGRAM]", "Gateway Start the network service")
 	p.service = &gatewayService{}

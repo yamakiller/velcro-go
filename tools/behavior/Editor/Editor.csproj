@@ -22,6 +22,7 @@
     <None Remove="Resources\Export.png" />
     <None Remove="Resources\Eye.ico" />
     <None Remove="Resources\File-Open.png" />
+    <None Remove="Resources\Link.png" />
     <None Remove="Resources\Newfile.png" />
     <None Remove="Resources\Newfolder.png" />
     <None Remove="Resources\OpenBehavior.png" />
@@ -30,10 +31,14 @@
     <None Remove="Resources\Save.ico" />
     <None Remove="Resources\Saveall.ico" />
     <None Remove="Resources\Saveall.png" />
+    <None Remove="Resources\Workspace.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Resources\DeleteFilderOrFile.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Link.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\Newfile.png">
@@ -97,6 +102,9 @@
     <Resource Include="Resources\Saveall.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Resources\Workspace.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
@@ -105,6 +113,7 @@
 
   <ItemGroup>
     <Folder Include="Framework\" />
+    <Folder Include="Styles\" />
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ namespace Editor.Datas
     public class BehaviorTree
     {
         public string FilePath {  get; set; }
+        public string Sha1 { get; set; }
         public Models.BehaviorTreeModel TreeModel { get; set; }
     }
 }

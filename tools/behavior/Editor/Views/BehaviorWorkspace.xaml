@@ -4,14 +4,18 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Views"
-             xmlns:localCtrl="clr-namespace:Editor.Contrels"
+             xmlns:localData ="clr-namespace:Editor.Datas"
+             xmlns:localCtrl="clr-namespace:Editor.Contrels" xmlns:viewmodels="clr-namespace:Editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:BehaviorEditViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <Style TargetType="Separator">
-            <Setter Property="BorderBrush" Value="White" />
-            <Setter Property="BorderThickness" Value="0.5" />
-        </Style>
+        <ResourceDictionary>
+            <Style TargetType="Separator">
+                <Setter Property="BorderBrush" Value="White" />
+                <Setter Property="BorderThickness" Value="0.5" />
+            </Style>
+        </ResourceDictionary>
+       
     </UserControl.Resources>
     <Grid>
         <DockPanel>
@@ -67,7 +71,19 @@
                     </Button>
                 </localCtrl:XToolBar>
             </ToolBarTray>
-            <TreeView BorderThickness="0"></TreeView>
+            <TreeView BorderThickness="0" >
+                <TreeViewItem Header="Behavior" ItemsSource="{Binding Trees}">
+                    <TreeViewItem.ItemTemplate>
+                        <HierarchicalDataTemplate DataType="{x:Type localData:BehaviorTree}">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="pack://application:,,,/Resources/Link.png" Width="16" Height="16"/>
+                                <Label Content="{Binding TreeModel.name}"/>
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
+                    </TreeViewItem.ItemTemplate>
+                </TreeViewItem>
+            
+            </TreeView>
         </DockPanel>
     </Grid>
 </UserControl>

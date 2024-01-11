@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace Editor.Datas
         private Models.WorkspaceModel? m_model;
         private Dictionary<string, Models.BehaviorNodeTypeModel> m_name2conf = new Dictionary<string, Models.BehaviorNodeTypeModel>();
         private Models.BehaviorNodeTypeModel[]? m_type;
-        private List<BehaviorTree> m_treeFilePath = new List<BehaviorTree>();
+        public ObservableCollection<BehaviorTree> Trees = new ObservableCollection<BehaviorTree>();
 
         private string m_lastError;
 
@@ -35,6 +36,11 @@ namespace Editor.Datas
         {
             get { return m_workdir; }
             set { m_workdir = value; }
+        }
+
+        public string FilePath
+        {
+            set { m_filepath = value; }
         }
 
         public Models.WorkspaceModel GetModel()
@@ -102,27 +108,36 @@ namespace Editor.Datas
 
 
             var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(m_filepath, 
-                JsonSerializer.Serialize<Models.WorkspaceModel>(new Models.WorkspaceModel() { NodeConfPath = m_nodeConfPath, WorkDir = m_workdir }, options));
+            var jsonContent = JsonSerializer.Serialize<Models.WorkspaceModel>(new Models.WorkspaceModel() { NodeConfPath = m_nodeConfPath, WorkDir = m_workdir }, options);
+            if (!File.Exists(m_filepath))
+            {
+                File.WriteAllText(m_filepath, jsonContent);
+            }
+            else
+            {
+                FileStream fs = File.OpenWrite(m_filepath);
+                fs.Seek(0, SeekOrigin.Begin);
+                fs.SetLength(0);
+                fs.Write(Encoding.UTF8.GetBytes(jsonContent));
+                fs.Close();
+            }
+
+
+            foreach (var tree in Trees)
+            {
+                if (string.IsNullOrEmpty(tree.Sha1))
+                {
+                    jsonContent = Utils.Files.WriteBehaviorTree(tree);
+                    if (jsonContent == null)
+                    {
+                        return false;
+                    }
+
+                    tree.Sha1 = Utils.Encryption.Sha1.Utf8Computer(jsonContent);
+                }
+            }
 
             return true;
-        }
-
-        /// <summary>
-        /// 添加一棵树
-        /// </summary>
-        /// <param name="behaviorTree"></param>
-        public void AddBT(BehaviorTree behaviorTree)
-        {
-            m_treeFilePath.Add(behaviorTree);
-        }
-
-        /// <summary>
-        /// 删除一颗树
-        /// </summary>
-        /// <param name="index"></param>
-        public void RemoveBT(int index ) {
-            m_treeFilePath.RemoveAt(index);
         }
 
         private bool initNodeConf()

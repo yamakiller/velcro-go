@@ -34,34 +34,34 @@
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator/>
-                    <MenuItem Header="新建行为树" IsEnabled="{Binding IsWorkspace}"></MenuItem>
+                    <MenuItem Header="新建行为树" IsEnabled="{Binding IsWorkspace}" Command="{Binding NewBehaviorTreeCmd}"></MenuItem>
                     <MenuItem Header="创建文件夹" IsEnabled="{Binding IsWorkspace}"></MenuItem>
                     <Separator/>
-                    <MenuItem Header="保存">
+                    <MenuItem Header="保存" IsEnabled="{Binding IsWorkspaceModify}" Command="{Binding SaveWorkspaceCmd}">
                         <MenuItem.Icon>
                             <Image Source="pack://application:,,,/Resources/Save.ico" Width="16" Height="16"></Image>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="另存为"></MenuItem>
-                    <MenuItem Header="导出"></MenuItem>
-                    <MenuItem Header="关闭"></MenuItem>
-                    <MenuItem Header="全部保存">
+                    <MenuItem Header="另存为" IsEnabled="{Binding IsWorkspace}"></MenuItem>
+                    <MenuItem Header="导出" IsEnabled="{Binding IsWorkspace}"></MenuItem>
+                    <MenuItem Header="关闭" IsEnabled="{Binding IsWorkspace}"></MenuItem>
+                    <MenuItem Header="全部保存" IsEnabled="{Binding IsWorkspace}">
                         <MenuItem.Icon>
                             <Image Source="pack://application:,,,/Resources/Saveall.ico" Width="16" Height="16"></Image>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="全部导出...">
+                    <MenuItem Header="全部导出..." IsEnabled="{Binding IsWorkspace}">
                         <MenuItem.Icon>
                             <Image Source="pack://application:,,,/Resources/Export.ico" Width="16" Height="16"></Image>
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Header="全部关闭"></MenuItem>
+                    <MenuItem Header="全部关闭" IsEnabled="{Binding IsWorkspace}"></MenuItem>
                     <Separator/>
                     <MenuItem Header="设置"></MenuItem>
                     <Separator/>
                     <MenuItem Header="最近打开的文件"></MenuItem>
                     <MenuItem Header="最近打开的工作区"></MenuItem>
-                    <MenuItem Header="退出"></MenuItem>
+                    <MenuItem Header="退出" Command="{Binding ExitSystemCmd}"></MenuItem>
                 </MenuItem>
                 <MenuItem Header="编辑">
                     <MenuItem Header="撤销"></MenuItem>
