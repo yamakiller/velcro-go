@@ -4,18 +4,21 @@ import (
 	"context"
 	"errors"
 	"net"
+	"runtime"
 	sync "sync"
 	"time"
 
 	"github.com/yamakiller/velcro-go/gofunc"
+	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/vlog"
 )
 
 var _ Handler = &tcpClientHandler{}
 
 // ClientHandler TCP服务客户端处理程序
 type tcpClientHandler struct {
-	conn net.Conn
-	// sendbox        *circbuf.LinkBuffer
+	conn           net.Conn
+	sendbox        *circbuf.LinkBuffer
 	sendcond       *sync.Cond
 	mailbox        chan interface{}
 	keepalive      uint32
@@ -29,12 +32,12 @@ type tcpClientHandler struct {
 }
 
 func (c *tcpClientHandler) start() {
-	c.refdone.Add(2)
-	c.done.Add(1)
+	c.refdone.Add(3)
+	c.done.Add(2)
 
-	// gofunc.RecoverGoFuncWithInfo(context.Background(),
-	// 	c.sender,
-	// 	gofunc.NewBasicInfo("sender", c.invoker.invokerEscalateFailure))
+	gofunc.RecoverGoFuncWithInfo(context.Background(),
+		c.sender,
+		gofunc.NewBasicInfo("sender", c.invoker.invokerEscalateFailure))
 
 	gofunc.RecoverGoFuncWithInfo(context.Background(),
 		c.reader,
@@ -53,8 +56,11 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return errors.New("client: closed")
 	}
-	c.conn.Write(b)
-	// c.sendbox.WriteBinary(b)
+
+	if _, err := c.sendbox.WriteBinary(b); err != nil {
+		c.sendcond.L.Unlock()
+		return err
+	}
 	c.sendcond.L.Unlock()
 
 	c.sendcond.Signal()
@@ -74,11 +80,11 @@ func (c *tcpClientHandler) Close() {
 	}
 
 	c.conn.Close()
+	close(c.stopper)
 
 	c.sendcond.L.Unlock()
 	c.sendcond.Signal()
 
-	c.done.Wait()
 	c.guarddone.Wait()
 }
 
@@ -91,7 +97,7 @@ func (c *tcpClientHandler) isStopped() bool {
 	}
 }
 
-/*func (c *tcpClientHandler) sender() {
+func (c *tcpClientHandler) sender() {
 	defer c.done.Done()
 	defer c.refdone.Done()
 
@@ -112,6 +118,7 @@ func (c *tcpClientHandler) isStopped() bool {
 			}
 
 			c.sendcond.L.Lock()
+			c.sendbox.Flush()
 			if c.sendbox.Len() > 0 {
 				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
 				if err != nil {
@@ -128,9 +135,29 @@ func (c *tcpClientHandler) isStopped() bool {
 					i = 0
 				}
 
-				if _, err := c.conn.Write(readbytes); err != nil {
-					goto tcp_sender_exit_label
+				offset := 0
+				nwrite := 0
+				for {
+
+					if c.isStopped() {
+						goto tcp_sender_exit_label
+					}
+
+					c.conn.SetWriteDeadline(time.Now().Add(time.Millisecond * 50))
+					if nwrite, err = c.conn.Write(readbytes[offset:]); err != nil {
+						if e, ok := err.(net.Error); ok && e.Timeout() {
+							goto tcp_sender_continue_label
+						}
+
+						goto tcp_sender_exit_label
+					}
+				tcp_sender_continue_label:
+					offset += nwrite
+					if offset == len(readbytes) {
+						break
+					}
 				}
+
 				readbytes = nil
 				i++
 			}
@@ -143,7 +170,7 @@ tcp_sender_exit_label:
 	}
 	c.sendcond.L.Unlock()
 	c.conn.Close()
-}*/
+}
 
 func (c *tcpClientHandler) reader() {
 	defer func() {
@@ -215,9 +242,9 @@ tcp_guardian_exit_lable:
 	c.done.Wait()
 
 	// 释放资源
-	// c.sendbox.Close()
-	// c.sendbox = nil
-	// c.sendcond = nil
+	c.sendbox.Close()
+	c.sendbox = nil
+	c.sendcond = nil
 
 	c.invoker.invokerClosed()
 }
