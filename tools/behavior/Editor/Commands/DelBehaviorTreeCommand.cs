@@ -21,6 +21,15 @@ namespace Editor.Commands
             {
                 return;
             }
+
+
+            if (idx >= contextViewModel.Workspace.Trees.Count) {
+                return;
+            }
+
+            contextViewModel.Workspace.Trees.RemoveAt(idx);
+            // 关闭视图
+            contextViewModel.IsWorkspaceModify = true;
         }
 
         public override bool CanExecute(BehaviorEditViewModel contextViewModel, object parameter)

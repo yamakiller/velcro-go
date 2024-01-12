@@ -128,6 +128,19 @@ namespace Editor.ViewModels
             }
         }
 
+        private OpenNodeEditorViewCommand? openNodeEditorViewCmd = null;
+        public OpenNodeEditorViewCommand OpenNodeEditorViewCmd
+        {
+            get
+            {
+                if (openNodeEditorViewCmd == null)
+                {
+                    openNodeEditorViewCmd= new OpenNodeEditorViewCommand(this);
+                }
+                return openNodeEditorViewCmd;
+            }
+        }
+
         public BehaviorEditViewModel()
         {
             Trees = new ReadOnlyObservableCollection<BehaviorTree>(workspace.Trees);

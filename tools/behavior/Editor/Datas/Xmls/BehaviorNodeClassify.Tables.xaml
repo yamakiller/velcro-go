@@ -1,0 +1,13 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <XmlDataProvider x:Key="BehaviorNodeClassify">
+        <x:XData>
+            <Classify xmlns="">
+                <ClassifyNode Name="复合节点" Value="Composite"></ClassifyNode>
+                <ClassifyNode Name="修饰节点" Value="Decorator"></ClassifyNode>
+                <ClassifyNode Name="条件节点" Value="Condition"></ClassifyNode>
+                <ClassifyNode Name="行为节点" Value="Action"></ClassifyNode>
+            </Classify>
+        </x:XData>
+    </XmlDataProvider>
+</ResourceDictionary>

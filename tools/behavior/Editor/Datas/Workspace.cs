@@ -21,7 +21,7 @@ namespace Editor.Datas
         private string m_workdir = "";      // 工作目录
         private Models.WorkspaceModel? m_model;
         private Dictionary<string, Models.BehaviorNodeTypeModel> m_name2conf = new Dictionary<string, Models.BehaviorNodeTypeModel>();
-        private Models.BehaviorNodeTypeModel[]? m_type;
+        public ObservableCollection<Models.BehaviorNodeTypeModel> Types = new ObservableCollection<Models.BehaviorNodeTypeModel>();
         public ObservableCollection<BehaviorTree> Trees = new ObservableCollection<BehaviorTree>();
 
         private string m_lastError;
@@ -91,7 +91,8 @@ namespace Editor.Datas
                 m_lastError = ex.Message;
                 return false;
             }
-            
+
+            initNodeConf();
             return true;
         }
 
@@ -140,6 +141,16 @@ namespace Editor.Datas
             return true;
         }
 
+        public void Clear()
+        {
+            Trees.Clear();
+            Types.Clear();
+            if (m_name2conf != null)
+            {
+                m_name2conf.Clear();
+            }
+        }
+
         private bool initNodeConf()
         {
             if (string.IsNullOrEmpty(m_nodeConfPath))
@@ -155,7 +166,12 @@ namespace Editor.Datas
             {
                 m_name2conf.Add(t.name, t);
             }
-            m_type = types;
+            //Types = types;
+            foreach(var t in types)
+            {
+                Types.Add(t);
+            }
+            
             return true;
         }
     }
