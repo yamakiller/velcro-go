@@ -1,0 +1,38 @@
+﻿<Window x:Class="Editor.Dialogs.CreateWorkspaceDialog"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Editor.Dialogs"
+      mc:Ignorable="d" 
+      ResizeMode="NoResize"
+      Height="170" 
+      Width="428"
+      Title="创建一个新的工作区"
+      WindowStartupLocation="CenterOwner">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Grid.Row="1">
+            <TextBlock Text="名         称" Margin="8"></TextBlock>
+            <TextBox x:Name="WorkspaceNameInput" Width="200" Height="20" Margin="4 0"></TextBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Row="3">
+            <TextBlock Text="工作区目录"  Margin="8"></TextBlock>
+            <TextBox x:Name="WorkspaceFolderInput" Width="300" Height="20" IsReadOnly="True"></TextBox>
+            <Button Width="28" Height="20" Click="Folder_Click">. . .</Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal"  Grid.Row="5" HorizontalAlignment="Right">
+            <Button Width="80" Height="24" Click="Cancel_Click" >取消</Button>
+            <Button Width="80" Height="24" Margin="8 0 8 0" Click="Applay_Click">应用</Button>
+        </StackPanel>
+    </Grid>
+</Window>

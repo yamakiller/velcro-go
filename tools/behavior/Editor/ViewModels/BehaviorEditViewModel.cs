@@ -1,6 +1,8 @@
 ﻿using Editor.Commands;
 using Editor.Datas;
 using Editor.Framework;
+using System.Collections.ObjectModel;
+using System.IO;
 
 namespace Editor.ViewModels
 {
@@ -12,15 +14,46 @@ namespace Editor.ViewModels
     
         Workspace workspace = new Workspace();
     
-        public Workspace Workspace { get { return workspace;} 
-            set { SetProperty(ref workspace, value); } }
+        public Workspace Workspace 
+        {
+            get { return workspace;} 
+            set { SetProperty(ref workspace, value); } 
+        }
 
         bool isWorkspaceVaild = false;
 
         public bool IsWorkspace
         {
             get { return isWorkspaceVaild; }
-            set { SetProperty(ref isWorkspaceVaild, value); }
+            set 
+            {   if (value)
+                {
+                    Caption = "Workspace:" + workspace.WorkDir;
+                }
+                else
+                {
+                    Caption = "BehaviorEditor";
+                }
+                SetProperty(ref isWorkspaceVaild, value); 
+            }
+        }
+
+        bool isWorkspaceModify = false;
+        public bool IsWorkspaceModify
+        {
+            get { return isWorkspaceModify; }
+            set 
+            {   if (value && IsWorkspace)
+                {
+                    Caption = "*Workspace:" + Workspace.WorkDir;
+                }
+                else if (!value && IsWorkspace) 
+                {
+                    Caption = "Workspace:" + Workspace.WorkDir;
+                }
+                
+                SetProperty(ref isWorkspaceModify, value); 
+            }
         }
 
         string caption = "Behavior Editor";
@@ -31,19 +64,74 @@ namespace Editor.ViewModels
             set { SetProperty(ref caption, value);}
         }
 
-        private NewWorkspaceCommand _newWorkspaceCmd;
+
+       
+        public ReadOnlyObservableCollection<BehaviorTree> Trees {
+            get;
+            set;
+        }
+
+        private NewWorkspaceCommand? newWorkspaceCmd = null;
 
         public NewWorkspaceCommand NewWorkspaceCmd
         {
             get
             {
-                if (_newWorkspaceCmd == null)
+                if (newWorkspaceCmd == null)
                 {
-                    _newWorkspaceCmd = new NewWorkspaceCommand(this);
+                    newWorkspaceCmd = new NewWorkspaceCommand(this);
                 }
 
-                return _newWorkspaceCmd;
+                return newWorkspaceCmd;
             }
+        }
+
+        private ExitSystemCommand? exitSystemCmd = null;
+
+        public ExitSystemCommand ExitSystemCmd
+        {
+            get
+            {
+                if (exitSystemCmd == null)
+                {
+                    exitSystemCmd = new ExitSystemCommand(this);
+                }
+
+                return exitSystemCmd;
+            }
+        }
+
+        private NewBehaviorTreeCommand? newBehaviorTreeCmd = null;
+        public NewBehaviorTreeCommand NewBehaviorTreeCmd
+        {
+            get
+            {
+                if (newBehaviorTreeCmd == null)
+                {
+                    newBehaviorTreeCmd = new NewBehaviorTreeCommand(this);
+                }
+
+                return newBehaviorTreeCmd;
+            }
+        }
+
+        private SaveWorkspaceCommand? saveWorkspaceCmd = null;
+        public SaveWorkspaceCommand SaveWorkspaceCmd
+        {
+            get
+            {
+                if (saveWorkspaceCmd == null)
+                {
+                    saveWorkspaceCmd = new SaveWorkspaceCommand(this);
+                }
+                return saveWorkspaceCmd;
+            }
+        }
+
+        public BehaviorEditViewModel()
+        {
+            Trees = new ReadOnlyObservableCollection<BehaviorTree>(workspace.Trees);
+
         }
     }
 }

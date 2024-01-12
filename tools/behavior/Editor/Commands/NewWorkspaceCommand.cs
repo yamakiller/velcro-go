@@ -2,6 +2,8 @@
 using Editor.Framework;
 using Editor.ViewModels;
 using Microsoft.Win32;
+using System.IO;
+using System.Windows;
 
 namespace Editor.Commands
 {
@@ -13,27 +15,38 @@ namespace Editor.Commands
 
         public override void Execute(BehaviorEditViewModel contextViewModel, object parameter)
         {
-            var folderDialog = new OpenFolderDialog() { 
-                Title = "Workspace",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-                Multiselect = false, };
-            var result = folderDialog.ShowDialog();
+            var newWorkspace = new Dialogs.CreateWorkspaceDialog(); 
+            var result = newWorkspace.ShowDialog();
             if (result != true)
             {
                 return;
             }
 
-            contextViewModel.Workspace.WorkDir = folderDialog.FolderName;
+            var filepath = Path.Combine(newWorkspace.WorkspaceFolder,
+                newWorkspace.WorkspaceName + ".json");
+
+            if (File.Exists(filepath))
+            {
+               if (MessageBoxResult.Cancel == 
+                   MessageBox.Show("文件:" + filepath + "已存在?", "警告", MessageBoxButton.OKCancel))
+               {
+                    return;
+               }
+            }
+
+            contextViewModel.Workspace.FilePath = filepath;
+            contextViewModel.Workspace.WorkDir = newWorkspace.WorkspaceFolder;
 
             Dialogs.ScanDialog scanDlg = new Dialogs.ScanDialog();
             scanDlg.Scaning(contextViewModel.Workspace.WorkDir);
 
             foreach(var file in scanDlg.Files)
             {
-                contextViewModel.Workspace.AddBT(file);
+                contextViewModel.Workspace.Trees.Add(file);
             }
-            contextViewModel.Caption = "Workspace:" + contextViewModel.Workspace.WorkDir;
+            
             contextViewModel.IsWorkspace = true;
+            contextViewModel.IsWorkspaceModify = true;
         }
 
         public override bool CanExecute(BehaviorEditViewModel contextViewModel, object parameter)

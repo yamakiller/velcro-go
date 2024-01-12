@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	e := &ecdh.Curve25519{A: 247, B: 127, C: 64}
+	e := &ecdh.Curve25519{A: 248, B: 127, C: 64}
 	_, pub1, _ := e.GenerateKey(rand.Reader)
 	pub1Byte := e.Marshal(pub1)
 
