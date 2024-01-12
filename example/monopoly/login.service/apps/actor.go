@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	defaultRequestTimeout = 2000
+	defaultRequestTimeout = 1000
 )
 
 type LoginActor struct {
@@ -45,7 +45,7 @@ func (actor *LoginActor) onSignIn(ctx context.Context) (proto.Message, error) {
 		actor.submitRequestCloseClient(ctx, sender)
 		return nil, err
 	}
-
+	actor.submitRequestGatewayAlterRule(ctx, sender,3)
 	resp := &mpubs.SignInResp{}
 	resp.Uid = player.UID
 	resp.DisplayName = player.DisplayName
@@ -57,6 +57,7 @@ func (actor *LoginActor) onSignIn(ctx context.Context) (proto.Message, error) {
 }
 
 func (actor *LoginActor) onSignOut(ctx context.Context) (proto.Message, error) {
+
 	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.SignOut)
 	sender := serve.GetServantClientInfo(ctx).Sender()
 	utils.AssertEmpty(request, "onSignOut message not pubs.SignOut")
@@ -91,7 +92,7 @@ func (actor *LoginActor) onSignOut(ctx context.Context) (proto.Message, error) {
 		actor.submitRequestCloseClient(ctx, sender)
 		return nil, err
 	}
-
+	
 	return &mpubs.SignOutResp{
 		Result: 0,
 	}, nil
@@ -125,7 +126,9 @@ func (actor *LoginActor) submitRequestCloseClient(ctx context.Context, clientId 
 	actor.submitRequest(ctx, &prvs.RequestGatewayCloseClient{Target: clientId})
 }
 
-
+func (actor *LoginActor) submitRequestGatewayAlterRule(ctx context.Context, clientId *network.ClientID,rule int32){
+	actor.submitRequest(ctx, &prvs.RequestGatewayAlterRule{Target: clientId,Rule: rule})
+}
 
 func (actor *LoginActor) submitForwardBundleRequest(ctx context.Context,clientId *network.ClientID, request proto.Message)(proto.Message, error) {
 	r := actor.ancestor.FindRouter(request)

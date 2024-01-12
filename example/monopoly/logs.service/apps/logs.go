@@ -7,11 +7,11 @@ import (
 )
 
 type logsService struct {
-	logs * elastic.ElastcConsumer
+	logs * elastic.Elastc
 }
 
 func (ls *logsService) Start() error {
-	ls.logs =  elastic.NewElastcConsumer(&envs.Instance().Get("configs").(*configs.Config).Elastic)
+	ls.logs =  elastic.NewElastc(envs.Instance().Get("configs").(*configs.Config).LogDeliveryAddr,envs.Instance().Get("configs").(*configs.Config).LogAcquisitionAddr)
 	if ls.logs == nil {
 		return nil
 	}

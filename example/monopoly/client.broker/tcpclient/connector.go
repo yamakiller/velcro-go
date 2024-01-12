@@ -2,27 +2,49 @@ package tcpclient
 
 import (
 	"context"
+	"fmt"
+	// "crypto"
+	// "encoding/base64"
+	"errors"
 	"net"
 	"reflect"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
-	"github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
+	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 	"github.com/yamakiller/velcro-go/rpc/client"
 	"github.com/yamakiller/velcro-go/rpc/errs"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/anypb"
 )
+
+func Closed() {
+
+}
+
+type AcceptMessage struct {
+}
+
+type PingMessage struct {
+}
+
+type RecviceMessage struct {
+	Data []byte
+	Addr net.Addr
+}
+
+type ClosedMessage struct {
+}
 
 func NewConn(options ...client.ConnConfigOption) client.IConnect {
 	config := client.Configure(options...)
@@ -34,14 +56,15 @@ func NewConnConfig(config *client.ConnConfig) *Conn {
 	return &Conn{
 		BaseConnect: &client.BaseConnect{},
 		Config:      config,
-		// sendbox:     intrusive.NewLinked(&syncx.NoMutex{}),
-		sendcon:  sync.NewCond(&sync.Mutex{}),
-		waitbox:  cmap.New(),
-		methods:  make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
-		stopper:  make(chan struct{}),
-		sequence: 1,
-		mailbox:  make(chan interface{}, 1),
-		state:    Disconnected,
+		sendbox:     circbuf.NewLinkBuffer(4096),
+		recvice:     circbuf.NewLinkBuffer(4096),
+		sendcond:    sync.NewCond(&sync.Mutex{}),
+		waitbox:     cmap.New(),
+		methods:     make(map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)),
+		stopper:     make(chan struct{}),
+		sequence:    1,
+		mailbox:     make(chan interface{}, 1),
+		state:       Disconnected,
 	}
 }
 
@@ -61,25 +84,25 @@ type IntervalLinkNode struct {
 
 type Conn struct {
 	*client.BaseConnect
-	Config  *client.ConnConfig
-	conn    net.Conn
-	address *net.TCPAddr
-	timeout time.Duration
-	// sendbox *intrusive.Linked
-	waitbox cmap.ConcurrentMap
-	sendcon *sync.Cond
+	Config   *client.ConnConfig
+	conn     net.Conn
+	address  *net.TCPAddr
+	timeout  time.Duration
+	sendbox  *circbuf.LinkBuffer
+	waitbox  cmap.ConcurrentMap
+	sendcond *sync.Cond
+	done     sync.WaitGroup
+
+	recvice *circbuf.LinkBuffer
 
 	stopper  chan struct{}
 	sequence int32
-	done     sync.WaitGroup
 
 	mailbox     chan interface{}
 	mailboxDone sync.WaitGroup
 
 	methods map[interface{}]func(ctx context.Context, message proto.Message) (proto.Message, error)
 
-	ping               uint64
-	kleepaliveError    int32
 	currentGoroutineId int
 	state              ConnState
 	secret             []byte
@@ -105,7 +128,7 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 	//1.启动发送及接收
 	rc.done.Add(2)
 
-	// go rc.sender()
+	go rc.sender()
 	go rc.reader()
 
 	rc.mailboxDone.Add(1)
@@ -187,10 +210,19 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (client.IFu
 		return future, nil
 	}
 
-	rc.sendcon.L.Lock()
-	_, err = rc.conn.Write(b)
-	rc.sendcon.L.Unlock()
-	rc.sendcon.Signal()
+	rc.sendcond.L.Lock()
+	if rc.isStopped() {
+		rc.sendcond.L.Unlock()
+		return nil, errors.New("client: closed")
+	}
+
+	if _, err := rc.sendbox.WriteBinary(b); err != nil {
+		rc.sendcond.L.Unlock()
+		return nil, err
+	}
+
+	rc.sendcond.Signal()
+	rc.sendcond.L.Unlock()
 
 	if err != nil {
 		// 发送失败
@@ -215,13 +247,14 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (client.IFu
 		return future, nil
 	}
 
-	rc.sendcon.L.Lock()
+	rc.sendcond.L.Lock()
 	node := &IntervalLinkNode{
 		Value: future,
 	}
 	rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(future.sequenceID), 10), node)
-	rc.sendcon.L.Unlock()
-	rc.sendcon.Signal()
+
+	rc.sendcond.Signal()
+	rc.sendcond.L.Unlock()
 
 	if timeout > 0 {
 		tp := time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
@@ -238,11 +271,9 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (client.IFu
 				tp.Stop()
 			}
 
-			// rc.sendbox.Remove(futureNode)
 			rc.waitbox.Remove(strconv.FormatInt(int64(future.sequenceID), 10))
-
-			future.cond.L.Unlock()
 			future.cond.Signal()
+			future.cond.L.Unlock()
 		})
 		atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&future.t)), unsafe.Pointer(tp))
 	}
@@ -251,43 +282,6 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (client.IFu
 	future.cond.Wait()
 	future.cond.L.Unlock()
 	return future, nil
-}
-
-func (rc *Conn) responseMessage(sequenceID int32, message proto.Message) error {
-	var (
-		resultAny *anypb.Any
-		err       error
-	)
-
-	if rc.isStopped() {
-		return errs.ErrorRpcConnectorClosed
-	}
-
-	if message != nil {
-		resultAny, err = anypb.New(message)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	req := &messages.RpcResponseMessage{
-		SequenceID: sequenceID,
-		Result:     resultAny,
-	}
-
-	b, err := messages.MarshalResponseProtobuf(req.SequenceID, req.Result)
-	if err != nil {
-		return errs.ErrorRpcConnectorClosed
-	}
-	rc.sendcon.L.Lock()
-	_, err = rc.conn.Write(b)
-	rc.sendcon.L.Unlock()
-	rc.sendcon.Signal()
-	if err != nil {
-		return errs.ErrorRpcConnectorClosed
-	}
-
-	return nil
 }
 
 // func (rc *Conn) pushSendBox(msg interface{}) *IntervalLinkNode {
@@ -322,10 +316,6 @@ func (rc *Conn) getFuture(id int32) *IntervalLinkNode {
 }
 
 func (rc *Conn) Close() {
-	// rc.sendcon.L.Lock()
-	// rc.sendbox.Push(&IntervalLinkNode{Value: nil})
-	// rc.sendcon.L.Unlock()
-	// rc.sendcon.Signal()
 	rc.done.Wait()
 	rc.mailboxDone.Wait()
 }
@@ -377,94 +367,128 @@ func (rc *Conn) onResponse(msg protoreflect.ProtoMessage) {
 	if tp != nil {
 		tp.Stop()
 	}
-	future.cond.L.Unlock()
 	future.cond.Signal()
+	future.cond.L.Unlock()
+	
 }
 
+func (c *Conn) sender() {
+	defer func() {
+		c.done.Done()
+	}()
 
-func (rc *Conn) reader() {
-	defer rc.done.Done()
-
-	var readtemp [1024]byte
-	readbuffer := circbuf.NewLinkBuffer(4096)
-	defer readbuffer.Close()
-
+	var (
+		err       error
+		readbytes []byte = nil
+	)
 	for {
-		if rc.isStopped() {
-			goto exit_reader_lable
+		c.sendcond.L.Lock()
+		if !c.isStopped() {
+			c.sendcond.Wait()
 		}
+		c.sendcond.L.Unlock()
 
-		if rc.Config.Kleepalive > 0 {
-			rc.conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(rc.Config.Kleepalive)))
-		}
-
-		nr, err := rc.conn.Read(readtemp[:])
-		if err != nil {
-			if e, ok := err.(net.Error); ok && e.Timeout() {
-				rc.kleepaliveError++
-				if rc.kleepaliveError > 3 {
-					goto exit_reader_lable
-				}
-
-				//发送心跳
-				uid := uuid.New()
-				rc.ping, _ = strconv.ParseUint(uid.String(), 10, 64)
-				// pingMessage := &messages.RpcPingMessage{VerifyKey: rc.ping}
-				b, err := messages.MarshalPingProtobuf(rc.ping)
-				if err != nil {
-					goto exit_reader_lable
-				}
-				_, err = rc.conn.Write(b)
-				if err != nil {
-					goto exit_reader_lable
-				}
-				continue
-			}
-			goto exit_reader_lable
-		}
-
-		rc.kleepaliveError = 0
-		offset := 0
 		for {
-			nw, err := readbuffer.WriteBinary(readtemp[offset:nr])
-			if err != nil {
-				goto exit_reader_lable
-			}
-			offset += nw
-			if err := readbuffer.Flush(); err != nil {
-				goto exit_reader_lable
-			}
-			msg, uerr := protomessge.UnMarshal(readbuffer, rc.secret)
-			if uerr != nil {
-				goto exit_reader_lable
+			if c.isStopped() {
+				goto tcp_sender_exit_label
 			}
 
-			if err != nil && msg == nil {
-				// 数据包存在问题
-				goto exit_reader_lable
-			}
-
-			if msg != nil {
-				switch message := msg.(type) {
-				case *messages.RpcPingMessage:
-
-				default:
-					rc.mailbox <- message
+			c.sendcond.L.Lock()
+			c.sendbox.Flush()
+			if c.sendbox.Len() > 0 {
+				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
+				if err != nil {
+					c.sendcond.L.Unlock()
+					vlog.Errorf("tcp handler error sendbuffer readbinary fail %s", err.Error())
+					goto tcp_sender_exit_label
 				}
 			}
-
-			if offset == nr {
+			if readbytes == nil {
+				c.sendcond.L.Unlock()
 				break
 			}
+			c.sendcond.L.Unlock()
+
+			i := 0
+			offset := 0
+			nwrite := 0
+			for {
+
+				if i > 1 {
+					runtime.Gosched()
+					i = 0
+				}
+
+				if c.isStopped() {
+					goto tcp_sender_exit_label
+				}
+
+				c.conn.SetWriteDeadline(time.Now().Add(time.Millisecond * 50))
+				if nwrite, err = c.conn.Write(readbytes[offset:]); err != nil {
+					if e, ok := err.(net.Error); ok && e.Timeout() {
+						goto tcp_sender_continue_label
+					}
+
+					goto tcp_sender_exit_label
+				}
+			tcp_sender_continue_label:
+				offset += nwrite
+				if offset == len(readbytes) {
+					break
+				}
+				i++
+			}
+
+			readbytes = nil
+
+		}
+	}
+tcp_sender_exit_label:
+	c.sendcond.L.Lock()
+	if !c.isStopped() {
+		close(c.stopper)
+	}
+	c.sendcond.L.Unlock()
+	c.conn.Close()
+}
+
+func (c *Conn) reader() {
+	defer func() {
+		c.done.Done()
+	}()
+
+	var tmp [512]byte
+	remoteAddr := c.conn.RemoteAddr()
+	for {
+
+		if c.isStopped() {
+			break
 		}
 
+		// if c.keepalive > 0 {
+		// 	c.conn.SetReadDeadline(time.Now().Add(time.Duration(c.keepalive) * time.Millisecond * 2.0))
+		// }
+
+		n, err := c.conn.Read(tmp[:])
+		if err != nil {
+			fmt.Println(err.Error())
+			break
+		}
+
+		// c.keepaliveError = 0
+		c.mailbox <- &RecviceMessage{Data: tmp[:n], Addr: remoteAddr}
 	}
-exit_reader_lable:
-	rc.conn.Close()
-	close(rc.stopper)
-	rc.sendcon.Signal()
-	rc.state = Disconnecting
-	rc.mailbox <- nil
+
+	c.conn.Close()
+	c.sendcond.L.Lock()
+	if !c.isStopped() {
+		close(c.stopper)
+	}
+	c.sendcond.Signal()
+	c.sendcond.L.Unlock()
+
+	c.mailbox <- &ClosedMessage{}
+
 }
 
 func (rc *Conn) guardian() {
@@ -485,8 +509,15 @@ func (rc *Conn) guardian() {
 		if reqMsg == nil {
 			break
 		}
-
-		rc.onResponse(reqMsg.(protoreflect.ProtoMessage))
+		switch msg:= reqMsg.(type) {
+		case *RecviceMessage:
+			rc.Recvice(msg.Data)
+		case *ClosedMessage:
+			goto exit_guardian_lable
+		default:
+		}
+		
+		// rc.Recvice(reqMsg.())
 
 		// f, ok := rc.methods[reflect.TypeOf(reqMsg)]
 		// if !ok {
@@ -503,7 +534,108 @@ func (rc *Conn) guardian() {
 exit_guardian_lable:
 	rc.done.Wait() // 等待读写线程结束
 	rc.state = Disconnected
-	rc.BaseConnect.Affiliation().Remove(rc.Node())
-
 	rc.Config.Closed()
+}
+func (rc *Conn) onPingReply(message *pubs.PingMsg) {
+	msg := &pubs.PingMsg{VerificationKey: message.VerificationKey + 1}
+	b, err := protomessge.Marshal(msg, rc.secret)
+	if err != nil {
+		return 
+	}
+
+	rc.sendcond.L.Lock()
+	if rc.isStopped() {
+		rc.sendcond.L.Unlock()
+		return 
+	}
+
+	if _, err := rc.sendbox.WriteBinary(b); err != nil {
+		rc.sendcond.L.Unlock()
+		return 
+	}
+
+	rc.sendcond.Signal()
+	rc.sendcond.L.Unlock()
+	fmt.Println("ping reply success")
+}
+
+func (dl *Conn) Recvice(b []byte) {
+	offset := 0
+	for {
+		var (
+			n    int   = 0
+			werr error = nil
+		)
+		if offset < len(b) {
+			n, werr = dl.recvice.WriteBinary(b[offset:])
+			offset += n
+			if err := dl.recvice.Flush(); err != nil {
+				return
+			}
+		}
+
+		msg, err := protomessge.UnMarshal(dl.recvice, dl.secret)
+		if err != nil {
+			vlog.Errorf("unmarshal message error:%v", err.Error())
+			return
+		}
+
+		if msg == nil {
+			if werr != nil {
+				vlog.Errorf("unmarshal message error:%v", err.Error())
+				return
+			}
+
+			if offset == len(b) {
+				return
+			}
+			continue
+		}
+
+		switch message := msg.(type) {
+		case *pubs.PingMsg:
+			dl.onPingReply(message)
+		case *pubs.PubkeyMsg:
+			dl.onPubkeyReply(message)
+		case *pubs.Error:
+			vlog.Errorf("message %v error:%v",message.Name,message.Err)
+		default:
+			dl.onResponse(message)
+		}
+	}
+}
+
+func (dl *Conn) onPubkeyReply(message *pubs.PubkeyMsg) {
+
+	// var (
+	// 	prvKey crypto.PrivateKey
+	// 	pubKey crypto.PublicKey
+	// )
+
+	// pubkeyByte, err := base64.StdEncoding.DecodeString(message.Key)
+	// if err != nil {
+	// 	vlog.Debugf("public key decode error %s", err.Error())
+	// 	ctx.Close(ctx.Self())
+	// 	return
+	// }
+
+	// prvKey, pubKey, err = dl.gateway.encryption.Ecdh.GenerateKey(rand.Reader)
+	// if err != nil {
+	// 	vlog.Debugf("generate public/private key error %s", err.Error())
+	// }
+
+	// remotePubkey, ok := dl.gateway.encryption.Ecdh.Unmarshal(pubkeyByte)
+	// if !ok {
+	// 	vlog.Debug("Public key parsing exception")
+	// 	ctx.Close(ctx.Self())
+	// 	return
+	// }
+
+	// secret, err := dl.gateway.encryption.Ecdh.GenerateSharedSecret(prvKey, remotePubkey)
+	// if err != nil {
+	// 	vlog.Debugf("generate shared secret error %s", err.Error())
+	// 	ctx.Close(ctx.Self())
+	// 	return
+	// }
+
 }

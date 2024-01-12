@@ -12,8 +12,6 @@ import (
 	"github.com/kardianos/service"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/client.broker/configs"
-	"github.com/yamakiller/velcro-go/example/monopoly/client.broker/tcpclient"
-	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
 	"github.com/yamakiller/velcro-go/utils/files"
 	"github.com/yamakiller/velcro-go/vlog"
 
@@ -37,7 +35,6 @@ type Program struct {
 	success        int64
 	failed         int64
 	writeBytes     []byte
-	service *clientpool.ConnectPool
 }
 
 func (p *Program) Start(s service.Service) error {
@@ -50,16 +47,13 @@ func (p *Program) Start(s service.Service) error {
 		return err
 	}
 
-	p.service = clientpool.NewConnectPool(envs.Instance().Get("configs").(*configs.Config).TargetAddr,clientpool.IdleConfig{
-		NewConn: tcpclient.NewConn,
-	})
 
 	// if err := p.service.Start(); err != nil {
 	// 	vlog.Info("[PROGRAM]", "client.test Failed to start network service", err)
 	// 	return err
 	// }
 	vlog.Info("[PROGRAM]", "client.test Start network service completed")
-	Test(p.service)
+	Test()
 	return nil
 }
 

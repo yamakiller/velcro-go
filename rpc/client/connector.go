@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"reflect"
 	"strconv"
@@ -12,13 +13,14 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
+	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -100,7 +102,7 @@ func (rc *Conn) Dial(addr string, timeout time.Duration) error {
 	rc.state = Connected
 
 	//1.启动发送及接收
-	rc.done.Add(2)
+	rc.done.Add(1)
 
 	// go rc.sender()
 	go rc.reader()
@@ -123,12 +125,12 @@ func (rc *Conn) Redial() error {
 	rc.mailbox = make(chan interface{}, 1)
 
 	//1.启动发送及接收
-	rc.done.Add(2)
+	rc.done.Add(1)
+	rc.mailboxDone.Add(1)
 
 	// go rc.sender()
 	go rc.reader()
 
-	rc.mailboxDone.Add(1)
 	go rc.guardian()
 
 	return nil
@@ -193,7 +195,6 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 	_, err = rc.conn.Write(b)
 	rc.sendcon.L.Unlock()
 
-
 	if err != nil {
 		// 发送失败
 		signal := false
@@ -223,7 +224,6 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 	}
 	rc.waitbox.SetIfAbsent(strconv.FormatInt(int64(future.sequenceID), 10), node)
 	rc.sendcon.L.Unlock()
-	
 
 	if timeout > 0 {
 		tp := time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
@@ -250,7 +250,7 @@ func (rc *Conn) RequestMessage(message proto.Message, timeout int64) (IFuture, e
 	future.cond.L.Lock()
 	future.cond.Wait()
 	future.cond.L.Unlock()
-	
+
 	return future, nil
 }
 
@@ -395,6 +395,19 @@ func (rc *Conn) onResponse(msg *messages.RpcResponseMessage) {
 
 	future.cond.Signal()
 }
+func (rc *Conn) onPing(msg *messages.RpcPingMessage) {
+	b, err := messages.MarshalPingProtobuf(msg.VerifyKey + 1)
+	if err != nil {
+		return
+	}
+
+	rc.sendcon.L.Lock()
+	defer rc.sendcon.L.Unlock()
+	if _, err := rc.conn.Write(b); err != nil {
+		return
+	}
+
+}
 
 // func (rc *Conn) sender() {
 // 	defer rc.done.Done()
@@ -526,8 +539,7 @@ func (rc *Conn) reader() {
 				}
 
 				//发送心跳
-				uid := uuid.New()
-				rc.ping, _ = strconv.ParseUint(uid.String(), 10, 64)
+				rc.ping = fastrand.Uint64n(math.MaxUint64)
 				// pingMessage := &messages.RpcPingMessage{VerifyKey: rc.ping}
 				b, err := messages.MarshalPingProtobuf(rc.ping)
 				if err != nil {
@@ -547,7 +559,7 @@ func (rc *Conn) reader() {
 		for {
 			nw, err := readbuffer.WriteBinary(readtemp[offset:nr])
 			offset += nw
-			if err := readbuffer.Flush();err != nil {
+			if err := readbuffer.Flush(); err != nil {
 				goto exit_reader_lable
 			}
 			_, msg, uerr := messages.UnMarshalProtobuf(readbuffer)
@@ -561,12 +573,7 @@ func (rc *Conn) reader() {
 			}
 
 			if msg != nil {
-				switch message := msg.(type) {
-				case *messages.RpcPingMessage:
-
-				default:
-					rc.mailbox <- message
-				}
+				rc.mailbox <- msg
 			}
 
 			if offset == nr {
@@ -603,6 +610,8 @@ func (rc *Conn) guardian() {
 		}
 
 		switch message := msg.(type) {
+		case *messages.RpcPingMessage:
+			rc.onPing(message)
 		case *messages.RpcResponseMessage:
 			rc.onResponse(message)
 		case *messages.RpcRequestMessage:

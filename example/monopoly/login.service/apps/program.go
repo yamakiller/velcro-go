@@ -1,7 +1,10 @@
 package apps
 
 import (
+	"strings"
+
 	"github.com/kardianos/service"
+	"github.com/yamakiller/velcro-go/cluster/logs"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
 	"github.com/yamakiller/velcro-go/utils/files"
@@ -21,6 +24,9 @@ func (p *Program) Start(s service.Service) error {
 		vlog.Fatal("[PROGRAM]", "Failed to load environment variables", err)
 		return err
 	}
+	
+	vaddr := strings.ReplaceAll(strings.ToLower("login@"+ envs.Instance().Get("configs").(*configs.Config).Server.VAddr),":",".") 
+	vlog.SetOutput(logs.NewElastic(envs.Instance().Get("configs").(*configs.Config).LogRemoteAddr, vaddr))
 
 	p.service = &loginService{}
 	if err := p.service.Start(); err != nil {

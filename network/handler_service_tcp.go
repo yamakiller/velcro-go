@@ -98,8 +98,10 @@ func (c *tcpClientHandler) isStopped() bool {
 }
 
 func (c *tcpClientHandler) sender() {
-	defer c.done.Done()
-	defer c.refdone.Done()
+	defer func() {
+		c.done.Done()
+		c.refdone.Done()
+	}()
 
 	var (
 		err       error
@@ -190,7 +192,7 @@ func (c *tcpClientHandler) reader() {
 		if c.isStopped() {
 			break
 		}
-
+		c.keepalive = 4000
 		if c.keepalive > 0 {
 			c.conn.SetReadDeadline(time.Now().Add(time.Duration(c.keepalive) * time.Millisecond * 2.0))
 		}
@@ -212,16 +214,23 @@ func (c *tcpClientHandler) reader() {
 	}
 
 	c.conn.Close()
+	c.sendcond.L.Lock()
+	if !c.isStopped() {
+		close(c.stopper)
+	}
 	c.sendcond.Signal()
+	c.sendcond.L.Unlock()
 
 	c.mailbox <- &ClosedMessage{}
 
 }
 
 func (c *tcpClientHandler) guardian() {
-	defer c.guarddone.Done()
-	defer c.refdone.Done()
 
+	defer func() {
+		c.guarddone.Done()
+		c.refdone.Done()
+	}()
 	for {
 		msg, ok := <-c.mailbox
 		if !ok {

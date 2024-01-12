@@ -3,6 +3,8 @@ package router
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	cmap "github.com/orcaman/concurrent-map"
@@ -46,7 +48,7 @@ func Loader(filePath string, algorithm string) (*RouterGroup, error) {
 
 		r := &Router{
 			Proxy:    p,
-			commands: make(map[string]struct{}),
+			commands: make(map[string]int64),
 		}
 
 		// 构建角色表
@@ -56,14 +58,19 @@ func Loader(filePath string, algorithm string) (*RouterGroup, error) {
 
 		// 构建指令表
 		for _, cmd := range router.Commands {
-			r.commands[cmd] = struct{}{}
+			cs := strings.Split(cmd, ",")
+			if len(cs) != 2 {
+				r.commands[cs[0]] = defaultTimeout
+			} else {
+				t, _ := strconv.ParseInt(cs[1], 10, 64)
+				r.commands[cs[0]] = t
+			}
 		}
 
 		for _, addr := range router.Endpoints {
 			result.vmaps.SetIfAbsent(addr.VAddr, r)
 		}
 		result.Push(r)
-
 	}
 
 	return result, nil

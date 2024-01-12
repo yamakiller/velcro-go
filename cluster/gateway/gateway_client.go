@@ -4,17 +4,17 @@ import (
 	"crypto"
 	"crypto/rand"
 	"encoding/base64"
+	"math"
 	"reflect"
-	"strconv"
 	"sync/atomic"
 
-	"github.com/google/uuid"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -48,7 +48,7 @@ type ClientConn struct {
 	secret         []byte //密钥
 	recvice        *circbuf.LinkBuffer
 	ping           uint64
-	requestTimeout int64 //最大超时时间 毫秒级
+	// requestTimeout int64 //最大超时时间 毫秒级
 	reference      int32 //引用计数器
 }
 
@@ -75,8 +75,8 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 		return
 	}
 
-	uid := uuid.New()
-	dl.ping, _ = strconv.ParseUint(uid.String(), 10, 64)
+
+	dl.ping = fastrand.Uint64n(math.MaxUint64)
 
 	msg := &pubs.PingMsg{VerificationKey: dl.ping}
 	msgb, err := protomessge.Marshal(msg, dl.secret)
@@ -152,7 +152,7 @@ func (dl *ClientConn) Closed(ctx network.Context) {
 
 	r := dl.gateway.FindRouter(request)
 	if r != nil {
-		if _, err := r.Proxy.RequestMessage(request, dl.requestTimeout); err != nil {
+		if _, err := r.Proxy.RequestMessage(request, r.GetMessageTimeout(request)); err != nil {
 			vlog.Errorf("request client %s closed to %s", request.ClientID.ToString(), "")
 		}
 	}
@@ -262,6 +262,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 		return
 	}
 
+
 	bodyAny, err := anypb.New(message)
 	if err != nil {
 		vlog.Warnf("%s message encoding failed error %s",
@@ -276,7 +277,7 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 	}
 
 	// 采用平均时间
-	result, err := r.Proxy.RequestMessage(forwardBundle, int64(dl.requestTimeout))
+	result, err := r.Proxy.RequestMessage(forwardBundle, r.GetMessageTimeout(message))
 	if err != nil {
 
 		b, msge := protomessge.Marshal(&pubs.Error{
