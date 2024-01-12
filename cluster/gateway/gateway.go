@@ -24,7 +24,8 @@ func New(options ...GatewayConfigOption) *Gateway {
 	)
 
 	if config.ClientPool == nil {
-		config.ClientPool = NewDefaultGatewayClientPool(g, config.RequestDefautTimeout)
+		// config.ClientPool = NewDefaultGatewayClientPool(g, config.RequestDefautTimeout)
+		config.ClientPool = NewDefaultGatewayClientPool(g)
 	}
 
 	g.servant = serve.New(

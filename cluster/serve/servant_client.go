@@ -3,6 +3,7 @@ package serve
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -155,17 +157,23 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 
 // Ping 客户端主动请求, 这里不处理
 func (c *ServantClientConn) Ping(ctx network.Context) {
-
-}
-
-func (c *ServantClientConn) onRpcPing(ctx network.Context, message *messages.RpcPingMessage) {
-	b, err := messages.MarshalPingProtobuf(message.VerifyKey + 1)
+	b, err := messages.MarshalPingProtobuf(fastrand.Uint64n(math.MaxUint64))
 	if err != nil {
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	ctx.PostMessage(ctx.Self(), b)
+}
+
+func (c *ServantClientConn) onRpcPing(ctx network.Context, message *messages.RpcPingMessage) {
+	// b, err := messages.MarshalPingProtobuf(message.VerifyKey + 1)
+	// if err != nil {
+	// 	ctx.Close(ctx.Self())
+	// 	return
+	// }
+
+	// ctx.PostMessage(ctx.Self(), b)
 }
 
 func (c *ServantClientConn) incarnateActor() {

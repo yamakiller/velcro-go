@@ -72,11 +72,11 @@ func WithKleepaliveServant(timeout int32) GatewayConfigOption {
 }
 
 // WithRequestTimeout 请求默认超时
-func WithRequestTimeout(timeout int64) GatewayConfigOption {
-	return func(opt *GatewayConfig) {
-		opt.RequestDefautTimeout = timeout
-	}
-}
+// func WithRequestTimeout(timeout int64) GatewayConfigOption {
+// 	return func(opt *GatewayConfig) {
+// 		opt.RequestDefautTimeout = timeout
+// 	}
+// }
 
 // WithOnlineOfNumber 设置最大在线人数
 func WithOnlineOfNumber(number int) GatewayConfigOption {
@@ -102,7 +102,7 @@ type GatewayConfig struct {
 	NewEncryption        func() *Encryption
 	Kleepalive           int32
 	KleepaliveServant    int32
-	RequestDefautTimeout int64
+	// RequestDefautTimeout int64
 	OnlineOfNumber       int
 	Router               *router.RouterConfig
 }
@@ -113,7 +113,7 @@ func defaultGatewayConfig() *GatewayConfig {
 		NewEncryption:        defaultEncryption,
 		Kleepalive:           2000,
 		KleepaliveServant:    2000,
-		RequestDefautTimeout: 1000,
+		// RequestDefautTimeout: 1000,
 		OnlineOfNumber:       2000,
 		Router: &router.RouterConfig{
 			URI:       files.NewLocalPathFull("routes.yaml"),

@@ -3,19 +3,20 @@ routes:
     max-idle-conn: 1024
     max-idle-timeout-minute: 30
     max-idle-conn-timeout-second: 2
-    kleepalive-millisec: 4000
+    kleepalive-millisec: 2000
     endpoints:
       - laddr: 0.0.0.0:8801
         vaddr: 0.0.0.0:8801
     commands:
       - prvs.RequestGatewayCloseClient
+      - prvs.RequestGatewayAlterRule
     rules:
       - 1
   - virtual-address: battle.service
     max-idle-conn: 1024
     max-idle-timeout-minute: 30
     max-idle-conn-timeout-second: 2
-    kleepalive-millisec: 4000
+    kleepalive-millisec: 2000
     endpoints:
       - laddr: 0.0.0.0:8870
         vaddr: 0.0.0.0:8870

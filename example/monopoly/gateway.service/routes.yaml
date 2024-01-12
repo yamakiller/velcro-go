@@ -3,20 +3,20 @@ routes:
     max-idle-conn: 1024
     max-idle-timeout-minute: 30
     max-idle-conn-timeout-second: 2
-    kleepalive-millisec: 4000
+    kleepalive-millisec: 2000
     endpoints:
       - laddr: 0.0.0.0:8860
         vaddr: 0.0.0.0:8860
     commands:
       - pubs.SignIn
-      - prvs.ClientClosed
+      - prvs.ClientClosed,5000
     rules:
       - 1
   - virtual-address: battle.serivce
     max-idle-conn: 1024
     max-idle-timeout-minute: 30
     max-idle-conn-timeout-second: 2
-    kleepalive-millisec: 4000
+    kleepalive-millisec: 2000
     endpoints:
       - laddr: 0.0.0.0:8870
         vaddr: 0.0.0.0:8870
@@ -25,12 +25,12 @@ routes:
       - pubs.GetBattleSpaceListResp
       - pubs.CreateBattleSpace
       - pubs.CreateBattleSpaceResp
-      - pubs.EnterBattleSpace
+      - pubs.EnterBattleSpace,5000
       - pubs.EnterBattleSpaceResp
-      - pubs.ReadyBattleSpace
+      - pubs.ReadyBattleSpace,5000
       - pubs.ReadyBattleSpaceResp
-      - pubs.RequsetStartBattleSpace
+      - pubs.RequsetStartBattleSpace,5000
       - pubs.RequsetStartBattleSpaceResp
-      - prvs.RequestExitBattleSpace
+      - prvs.RequestExitBattleSpace,5000
     rules:
       - 1
