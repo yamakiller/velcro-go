@@ -61,9 +61,9 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return err
 	}
-	c.sendcond.L.Unlock()
 
 	c.sendcond.Signal()
+	c.sendcond.L.Unlock()
 
 	return nil
 }
@@ -82,10 +82,10 @@ func (c *tcpClientHandler) Close() {
 	c.conn.Close()
 	close(c.stopper)
 
-	c.sendcond.L.Unlock()
 	c.sendcond.Signal()
+	c.sendcond.L.Unlock()
 
-	c.guarddone.Wait()
+	//c.guarddone.Wait()
 }
 
 func (c *tcpClientHandler) isStopped() bool {
@@ -111,7 +111,7 @@ func (c *tcpClientHandler) sender() {
 			c.sendcond.Wait()
 		}
 		c.sendcond.L.Unlock()
-		i := 0
+
 		for {
 			if c.isStopped() {
 				goto tcp_sender_exit_label
@@ -127,40 +127,44 @@ func (c *tcpClientHandler) sender() {
 					goto tcp_sender_exit_label
 				}
 			}
+			if readbytes == nil {
+				c.sendcond.L.Unlock()
+				break
+			}
 			c.sendcond.L.Unlock()
 
-			if readbytes != nil {
+			i := 0
+			offset := 0
+			nwrite := 0
+			for {
+
 				if i > 1 {
 					runtime.Gosched()
 					i = 0
 				}
 
-				offset := 0
-				nwrite := 0
-				for {
-
-					if c.isStopped() {
-						goto tcp_sender_exit_label
-					}
-
-					c.conn.SetWriteDeadline(time.Now().Add(time.Millisecond * 50))
-					if nwrite, err = c.conn.Write(readbytes[offset:]); err != nil {
-						if e, ok := err.(net.Error); ok && e.Timeout() {
-							goto tcp_sender_continue_label
-						}
-
-						goto tcp_sender_exit_label
-					}
-				tcp_sender_continue_label:
-					offset += nwrite
-					if offset == len(readbytes) {
-						break
-					}
+				if c.isStopped() {
+					goto tcp_sender_exit_label
 				}
 
-				readbytes = nil
+				c.conn.SetWriteDeadline(time.Now().Add(time.Millisecond * 50))
+				if nwrite, err = c.conn.Write(readbytes[offset:]); err != nil {
+					if e, ok := err.(net.Error); ok && e.Timeout() {
+						goto tcp_sender_continue_label
+					}
+
+					goto tcp_sender_exit_label
+				}
+			tcp_sender_continue_label:
+				offset += nwrite
+				if offset == len(readbytes) {
+					break
+				}
 				i++
 			}
+
+			readbytes = nil
+
 		}
 	}
 tcp_sender_exit_label:
