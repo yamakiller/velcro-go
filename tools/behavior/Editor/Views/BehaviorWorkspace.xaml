@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Views"
              xmlns:localData ="clr-namespace:Editor.Datas"
-             xmlns:localCtrl="clr-namespace:Editor.Contrels" xmlns:viewmodels="clr-namespace:Editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:BehaviorEditViewModel}"
+             xmlns:localCtrl="clr-namespace:Editor.Contrels" 
+             xmlns:viewmodels="clr-namespace:Editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:BehaviorEditViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>

@@ -1,0 +1,98 @@
+﻿<Window x:Class="Editor.Dialogs.EditNodeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Editor.Dialogs"
+        xmlns:localDataModel ="clr-namespace:Editor.Datas.Models"
+        xmlns:viewmodels="clr-namespace:Editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:EditNodeDialogViewModel}"
+        mc:Ignorable="d"
+        ResizeMode="NoResize"
+        Title="节点编辑器" 
+        Height="604" 
+        Width="555">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Datas/Xmls/BehaviorNodeClassify.Tables.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="节点类型" Grid.Row="0" Margin="8"></TextBlock>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <TreeView Width="200" Height="250" Margin="8 0 0 0" ItemsSource="{Binding Types}">
+                <TreeView.ItemTemplate >
+                    <HierarchicalDataTemplate DataType="{x:Type localDataModel:BehaviorNodeTypeModel}">
+                        <StackPanel>
+                            <Label Content="{Binding name}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+            <GroupBox Width="250" Header="节点信息">
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="类型:"></Label>
+                        <ComboBox  Width="80" Height="20" Margin="26 0 0 0"
+                              DisplayMemberPath="@Name"
+                              SelectedValuePath="@Value"
+                              ItemsSource="{Binding Source={StaticResource BehaviorNodeClassify}, XPath=/Classify/ClassifyNode}"/>
+
+                        <CheckBox Content="生成代码?" Margin="4 5"></CheckBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="名称:"></Label>
+                        <TextBox Margin="26 0 0 0" Width="166" Height="20"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="命名空间:"></Label>
+                        <TextBox Margin="2 0 0 0" Width="166" Height="20"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="生成位置:"></Label>
+                        <TextBox Margin="2 0 0 0" Text="{Binding CodeFolder}" Width="130" Height="20" IsReadOnly="True"></TextBox>
+                        <Button Margin="2 0 0 0" Width="33" Height="20" Click="FolderSelected_Click">...</Button>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="参数:"></Label>
+                        <ComboBox Margin="26 0 0 0"  Width="80" Height="20"/>
+                        <Button Margin="2 0 0 0" Content="添加" Height="20" Width="40"/>
+                        <Button Margin="2 0 0 0" Content="删除" Height="20" Width="40"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="简述:"></Label>
+                        <TextBox Margin="26 0 0 0" Width="166" Height="20"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="详细描述:(支持简单制表符)"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <RichTextBox Width="165" Margin="0 0 10 0" Height="50"></RichTextBox>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+            <StackPanel Orientation="Vertical">
+                <Button Margin="6 0 0 0" Content="新增" Width="70"></Button>
+                <Button Margin="6 16 0 0" Content="删除" Width="70"></Button>
+            </StackPanel>
+        </StackPanel>
+        <Grid Grid.Row="2">
+            <StackPanel Margin="8 2" Orientation="Vertical" HorizontalAlignment="Left">
+                <Label Content="节点代码编辑"/>
+                <RichTextBox Width="515" Margin="0 0 10 0" Height="220"></RichTextBox>
+            </StackPanel>
+        </Grid>
+        <StackPanel Margin="0 8 12 0" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="打开代码生成位置" Width="102" Height="20" Margin="0 0 290 0"></Button>
+            <Button Content="应用" Width="60" Height="20"></Button>
+            <Button Content="取消" Margin="8 0 0 0" Width="60" Height="20"></Button>
+        </StackPanel>
+    </Grid>
+</Window>

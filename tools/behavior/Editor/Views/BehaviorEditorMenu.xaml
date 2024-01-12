@@ -58,6 +58,7 @@
                     <MenuItem Header="全部关闭" IsEnabled="{Binding IsWorkspace}"></MenuItem>
                     <Separator/>
                     <MenuItem Header="设置"></MenuItem>
+                    <MenuItem Header="节点编辑" Command="{Binding OpenNodeEditorViewCmd}"></MenuItem>
                     <Separator/>
                     <MenuItem Header="最近打开的文件"></MenuItem>
                     <MenuItem Header="最近打开的工作区"></MenuItem>
@@ -86,7 +87,6 @@
                     <MenuItem Header="查找"></MenuItem>
                     <MenuItem Header="查找全部"></MenuItem>
                     <Separator/>
-                    <MenuItem Header="类型信息"></MenuItem>
                     <MenuItem Header="属性"></MenuItem>
                     <MenuItem Header="断点"></MenuItem>
                     <MenuItem Header="时间轴"></MenuItem>

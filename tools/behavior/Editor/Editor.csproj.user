@@ -10,6 +10,9 @@
     <Compile Update="Dialogs\CreateWorkspaceDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\EditNodeDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\ScanDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -33,7 +36,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Datas\Xmls\BehaviorNodeClassify.Tables.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Dialogs\CreateWorkspaceDialog.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\EditNodeDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Dialogs\ScanDialog.xaml">
