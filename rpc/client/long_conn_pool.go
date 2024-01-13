@@ -147,7 +147,6 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 	default:
 		node := dc.idles.Pop()
 		dc.busys.Push(node)
-
 		conn := node.(*LongConn)
 		dc.mutex.Unlock()
 		return conn, nil
