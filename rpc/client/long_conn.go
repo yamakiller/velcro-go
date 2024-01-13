@@ -33,8 +33,24 @@ const (
 	LCS_Disconnecting
 )
 
-type LongConn struct {
+func NewLongConn(ascription LongConnPool, usedLastTime int64) *LongConn {
+	conn := &LongConn{
+		ascription:   ascription,
+		mailbox:      make(chan interface{}, 1),
+		reqsbox:      cmap.New(),
+		state:        LCS_Disconnected,
+		usedLastTime: usedLastTime,
+	}
+
+	return conn
+}
+
+type LongConnLinkedNode struct {
 	intrusive.LinkedNode
+}
+
+type LongConn struct {
+	LongConnLinkedNode
 	ascription   LongConnPool
 	conn         net.Conn
 	done         sync.WaitGroup
@@ -80,7 +96,7 @@ func (c *LongConn) IsConnected() bool {
 	return false
 }
 
-func (c *LongConn) RequestMessage(message proto.Message, timeout int64) (interface{}, error) {
+func (c *LongConn) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
 	if c.currentGoroutineId == utils.GetCurrentGoroutineID() {
 		panic("RequestMessage cannot block calls in its own thread")
 	}
@@ -156,7 +172,7 @@ func (c *LongConn) RequestMessage(message proto.Message, timeout int64) (interfa
 		}
 	})
 
-	var result interface{}
+	var result proto.Message
 	var resultErr error
 	if timeout > 0 {
 		future.cond.L.Lock()

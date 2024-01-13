@@ -21,6 +21,6 @@ routes:
       - laddr: 0.0.0.0:8870
         vaddr: 0.0.0.0:8870
     commands:
-      - prvs.RequestExitBattleSpace
+      - prvs.RequestExitBattleSpace,2000
     rules:
       - 1

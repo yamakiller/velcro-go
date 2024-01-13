@@ -7,7 +7,6 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/balancer"
 	"github.com/yamakiller/velcro-go/cluster/repeat"
 	"github.com/yamakiller/velcro-go/rpc/client"
-	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
 	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
@@ -51,7 +50,7 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 // RpcProxy rpc 代理
 type RpcProxy struct {
 	// 连接等待超时
-	poolConfig *clientpool.IdleConfig
+	poolConfig *client.LongConnPoolConfig
 	// 连接器
 	hostMap     map[string]*RpcProxyConn
 	hostAddrMap map[string]string
@@ -67,13 +66,10 @@ type RpcProxy struct {
 func (rpx *RpcProxy) Open() {
 	for host, conn := range rpx.hostMap {
 		conn.proxy = rpx
-		conn.ConnectPool = clientpool.NewConnectPool(rpx.hostAddrMap[host], clientpool.IdleConfig{
-			MaxIdleGlobal:      rpx.poolConfig.MaxIdleGlobal,
-			MaxIdleTimeout:     rpx.poolConfig.MaxIdleTimeout,
+		conn.LongConnPool = client.NewDefaultConnPool(rpx.hostAddrMap[host], client.LongConnPoolConfig{
+			MaxConn: rpx.poolConfig.MaxConn,
+			MaxIdleConn: rpx.poolConfig.MaxIdleConn,
 			MaxIdleConnTimeout: rpx.poolConfig.MaxIdleConnTimeout,
-			Kleepalive:         rpx.poolConfig.Kleepalive,
-			Connected:          rpx.poolConfig.Connected,
-			Closed:             rpx.poolConfig.Closed,
 		})
 
 		vlog.Infof("%s connecting", rpx.hostAddrMap[host])
@@ -87,29 +83,25 @@ func (rpx *RpcProxy) Open() {
 // RequestMessage 集群请求消息
 func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
 	var (
-		host   string
-		err    error
-		future client.IFuture
+		host string
+		result    proto.Message = nil
+		resultErr error = nil
 	)
 
 	startMills := time.Now().UnixMilli()
 	endMills := int64(0)
-	host, err = rpx.balancer.Balance("")
-	if err != nil {
+	host, resultErr = rpx.balancer.Balance("")
+	if resultErr != nil {
 		goto try_again_label
 	}
 
 	rpx.balancer.Inc(host)
 	defer rpx.balancer.Done(host)
 
-	future, err = rpx.hostMap[host].RequestMessage(message, timeout)
-	if err != nil {
-		goto try_again_label
-	}
+	result, resultErr = rpx.hostMap[host].RequestMessage(message, timeout)
 
-	future.Wait()
-	if future.Error() != nil {
-		if future.Error() == errs.ErrorRequestTimeout {
+	if resultErr != nil {
+		if resultErr == errs.ErrorRequestTimeout {
 			return nil, errs.ErrorRequestTimeout
 		}
 
@@ -120,10 +112,9 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 		goto try_again_label
 	}
 
-	return future.Result(), nil
+	return result, nil
 try_again_label:
-	var result proto.Message = nil
-	var resultErr error = nil
+
 	repeat.Repeat(repeat.FnWithCounter(func(n int) error {
 		if n >= 2 {
 			return nil
@@ -135,38 +126,30 @@ try_again_label:
 			return nil
 		}
 
-		host, err = rpx.balancer.Balance("")
-		if err != nil {
-			resultErr = err
+		host, resultErr = rpx.balancer.Balance("")
+		if resultErr != nil {
 			return resultErr
 		}
 
 		rpx.balancer.Inc(host)
 		defer rpx.balancer.Done(host)
 
-		future, err = rpx.hostMap[host].RequestMessage(message, timeout)
-		if err != nil {
-			resultErr = err
-			return resultErr
-		}
+		result, resultErr = rpx.hostMap[host].RequestMessage(message, timeout)
 
-		future.Wait()
-		if future.Error() != nil {
-			if future.Error() == errs.ErrorRequestTimeout {
+		if resultErr != nil {
+			if resultErr == errs.ErrorRequestTimeout {
 				resultErr = errs.ErrorRequestTimeout
 				return nil
 			}
 
-			resultErr = err
 			return resultErr
 		}
-		result = future.Result()
 		return nil
 	}),
 		repeat.StopOnSuccess(),
 		repeat.WithDelay(repeat.ExponentialBackoff(200*time.Millisecond).Set()))
 
-	return result, resultErr
+	return result.(proto.Message), resultErr
 }
 
 // Shutdown 关闭代理
@@ -174,7 +157,7 @@ func (rpx *RpcProxy) Shutdown() {
 	//释放资源
 	close(rpx.stopper)
 	for _, conn := range rpx.hostMap {
-		conn.Shudown()
+		conn.Close()
 	}
 	rpx.hostMap = make(map[string]*RpcProxyConn)
 	rpx.alive = make(map[string]bool)

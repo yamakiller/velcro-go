@@ -8,13 +8,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-
-type IFuture interface{
-	Error() error 
-	Result() proto.Message
-	Wait()
-}
-
 // 请求器
 type Future struct {
 	sequenceID int32
