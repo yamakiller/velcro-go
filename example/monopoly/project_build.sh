@@ -23,3 +23,8 @@ cd $GO_COMPILER_PATH/login.service
 go build  -o $GO_COMPILER_PATH/bin/login.service/
 cp $GO_COMPILER_PATH/login.service/config.yaml $GO_COMPILER_PATH/bin/login.service/config.yaml
 cp $GO_COMPILER_PATH/login.service/routes.yaml $GO_COMPILER_PATH/bin/login.service/routes.yaml
+
+cp $GO_COMPILER_PATH/project_run/project_run_ubuntu_install.sh $GO_COMPILER_PATH/bin/project_run_ubuntu_install.sh
+cp $GO_COMPILER_PATH/project_run/project_run_ubuntu_remove.sh $GO_COMPILER_PATH/bin/project_run_ubuntu_remove.sh
+cp $GO_COMPILER_PATH/project_run/project_run_ubuntu_start.sh $GO_COMPILER_PATH/bin/project_run_ubuntu_start.sh
+cp $GO_COMPILER_PATH/project_run/project_run_ubuntu_stop.sh $GO_COMPILER_PATH/bin/project_run_ubuntu_stop.sh

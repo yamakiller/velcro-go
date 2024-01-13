@@ -19,4 +19,5 @@ start cmd /k "cd /d %GO_COMPILER_PATH%\login.service &&go build  -o %GO_COMPILER
 echo F|xcopy /f /s /q /y %GO_COMPILER_PATH%\login.service\config.yaml %GO_COMPILER_PATH%\bin\login.service\config.yaml
 echo F|xcopy /f /s /q /y %GO_COMPILER_PATH%\login.service\routes.yaml %GO_COMPILER_PATH%\bin\login.service\routes.yaml
 
+echo F|xcopy /f /s /q /y %GO_COMPILER_PATH%\project_run\project_run_ubuntu_start.bat %GO_COMPILER_PATH%\bin\project_run_ubuntu_start.bat
 pause 

@@ -34,18 +34,13 @@ func (c *tcpSyncClientHandler) start() {
 
 // PostMessage 直接写数据
 func (c *tcpSyncClientHandler) PostMessage(b []byte) error {
-	c.mutex.Lock()
 	if c.isStopped() {
-		c.mutex.Unlock()
 		return errors.New("client: closed")
 	}
 
 	if _, err := c.conn.Write(b); err != nil {
-		c.mutex.Unlock()
 		return err
 	}
-
-	c.mutex.Unlock()
 
 	return nil
 }

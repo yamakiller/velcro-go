@@ -1,12 +1,10 @@
 package proxy
 
-import (
-	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
-)
+import "github.com/yamakiller/velcro-go/rpc/client"
 
 type RpcProxyConn struct {
 	proxy *RpcProxy
-	*clientpool.ConnectPool
+	client.LongConnPool
 }
 
 /*type RpcProxyConn struct {

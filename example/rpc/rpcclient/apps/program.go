@@ -11,9 +11,7 @@ import (
 
 	// "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/configs"
-	"github.com/yamakiller/velcro-go/example/rpc/rpcclient/internet"
 	"github.com/yamakiller/velcro-go/rpc/client"
-	"github.com/yamakiller/velcro-go/rpc/client/clientpool"
 	// "github.com/yamakiller/velcro-go/rpc/messages"
 	// "github.com/yamakiller/velcro-go/vlog"
 )
@@ -21,7 +19,7 @@ import (
 var appName string = "test-rpc-client"
 
 type Program struct {
-	_c *clientpool.ConnectPool
+	_c client.LongConnPool
 }
 
 func (p *Program) Start(s service.Service) error {
@@ -36,10 +34,8 @@ func (p *Program) Start(s service.Service) error {
 	if err := envs.Instance().Load("config", cfgFilePath, &config); err != nil {
 		return err
 	}
-	p._c = clientpool.NewConnectPool(config.TargetAddr, clientpool.IdleConfig{
-		Closed: internet.Closed,
-	})
-	cli := client.NewConn()
+	p._c = client.NewDefaultConnPool(config.TargetAddr, client.LongConnPoolConfig{})
+	cli := client.NewLongConn(p._c,10*time.Second.Milliseconds())
 	if err := cli.Dial(config.TargetAddr,2*time.Second);err != nil{
 		fmt.Fprintln(os.Stderr,err.Error())
 		return err
@@ -71,7 +67,7 @@ func (p *Program) Start(s service.Service) error {
 
 func (p *Program) Stop(s service.Service) error {
 	if p._c != nil {
-		p._c.Shudown()
+		p._c.Close()
 		p._c = nil
 	}
 	return nil

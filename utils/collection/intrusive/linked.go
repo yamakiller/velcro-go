@@ -120,7 +120,24 @@ func (linked *Linked) Foreach(f func(INode)bool){
 
 	tmp := linked.head
 	for tmp != nil{
+		node := tmp.Next()
 		f(tmp)
-		tmp = tmp.Next()
+		tmp = node
 	}
+}
+
+func (linked *Linked) Len() int {
+	linked.mutex.Lock()
+	defer linked.mutex.Unlock()
+	p := linked.head
+	len := 0
+	for p != nil{
+		len++
+		if p == linked.tail{
+			return len
+		}
+		p = p.Next()
+	}
+
+	return len
 }

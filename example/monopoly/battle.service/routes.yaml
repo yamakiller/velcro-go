@@ -9,5 +9,6 @@ routes:
         vaddr: Gateway@0.0.0.0:8800
     commands:
       - prvs.RequestGatewayCloseClient
+      - prvs.RequestExitBattleSpace
     rules:
       - 1

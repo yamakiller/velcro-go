@@ -9,6 +9,7 @@ routes:
         vaddr: 0.0.0.0:8801
     commands:
       - prvs.RequestGatewayCloseClient
+      - prvs.RequestGatewayAlterRule
     rules:
       - 1
   - virtual-address: battle.service
