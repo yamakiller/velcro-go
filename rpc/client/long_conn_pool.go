@@ -35,7 +35,9 @@ func NewDefaultConnPool(address string, idlConfig LongConnPoolConfig) *DefaultCo
 
 	res := &DefaultConnPool{
 		openingConns: 0,
-		pls:          intrusive.NewLinked(&syncx.NoMutex{}),
+		idles:        intrusive.NewLinked(&syncx.NoMutex{}),
+		busys:        intrusive.NewLinked(&syncx.NoMutex{}),
+		stopper:      make(chan struct{}),
 	}
 	res.address = address
 	res.cfg = CheckLongConnPoolConfig(idlConfig)
@@ -58,10 +60,13 @@ type LongConnPool interface {
 }
 
 type DefaultConnPool struct {
-	pls          *intrusive.Linked
+	idles *intrusive.Linked
+	busys *intrusive.Linked
+
 	openingConns int32
 	address      string
 	cfg          *LongConnPoolConfig
+	stopper      chan struct{}
 	mutex        sync.Mutex
 }
 
@@ -75,7 +80,7 @@ func (dc *DefaultConnPool) Open() {
 		atomic.AddInt32(&dc.openingConns, 1)
 
 		dc.mutex.Lock()
-		dc.pls.Push(conn)
+		dc.idles.Push(conn)
 		dc.mutex.Unlock()
 	}
 }
@@ -104,18 +109,22 @@ func (dc *DefaultConnPool) RequestMessage(msg protoreflect.ProtoMessage, timeout
 }
 
 func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, error) {
-	if dc.pls == nil {
+	if dc.idles == nil {
 		return nil, errs.ErrorRpcConnectPoolNoInitialize
 	}
 
 	dc.mutex.Lock()
+	if dc.isStopped() {
+		dc.mutex.Unlock()
+		return nil, errs.ErrorRpcConnPoolClosed
+	}
 
-	if dc.pls.Len() == 0 && dc.openingConns >= dc.cfg.MaxConn {
+	if dc.idles.Len() == 0 && dc.openingConns >= dc.cfg.MaxConn {
 		dc.mutex.Unlock()
 		return nil, errs.ErrorRpcConnectMaxmize
 	}
 
-	if dc.pls.Len() == 0 {
+	if dc.idles.Len() == 0 {
 		atomic.AddInt32(&dc.openingConns, 1)
 		dc.mutex.Unlock()
 
@@ -125,6 +134,9 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 			return nil, err
 		}
 
+		dc.mutex.Lock()
+		dc.busys.Push(conn)
+		dc.mutex.Unlock()
 		return conn, nil
 	}
 
@@ -133,7 +145,9 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 		dc.mutex.Unlock()
 		return nil, errs.ErrorRequestTimeout
 	default:
-		node := dc.pls.Pop()
+		node := dc.idles.Pop()
+		dc.busys.Push(node)
+
 		conn := node.(*LongConn)
 		dc.mutex.Unlock()
 		return conn, nil
@@ -144,7 +158,7 @@ func (dc *DefaultConnPool) Put(conn *LongConn) error {
 	if conn == nil {
 		return errs.ErrorInvalidRpcConnect
 	}
-	if dc.pls == nil {
+	if dc.idles == nil {
 		return errs.ErrorRpcConnectPoolNoInitialize
 	}
 
@@ -154,32 +168,43 @@ func (dc *DefaultConnPool) Put(conn *LongConn) error {
 		return err
 	}
 	dc.mutex.Lock()
-	dc.pls.Push(conn)
+	dc.busys.Remove(conn)
+	dc.idles.Push(conn)
 	dc.mutex.Unlock()
 	return nil
 }
 
 func (dc *DefaultConnPool) Discard(conn *LongConn) error {
-	if dc.pls.Remove(conn) {
+	dc.mutex.Lock()
+	if dc.idles.Remove(conn) {
+		atomic.AddInt32(&dc.openingConns, -1)
+	} else if dc.busys.Remove(conn) {
 		atomic.AddInt32(&dc.openingConns, -1)
 	}
+	dc.mutex.Unlock()
 	return nil
 }
 
 func (dc *DefaultConnPool) Close() error {
 	dc.mutex.Lock()
-	dc.pls.Foreach(func(node intrusive.INode) bool {
+	close(dc.stopper)
+	dc.idles.Foreach(func(node intrusive.INode) bool {
 		node.(*LongConn).Close()
 		return true
 	})
-	dc.pls = nil
+	dc.busys.Foreach(func(node intrusive.INode) bool {
+		node.(*LongConn).Close()
+		return true
+	})
+	dc.idles = nil
+	dc.busys = nil
 	dc.mutex.Unlock()
 	return nil
 }
 
 func (dc *DefaultConnPool) Tick() {
 	dc.mutex.Lock()
-	dc.pls.Foreach(func(node intrusive.INode) bool {
+	dc.idles.Foreach(func(node intrusive.INode) bool {
 		if node == nil {
 			return false
 		}
@@ -200,4 +225,13 @@ func (dc *DefaultConnPool) Tick() {
 		return true
 	})
 	dc.mutex.Unlock()
+}
+
+func (dc *DefaultConnPool) isStopped() bool {
+	select {
+	case <-dc.stopper:
+		return true
+	default:
+		return false
+	}
 }
