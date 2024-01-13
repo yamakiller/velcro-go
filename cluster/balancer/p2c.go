@@ -2,9 +2,9 @@ package balancer
 
 import (
 	"hash/crc32"
-	"math/rand"
 	"sync"
-	"time"
+
+	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
 )
 
 const Salt = "%#!"
@@ -22,7 +22,6 @@ type host struct {
 type P2C struct {
 	sync.RWMutex
 	hosts   []*host
-	rnd     *rand.Rand
 	loadMap map[string]*host
 }
 
@@ -31,7 +30,6 @@ func NewP2C(hosts []string) Balancer {
 	p := &P2C{
 		hosts:   []*host{},
 		loadMap: make(map[string]*host),
-		rnd:     rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 
 	for _, h := range hosts {
@@ -96,8 +94,8 @@ func (p *P2C) hash(key string) (string, string) {
 		n2 = p.hosts[crc32.ChecksumIEEE([]byte(saltKey))%uint32(len(p.hosts))].name
 		return n1, n2
 	}
-	n1 = p.hosts[p.rnd.Intn(len(p.hosts))].name
-	n2 = p.hosts[p.rnd.Intn(len(p.hosts))].name
+	n1 = p.hosts[fastrand.Intn(len(p.hosts))].name
+	n2 = p.hosts[fastrand.Intn(len(p.hosts))].name
 	return n1, n2
 }
 
