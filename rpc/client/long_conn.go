@@ -33,12 +33,21 @@ const (
 	LCS_Disconnecting
 )
 
+type LongConnDirect int
+
+const (
+	LCS_Unknown = iota
+	LCS_Idle
+	LCS_Busy
+)
+
 func NewLongConn(ascription LongConnPool, usedLastTime int64) *LongConn {
 	conn := &LongConn{
 		ascription:   ascription,
 		mailbox:      make(chan interface{}, 1),
 		reqsbox:      cmap.New(),
 		state:        LCS_Disconnected,
+		direct:       LCS_Unknown,
 		usedLastTime: usedLastTime,
 	}
 
@@ -60,6 +69,7 @@ type LongConn struct {
 
 	currentGoroutineId int
 	state              int32
+	direct             int32
 	usedLastTime       int64 // 最后使用时间,可以利用此计算连接闲置时间
 }
 

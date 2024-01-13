@@ -81,18 +81,11 @@ func (linked *Linked) Pop() INode {
 }
 
 // Remove 删除这个节点
-func (linked *Linked) Remove(node INode) bool {
+func (linked *Linked) Remove(node INode) {
 	linked.mutex.Lock()
 	defer linked.mutex.Unlock()
 	if node == nil {
-		return false
-	}
-
-	// 不在存储结构内
-	if node != linked.tail &&
-		node.Prev() == nil &&
-		node.Next() == nil {
-		return false
+		return
 	}
 
 	if node.Prev() != nil {
@@ -115,7 +108,7 @@ func (linked *Linked) Remove(node INode) bool {
 	node.WithPrev(nil)
 	node.WithNext(nil)
 
-	return true
+	return
 }
 
 func (linked *Linked) Foreach(f func(INode) bool) {
