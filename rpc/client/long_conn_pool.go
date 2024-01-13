@@ -44,7 +44,7 @@ func NewDefaultConnPool(address string, idlConfig LongConnPoolConfig) *DefaultCo
 }
 
 type LongConnPool interface {
-	RequestMessage(protoreflect.ProtoMessage,  int64) (proto.Message, error)
+	RequestMessage(protoreflect.ProtoMessage, int64) (proto.Message, error)
 
 	Get(ctx context.Context, address string) (*LongConn, error)
 
@@ -68,15 +68,21 @@ func (dc *DefaultConnPool) RequestMessage(msg protoreflect.ProtoMessage, timeout
 		conn *LongConn
 		res  proto.Message
 		err  error
+		ctx  context.Context
 	)
-	background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
-	conn, err = dc.Get(background, dc.address)
+
+	if timeout > 0 {
+		ctx, _ = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
+	} else {
+		ctx = context.Background()
+	}
+	conn, err = dc.Get(ctx, dc.address)
 	if err != nil {
 		return nil, err
 	}
+	defer dc.Put(conn)
 	res, err = conn.RequestMessage(msg, timeout)
-	dc.Put(conn)
-	cancel()
+
 	return res, err
 }
 
@@ -84,14 +90,16 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 	if dc.pls == nil {
 		return nil, errs.ErrorRpcConnectPoolNoInitialize
 	}
+
 	dc.mutex.Lock()
 	if dc.pls.Len() == 0 && dc.openingConns >= dc.cfg.MaxConn {
 		dc.mutex.Unlock()
 		return nil, errs.ErrorRpcConnectMaxmize
 	}
+
 	for {
 		if dc.pls.Len() == 0 {
-			
+
 			conn := NewLongConn(dc, dc.cfg.MaxIdleConnTimeout.Milliseconds())
 			err := conn.Dial(address, 2000)
 			if err != nil {
@@ -106,6 +114,7 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 			dc.mutex.Unlock()
 			return conn, nil
 		}
+
 		select {
 		case <-ctx.Done():
 			dc.mutex.Unlock()
@@ -175,11 +184,11 @@ func (dc *DefaultConnPool) Tick() {
 		if node == nil {
 			return false
 		}
-		if time.Now().UnixMilli() - node.(*LongConn).usedLastTime < 0 {
+		if time.Now().UnixMilli()-node.(*LongConn).usedLastTime < 0 {
 			return true
 		}
-		
-		if atomic.LoadInt32(&dc.openingConns) >= dc.cfg.MaxIdleConn{
+
+		if atomic.LoadInt32(&dc.openingConns) >= dc.cfg.MaxIdleConn {
 			node.(*LongConn).Close()
 			dc.pls.Remove(node)
 			atomic.AddInt32(&dc.openingConns, -1)
