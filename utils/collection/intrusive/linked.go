@@ -70,23 +70,31 @@ func (linked *Linked) Pop() INode {
 	if popNode.Prev() != nil {
 		popNode.Prev().WithNext(nil)
 		linked.tail = popNode.Prev()
-	}else{
+	} else {
 		linked.head = nil
 		linked.tail = nil
 	}
-	
+
 	popNode.WithPrev(nil)
 	popNode.WithNext(nil)
 	return popNode
 }
 
 // Remove 删除这个节点
-func (linked *Linked) Remove(node INode) {
+func (linked *Linked) Remove(node INode) bool {
 	linked.mutex.Lock()
 	defer linked.mutex.Unlock()
-	if node == nil{
-		return
+	if node == nil {
+		return false
 	}
+
+	// 不在存储结构内
+	if node != linked.tail &&
+		node.Prev() == nil &&
+		node.Next() == nil {
+		return false
+	}
+
 	if node.Prev() != nil {
 		node.Prev().WithNext(node.Next())
 	}
@@ -106,10 +114,12 @@ func (linked *Linked) Remove(node INode) {
 
 	node.WithPrev(nil)
 	node.WithNext(nil)
+
+	return true
 }
 
-func (linked *Linked) Foreach(f func(INode)bool){
-	if f == nil{
+func (linked *Linked) Foreach(f func(INode) bool) {
+	if f == nil {
 		return
 	}
 	linked.mutex.Lock()
@@ -119,7 +129,7 @@ func (linked *Linked) Foreach(f func(INode)bool){
 	}
 
 	tmp := linked.head
-	for tmp != nil{
+	for tmp != nil {
 		node := tmp.Next()
 		f(tmp)
 		tmp = node
@@ -131,9 +141,9 @@ func (linked *Linked) Len() int {
 	defer linked.mutex.Unlock()
 	p := linked.head
 	len := 0
-	for p != nil{
+	for p != nil {
 		len++
-		if p == linked.tail{
+		if p == linked.tail {
 			return len
 		}
 		p = p.Next()

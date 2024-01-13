@@ -52,6 +52,8 @@ type LongConnPool interface {
 
 	Discard(*LongConn) error
 
+	Open()
+
 	Close() error
 }
 
@@ -61,6 +63,21 @@ type DefaultConnPool struct {
 	address      string
 	cfg          *LongConnPoolConfig
 	mutex        sync.Mutex
+}
+
+func (dc *DefaultConnPool) Open() {
+	for i := 0; i < int(dc.cfg.MaxIdleConn); i++ {
+		conn := NewLongConn(dc, dc.cfg.MaxIdleConnTimeout.Milliseconds())
+		err := conn.Dial(dc.address, 2000)
+		if err != nil {
+			continue
+		}
+		atomic.AddInt32(&dc.openingConns, 1)
+
+		dc.mutex.Lock()
+		dc.pls.Push(conn)
+		dc.mutex.Unlock()
+	}
 }
 
 func (dc *DefaultConnPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int64) (proto.Message, error) {
@@ -92,48 +109,35 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 	}
 
 	dc.mutex.Lock()
+
 	if dc.pls.Len() == 0 && dc.openingConns >= dc.cfg.MaxConn {
 		dc.mutex.Unlock()
 		return nil, errs.ErrorRpcConnectMaxmize
 	}
 
-	for {
-		if dc.pls.Len() == 0 {
+	if dc.pls.Len() == 0 {
+		atomic.AddInt32(&dc.openingConns, 1)
+		dc.mutex.Unlock()
 
-			conn := NewLongConn(dc, dc.cfg.MaxIdleConnTimeout.Milliseconds())
-			err := conn.Dial(address, 2000)
-			if err != nil {
-				continue
-			}
-
-			if !conn.IsConnected() {
-				continue
-			}
-
-			atomic.AddInt32(&dc.openingConns, 1)
-			dc.mutex.Unlock()
-			return conn, nil
+		conn := NewLongConn(dc, dc.cfg.MaxIdleConnTimeout.Milliseconds())
+		err := conn.Dial(address, 2000)
+		if err != nil {
+			return nil, err
 		}
 
-		select {
-		case <-ctx.Done():
-			dc.mutex.Unlock()
-			return nil, errs.ErrorRequestTimeout
-		default:
-			node := dc.pls.Pop()
-			conn := node.(*LongConn)
-
-			if !conn.IsConnected() {
-				if atomic.LoadInt32(&dc.openingConns) >= dc.cfg.MaxIdleConn {
-					atomic.AddInt32(&dc.openingConns, -1)
-				}
-				continue
-			}
-			dc.mutex.Unlock()
-			return conn, nil
-		}
+		return conn, nil
 	}
 
+	select {
+	case <-ctx.Done():
+		dc.mutex.Unlock()
+		return nil, errs.ErrorRequestTimeout
+	default:
+		node := dc.pls.Pop()
+		conn := node.(*LongConn)
+		dc.mutex.Unlock()
+		return conn, nil
+	}
 }
 
 func (dc *DefaultConnPool) Put(conn *LongConn) error {
@@ -144,15 +148,7 @@ func (dc *DefaultConnPool) Put(conn *LongConn) error {
 		return errs.ErrorRpcConnectPoolNoInitialize
 	}
 
-	if atomic.LoadInt32(&dc.openingConns) > dc.cfg.MaxConn || !conn.IsConnected() {
-		atomic.AddInt32(&dc.openingConns, -1)
-		err := dc.Discard(conn)
-		conn = nil
-		return err
-	}
-
 	if !conn.IsConnected() {
-		atomic.AddInt32(&dc.openingConns, -1)
 		err := dc.Discard(conn)
 		conn = nil
 		return err
@@ -164,6 +160,9 @@ func (dc *DefaultConnPool) Put(conn *LongConn) error {
 }
 
 func (dc *DefaultConnPool) Discard(conn *LongConn) error {
+	if dc.pls.Remove(conn) {
+		atomic.AddInt32(&dc.openingConns, -1)
+	}
 	return nil
 }
 
@@ -184,15 +183,20 @@ func (dc *DefaultConnPool) Tick() {
 		if node == nil {
 			return false
 		}
-		if time.Now().UnixMilli()-node.(*LongConn).usedLastTime < 0 {
+
+		if atomic.LoadInt32(&dc.openingConns) <= dc.cfg.MaxIdleConn {
 			return true
 		}
 
-		if atomic.LoadInt32(&dc.openingConns) >= dc.cfg.MaxIdleConn {
-			node.(*LongConn).Close()
-			dc.pls.Remove(node)
-			atomic.AddInt32(&dc.openingConns, -1)
+		if !node.(*LongConn).IsConnected() {
+			return true
 		}
+
+		usedLastTime := atomic.LoadInt64(&node.(*LongConn).usedLastTime)
+		if time.Now().UnixMilli()-usedLastTime > int64(dc.cfg.MaxIdleConnTimeout) {
+			node.(*LongConn).Close()
+		}
+
 		return true
 	})
 	dc.mutex.Unlock()

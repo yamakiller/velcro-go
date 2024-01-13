@@ -340,10 +340,8 @@ func (c *LongConn) onResponse(msg *messages.RpcResponseMessage) {
 	if tp != nil {
 		tp.Stop()
 	}
-
-	future.cond.L.Unlock()
-
 	future.cond.Signal()
+	future.cond.L.Unlock()
 }
 
 func (c *LongConn) EscalateFailure(reason interface{}, message interface{}) {
