@@ -1,11 +1,6 @@
 package client
 
-import (
-	"net"
-	"sync"
-)
-
-var connWrapperPool sync.Pool
+/*var connWrapperPool sync.Pool
 
 func init() {
 	connWrapperPool.New = newConnWrapper
@@ -32,3 +27,4 @@ func (cm *ConnWrapper) zero() {
 	cm.connPool = nil
 	cm.conn = nil
 }
+*/

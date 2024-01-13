@@ -1,12 +1,6 @@
 package client
 
-import (
-	"context"
-	"net"
-	"time"
-)
-
-type ConnOption struct {
+/*type ConnOption struct {
 	Dialer         Dialer
 	ConnectTimeout time.Duration
 }
@@ -48,4 +42,4 @@ type RawConn interface {
 // IsActive is used to check if the connection is active.
 type IsActive interface {
 	IsActive() bool
-}
+}*/
