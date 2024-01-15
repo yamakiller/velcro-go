@@ -131,11 +131,13 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 
 		conn := NewLongConn(dc, dc.cfg.ConnectTimeout.Milliseconds())
 		err := conn.Dial(address, 2000)
+		dc.mutex.Lock()
 		if err != nil {
+			atomic.AddInt32(&dc.openingConns, -1)
+			dc.mutex.Unlock()
 			return nil, err
 		}
 
-		dc.mutex.Lock()
 		if !conn.IsConnected() {
 			atomic.AddInt32(&dc.openingConns, -1)
 			dc.mutex.Unlock()

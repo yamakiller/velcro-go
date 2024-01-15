@@ -5,8 +5,8 @@ routes:
     max-idle-conn-timeout-second: 2
     kleepalive-millisec: 2000
     endpoints:
-      - laddr: 0.0.0.0:8801
-        vaddr: Gateway@0.0.0.0:8800
+      - laddr: 0.0.0.0:10001
+        vaddr: Gateway@0.0.0.0:10000
     commands:
       - prvs.RequestGatewayCloseClient
       - prvs.RequestExitBattleSpace

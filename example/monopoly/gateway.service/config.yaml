@@ -1,7 +1,7 @@
 server:
-  laddr: 0.0.0.0:8800
-  laddr_servant: 0.0.0.0:8801
-  vaddr: 0.0.0.0:8800
+  laddr: 0.0.0.0:10000
+  laddr_servant: 0.0.0.0:10001
+  vaddr: 0.0.0.0:10000
   encryption-enabled: false
   online-number: 5000
   request-timeout-max: 2000
