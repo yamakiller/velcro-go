@@ -2,6 +2,7 @@ package logs
 
 import (
 	"strings"
+	"time"
 	// "time"
 
 	"github.com/IBM/sarama"
@@ -24,14 +25,19 @@ func NewElastic(addr, vaddr string) *Elastic {
 		panic("vaddr have ':'")
 	}
 
-	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.NoResponse                                  // Only wait for the leader to ack
-	config.Producer.Partitioner = sarama.NewRandomPartitioner
-	config.Producer.Return.Successes = true
-	cli, err := sarama.NewAsyncProducer([]string{addr},config)
-	if err != nil {
+	cfg := sarama.NewConfig()
+	cfg.Version = sarama.V2_8_0_0
+	cfg.Producer.RequiredAcks = sarama.WaitForAll // 三种模式任君选择
+	cfg.Producer.Partitioner = sarama.NewHashPartitioner
+	cfg.Producer.Return.Successes = true
+	cfg.Producer.Return.Errors = true
+	cfg.Producer.Retry.Max = 3
+	cfg.Producer.Retry.Backoff = 100 * time.Millisecond
+	cli, err := sarama.NewAsyncProducer([]string{addr}, cfg)
+	if err != nil{
 		return nil
 	}
+
 	res := &Elastic{
 		topic: elasticVelgroGoLogTopic,
 		vaddr: vaddr,
@@ -47,12 +53,12 @@ type Elastic struct {
 }
 
 func (e *Elastic) Write(in []byte) (int,error){
-	msg := &sarama.ProducerMessage{
-        Topic: e.topic,
-        Key:   sarama.StringEncoder(e.vaddr),
-        Value: sarama.ByteEncoder(in),
-    }
-	e.client.Input() <- msg
+
+	e.client.Input() <- &sarama.ProducerMessage{
+		Value: sarama.ByteEncoder(in),
+		Key:   sarama.StringEncoder(e.vaddr),
+		Topic: e.topic,
+	}
 
 	return 0,nil
 }

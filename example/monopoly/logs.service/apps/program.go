@@ -38,10 +38,10 @@ func (p *Program) Start(s service.Service) error {
 
 func (p *Program) Stop(s service.Service) error {
 	if p.service != nil {
-		vlog.Info("[PROGRAM]", "Gateway service terminating")
+		vlog.Info("[PROGRAM]", "Logs service terminating")
 		p.service.Stop()
 		p.service = nil
-		vlog.Info("[PROGRAM]", "Gateway service terminated")
+		vlog.Info("[PROGRAM]", "Logs service terminated")
 	}
 	return nil
 }
