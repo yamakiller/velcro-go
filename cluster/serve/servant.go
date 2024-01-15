@@ -6,6 +6,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/files"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -33,7 +34,7 @@ type Servant struct {
 
 func (s *Servant) Start() error {
 	if s.Config.Router.URI != "" {
-		routeGroup, err := router.Loader(s.Config.Router.URI,
+		routeGroup, err := router.Loader(files.NewLocalPathFull(s.Config.Router.URI),
 			s.Config.Router.Algorithm)
 		if err != nil {
 			return err

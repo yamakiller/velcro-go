@@ -1,6 +1,6 @@
 server:
-  laddr: 0.0.0.0:10100
-  vaddr: 0.0.0.0:10100
+  laddr: 0.0.0.0:10200
+  vaddr: 0.0.0.0:10200
 redis:
   address: 0.0.0.0:6379
   password: yqXaWje245RPbsn*

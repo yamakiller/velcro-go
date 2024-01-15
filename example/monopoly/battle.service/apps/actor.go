@@ -252,7 +252,7 @@ func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.M
 		}
 	}
 
-	fmt.Println("user" , time.Now().UnixMilli() - t1.UnixMilli())
+	fmt.Println(time.Now().UnixMilli() - t1.UnixMilli())
 	return &mprvs.RequestExitBattleSpace{
 		BattleSpaceID: request.BattleSpaceID,
 		UID:           request.UID,

@@ -13,7 +13,7 @@ import (
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
-var index = int32(1)
+var index = int32(0)
 
 func Test() {
 	for i := int32(0); i < envs.Instance().Get("configs").(*configs.Config).ClientNumber; i++ {
@@ -27,9 +27,9 @@ func owner(cli *tcpclient.Conn,i int32) string{
 	return createbattlespace(cli)
 }
 func user(cli *tcpclient.Conn,i int32,spaceid string){
-	singin(cli,fmt.Sprintf("test_00%d&123456", i))
+	uid:=singin(cli,fmt.Sprintf("test_00%d&123456", i))
 	enterbattlespace(cli,spaceid)
-	// readybattlespace(cli,uid,spaceid,true)
+	readybattlespace(cli,uid,spaceid,true)
 }
 
 
@@ -59,7 +59,7 @@ func singin(cp *tcpclient.Conn, token string) string {
 	req := &mpubs.SignIn{
 		Token: token,
 	}
-	res, err := cp.RequestMessage(req, 2000)
+	res, err := cp.RequestMessage(req, 5000)
 	if err != nil {
 		vlog.Info("[PROGRAM]", "singin failed  ", err.Error())
 		return ""

@@ -149,7 +149,7 @@ try_again_label:
 		repeat.StopOnSuccess(),
 		repeat.WithDelay(repeat.ExponentialBackoff(200*time.Millisecond).Set()))
 
-	return result.(proto.Message), resultErr
+	return result, resultErr
 }
 
 // Shutdown 关闭代理

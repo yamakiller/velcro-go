@@ -1,13 +1,13 @@
 routes:
   - virtual-address: gatway.service
-    max-idle-conn: 1024
+    max-conn: 3000
+    max-idle-conn: 32
     max-idle-timeout-minute: 30
-    max-idle-conn-timeout-second: 2
-    kleepalive-millisec: 2000
+    rules:
+      - 3
     endpoints:
-      - laddr: 0.0.0.0:8801
-        vaddr: Gateway@0.0.0.0:8800
+      - laddr: 0.0.0.0:10001
+        vaddr: Gateway@0.0.0.0:10000
     commands:
       - prvs.RequestGatewayCloseClient
-    rules:
-      - 1
+      - prvs.RequestExitBattleSpace

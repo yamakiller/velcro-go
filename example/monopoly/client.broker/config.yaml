@@ -1,5 +1,5 @@
-target-addr: 0.0.0.0:8800
+target-addr: 192.168.0.104:10000
 client-connection-timeout: 200000
-client-number: 5
+client-number: 50
 interval-second: 5
 screen-refresh-frequency: 4000
