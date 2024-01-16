@@ -3,7 +3,6 @@ package logs
 import (
 	"strings"
 	"time"
-	// "time"
 
 	"github.com/IBM/sarama"
 )
