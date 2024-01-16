@@ -29,7 +29,7 @@ namespace Editor.Datas.Models
         public ArgsDefType[]? args {  get; set; } 
         public string? input {  get; set; }
         public string? output { get; set; }
-        public string? doc { get; set; }
+        public string? src { get; set; }
     }
 
     public class BehaviorNodeModel

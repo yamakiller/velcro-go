@@ -57,7 +57,7 @@
                     </MenuItem>
                     <MenuItem Header="全部关闭" IsEnabled="{Binding IsWorkspace}"></MenuItem>
                     <Separator/>
-                    <MenuItem Header="设置"></MenuItem>
+                    <MenuItem Header="设置" Command="{Binding OpenDefaultEditorViewCmd}"></MenuItem>
                     <MenuItem Header="节点编辑" Command="{Binding OpenNodeEditorViewCmd}"></MenuItem>
                     <Separator/>
                     <MenuItem Header="最近打开的文件"></MenuItem>

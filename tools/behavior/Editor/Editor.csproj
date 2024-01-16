@@ -27,6 +27,25 @@
     <None Remove="Resources\Newfolder.png" />
     <None Remove="Resources\OpenBehavior.png" />
     <None Remove="Resources\OpenWorkspace.png" />
+    <None Remove="Resources\Packages\actions\error.go" />
+    <None Remove="Resources\Packages\actions\failer.go" />
+    <None Remove="Resources\Packages\actions\logger.go" />
+    <None Remove="Resources\Packages\actions\runner.go" />
+    <None Remove="Resources\Packages\actions\succeeder.go" />
+    <None Remove="Resources\Packages\actions\wait.go" />
+    <None Remove="Resources\Packages\actions\wait_failure.go" />
+    <None Remove="Resources\Packages\actions\wait_random.go" />
+    <None Remove="Resources\Packages\composites\ifelse.go" />
+    <None Remove="Resources\Packages\composites\parallel.go" />
+    <None Remove="Resources\Packages\composites\parallel_selector.go" />
+    <None Remove="Resources\Packages\composites\parallel_sequence.go" />
+    <None Remove="Resources\Packages\composites\selector.go" />
+    <None Remove="Resources\Packages\composites\selector_random.go" />
+    <None Remove="Resources\Packages\composites\selector_serial.go" />
+    <None Remove="Resources\Packages\composites\sequence.go" />
+    <None Remove="Resources\Packages\composites\sequence_random.go" />
+    <None Remove="Resources\Packages\condition\tick_times.go" />
+    <None Remove="Resources\Packages\default.json" />
     <None Remove="Resources\ReloadWorkspace.png" />
     <None Remove="Resources\Save.ico" />
     <None Remove="Resources\Saveall.ico" />
@@ -89,6 +108,63 @@
     </Resource>
     <Resource Include="Resources\OpenWorkspace.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\error.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\failer.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\logger.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\runner.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\succeeder.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\wait.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\wait_failure.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\actions\wait_random.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\ifelse.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\parallel.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\parallel_selector.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\parallel_sequence.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\selector.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\selector_random.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\selector_serial.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\sequence.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\composites\sequence_random.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\condition\tick_times.go">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Packages\default.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\ReloadWorkspace.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

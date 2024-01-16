@@ -63,8 +63,6 @@ namespace Editor.ViewModels
             get { return caption; }
             set { SetProperty(ref caption, value);}
         }
-
-
        
         public ReadOnlyObservableCollection<BehaviorTree> Trees {
             get;
@@ -138,6 +136,20 @@ namespace Editor.ViewModels
                     openNodeEditorViewCmd= new OpenNodeEditorViewCommand(this);
                 }
                 return openNodeEditorViewCmd;
+            }
+        }
+
+        private OpenEditDefaultNodeCommand? openDefaultEditorViewCmd = null;
+        public OpenEditDefaultNodeCommand OpenDefaultEditorViewCmd
+        {
+            get
+            {
+                if (openDefaultEditorViewCmd == null)
+                {
+                    openDefaultEditorViewCmd = new OpenEditDefaultNodeCommand(this);
+                }
+
+                return openDefaultEditorViewCmd;
             }
         }
 

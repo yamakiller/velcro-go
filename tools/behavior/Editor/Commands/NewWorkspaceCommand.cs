@@ -37,6 +37,8 @@ namespace Editor.Commands
             contextViewModel.Workspace.FilePath = filepath;
             contextViewModel.Workspace.WorkDir = newWorkspace.WorkspaceFolder;
 
+            // 生成默认节点配置文件
+
             Dialogs.ScanDialog scanDlg = new Dialogs.ScanDialog();
             scanDlg.Scaning(contextViewModel.Workspace.WorkDir);
 

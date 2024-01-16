@@ -1,0 +1,11 @@
+[
+  {
+    "name": "logger",
+    "type": "Action",
+    "desc": "\u65B0\u8282\u70B9",
+    "args": null,
+    "input": null,
+    "output": null,
+    "src": "D:\\workspace\\go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Resources\\Packages\\actions\\logger.go"
+  }
+]
