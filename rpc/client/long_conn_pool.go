@@ -72,8 +72,8 @@ type DefaultConnPool struct {
 
 func (dc *DefaultConnPool) Open() {
 	for i := 0; i < int(dc.cfg.MaxIdleConn); i++ {
-		conn := NewLongConn(dc, int64(dc.cfg.ConnectTimeout.Milliseconds()))
-		err := conn.Dial(dc.address, 2000)
+		conn := NewLongConn(dc, int64(dc.cfg.MaxIdleConnTimeout.Milliseconds()))
+		err := conn.Dial(dc.address, dc.cfg.ConnectTimeout)
 		if err != nil {
 			continue
 		}
@@ -105,7 +105,6 @@ func (dc *DefaultConnPool) RequestMessage(msg protoreflect.ProtoMessage, timeout
 	}
 	defer dc.Put(conn)
 	res, err = conn.RequestMessage(msg, timeout)
-
 	return res, err
 }
 
@@ -129,13 +128,15 @@ func (dc *DefaultConnPool) Get(ctx context.Context, address string) (*LongConn, 
 		atomic.AddInt32(&dc.openingConns, 1)
 		dc.mutex.Unlock()
 
-		conn := NewLongConn(dc, dc.cfg.ConnectTimeout.Milliseconds())
-		err := conn.Dial(address, 2000)
+		conn := NewLongConn(dc, int64(dc.cfg.MaxIdleConnTimeout.Milliseconds()))
+		err := conn.Dial(dc.address, dc.cfg.ConnectTimeout)
+		dc.mutex.Lock()
 		if err != nil {
+			atomic.AddInt32(&dc.openingConns, -1)
+			dc.mutex.Unlock()
 			return nil, err
 		}
 
-		dc.mutex.Lock()
 		if !conn.IsConnected() {
 			atomic.AddInt32(&dc.openingConns, -1)
 			dc.mutex.Unlock()
@@ -201,7 +202,6 @@ func (dc *DefaultConnPool) Discard(conn *LongConn) error {
 		atomic.AddInt32(&dc.openingConns, -1)
 		atomic.StoreInt32(&conn.direct, LCS_Unknown)
 	}
-
 	dc.mutex.Unlock()
 	return nil
 }
@@ -217,7 +217,7 @@ func (dc *DefaultConnPool) Close() error {
 		node.(*LongConn).Close()
 		return true
 	})
-	dc.mutex.Unlock()
+	
 	return nil
 }
 

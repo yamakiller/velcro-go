@@ -193,7 +193,6 @@ func (c *tcpClientHandler) reader() {
 		if c.isStopped() {
 			break
 		}
-		c.keepalive = 4000
 		if c.keepalive > 0 {
 			c.conn.SetReadDeadline(time.Now().Add(time.Duration(c.keepalive) * time.Millisecond * 2.0))
 		}

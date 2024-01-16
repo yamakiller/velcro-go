@@ -33,25 +33,25 @@ func (g *Guardian) Startup(app service.Interface) (string, error) {
 			if err != nil {
 				return "", errors.Errorf("service install fail[error:%s]", err.Error())
 			}
-			return "service install success", nil
+			return scfg.DisplayName + " service install success", nil
 		case "uninstall":
 			err := s.Uninstall()
 			if err != nil {
 				return "", errors.Errorf("service uninstall fail[error:%s]", err.Error())
 			}
-			return "service uninstall success", nil
+			return scfg.DisplayName + " service uninstall success", nil
 		case "start":
 			err := s.Start()
 			if err != nil {
 				return "", errors.Errorf("service start fail[error:%s]", err.Error())
 			}
-			return "service start success", nil
+			return scfg.DisplayName + " service start success", nil
 		case "stop":
 			err := s.Stop()
 			if err != nil {
 				return "", errors.Errorf("service stop fail[error:%s]", err.Error())
 			}
-			return "service stop success", nil
+			return scfg.DisplayName + " service stop success", nil
 		}
 	}
 

@@ -1,10 +1,10 @@
 package apps
 
 import (
-	// "strings"
+	"strings"
 
 	"github.com/kardianos/service"
-	// "github.com/yamakiller/velcro-go/cluster/logs"
+	"github.com/yamakiller/velcro-go/cluster/logs"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
 	"github.com/yamakiller/velcro-go/utils/files"
@@ -29,8 +29,8 @@ func (p *Program) Start(s service.Service) error {
 		return err
 	}
 
-	// vaddr := strings.ReplaceAll(strings.ToLower("gateway@"+ envs.Instance().Get("configs").(*configs.Config).Server.VAddr),":",".") 
-	// vlog.SetOutput(logs.NewElastic(envs.Instance().Get("configs").(*configs.Config).LogRemoteAddr, vaddr))
+	vaddr := strings.ReplaceAll(strings.ToLower("gateway@"+ envs.Instance().Get("configs").(*configs.Config).Server.VAddr),":",".") 
+	vlog.SetOutput(logs.NewElastic(envs.Instance().Get("configs").(*configs.Config).LogRemoteAddr, vaddr))
 
 	vlog.Info("[PROGRAM]", "Gateway Loading environment variables is completed")
 	vlog.Info("[PROGRAM]", "Gateway Start the network service")
@@ -40,6 +40,7 @@ func (p *Program) Start(s service.Service) error {
 		return err
 	}
 	vlog.Info("[PROGRAM]", "Gateway Start network service completed ",envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
+
 	return nil
 }
 

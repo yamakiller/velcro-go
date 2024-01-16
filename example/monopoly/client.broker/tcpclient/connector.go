@@ -220,6 +220,31 @@ func (c *Conn) Destory() {
 	// c.sendbox = nil
 }
 
+func (c *Conn) onError(err *pubs.Error){
+	future := c.getFuture(c.sequenceID)
+	if future == nil {
+		return
+	}
+	future.cond.L.Lock()
+	if future.done {
+		future.cond.L.Unlock()
+		return
+	}
+	if err != nil {
+		future.result = nil
+		
+		future.err = fmt.Errorf("message %v error:%v",err.Name,err.Err)
+	}
+	future.done = true
+
+	tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
+	if tp != nil {
+		tp.Stop()
+	}
+	c.sequenceID = 0
+	future.cond.Signal()
+	future.cond.L.Unlock()
+}
 
 func (c *Conn) onResponse(msg protoreflect.ProtoMessage) {
 	future := c.getFuture(c.sequenceID)
@@ -334,7 +359,7 @@ func (c *Conn) guardian() {
 		case *pubs.PubkeyMsg:
 			c.onPubkeyReply(message)
 		case *pubs.Error:
-			vlog.Errorf("message %v error:%v",message.Name,message.Err)
+			c.onError(message)
 		default:
 			c.onResponse(message.(proto.Message))
 		}

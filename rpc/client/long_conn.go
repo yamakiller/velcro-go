@@ -275,7 +275,9 @@ exit_reader_lable:
 
 func (c *LongConn) guardian() {
 	c.currentGoroutineId = utils.GetCurrentGoroutineID()
-
+	defer func() {
+		c.guardianDone.Done()
+	}()
 	for {
 		msg, ok := <-c.mailbox
 		if !ok {
@@ -296,7 +298,7 @@ exit_guardian_lable:
 	if c.ascription != nil {
 		c.ascription.Discard(c)
 	}
-
+	
 	c.done.Wait() // 等待读写线程结束
 	close(c.mailbox)
 
@@ -363,7 +365,6 @@ func (c *LongConn) Close() {
 		c.conn.Close()
 	}
 	c.done.Wait()
-	c.guardianDone.Wait()
 }
 
 func (c *LongConn) getFuture(id int32) *Future {
