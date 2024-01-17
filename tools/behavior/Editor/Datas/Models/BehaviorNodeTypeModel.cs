@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,11 +15,11 @@ namespace Editor.Datas.Models
 
     public class ArgsDefType
     {
-        public string name { get; set; }
-        public string type { get; set; }
-        public string desc { get; set; }
-        public string defa { get; set; }
-        public ArgsOptional[] options { get; set; }
+        public string name { get; set; } // 名称
+        public string type { get; set; } // 类型 int/bool/float64/int64/string/object
+        public string? desc { get; set; } // 说明
+        public object? defaultValue { get; set; } // 默认值
+        //public ArgsOptional[] options { get; set; }
     }
 
     public class BehaviorNodeTypeModel
@@ -26,7 +27,7 @@ namespace Editor.Datas.Models
         public string name { get; set; }
         public string? type { get; set; }
         public string? desc { get; set; }
-        public ArgsDefType[]? args {  get; set; } 
+        public ObservableCollection<ArgsDefType>?  args {  get; set; } 
         public string? input {  get; set; }
         public string? output { get; set; }
         public string? src { get; set; }

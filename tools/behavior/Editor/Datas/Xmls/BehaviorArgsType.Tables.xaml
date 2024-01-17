@@ -1,0 +1,15 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <XmlDataProvider x:Key="BehaviorArgsType">
+        <x:XData>
+            <ArgsType xmlns="">
+                <Node Name="整数" Value="int"></Node>
+                <Node Name="布尔" Value="bool"></Node>
+                <Node Name="双精度浮点数" Value="float64"></Node>
+                <Node Name="整数64" Value="int64"></Node>
+                <Node Name="字符串" Value="string"></Node>
+                <Node Name="对象" Value="object"></Node>
+            </ArgsType>
+        </x:XData>
+    </XmlDataProvider>
+</ResourceDictionary>

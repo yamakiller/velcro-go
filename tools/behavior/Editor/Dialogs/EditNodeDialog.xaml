@@ -13,8 +13,7 @@
         Title="节点编辑器" 
         Height="604" 
         Width="555"
-        Loaded="Window_Loaded"
-        >
+        Loaded="Window_Loaded">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -31,7 +30,10 @@
         </Grid.RowDefinitions>
         <TextBlock Text="节点类型" Grid.Row="0" Margin="8"></TextBlock>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <TreeView Name="NodeTreeView"  Width="200" Height="250" Margin="8 0 0 0" 
+            <TreeView Name="NodeTreeView"  
+                      Width="200" 
+                      Height="250" 
+                      Margin="8 0 0 0" 
                       ItemsSource="{Binding Types}" 
                       SelectedValuePath="{Binding SelectedNode}"
                       SelectedItemChanged="TreeView_SelectedItemChanged">
@@ -47,7 +49,7 @@
                 <StackPanel Orientation="Vertical">
                     <StackPanel Orientation="Horizontal">
                         <Label Content="源码文件:"></Label>
-                        <TextBox Margin="2 0 0 0" Text="{Binding SelectedNodeFile}" Width="130" Height="20" IsReadOnly="True"></TextBox>
+                        <TextBox Margin="2 0 0 0" Text="{Binding SelectedNodeFile, Mode=TwoWay}" Width="130" Height="20" IsReadOnly="True"></TextBox>
                         <Button Margin="2 0 0 0" Width="33" Height="20" Click="SourceFileSelected_Click">...</Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
@@ -55,27 +57,31 @@
                         <ComboBox  Width="80" Height="20" Margin="26 0 0 0"
                               DisplayMemberPath="@Name"
                               SelectedValuePath="@Value"
-                              SelectedValue="{Binding SelectedNodeType}"
+                              SelectedValue="{Binding SelectedNodeType, Mode=TwoWay}"
                               ItemsSource="{Binding Source={StaticResource BehaviorNodeClassify}, XPath=/Classify/ClassifyNode}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Content="名称:"></Label>
-                        <TextBox Margin="26 0 0 0" Width="166" Height="20" Text="{Binding SelectedNodeName}"></TextBox>
+                        <TextBox Margin="26 0 0 0" Width="166" Height="20" Text="{Binding SelectedNodeName, Mode=TwoWay}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Content="命名空间:"></Label>
-                        <TextBox Margin="2 0 0 0" Width="166" Height="20" Text="{Binding SelectedNodePackageName}"></TextBox>
+                        <TextBox Margin="2 0 0 0" Width="166" Height="20" Text="{Binding SelectedNodePackageName}" IsReadOnly="True"></TextBox>
                     </StackPanel>
                 
                     <StackPanel Orientation="Horizontal">
                         <Label Content="参数:"></Label>
-                        <ComboBox Margin="26 0 0 0"  Width="80" Height="20"/>
-                        <Button Margin="2 0 0 0" Content="添加" Height="20" Width="40"/>
-                        <Button Margin="2 0 0 0" Content="删除" Height="20" Width="40"/>
+                        <ComboBox Name="ArgsCtrl"
+                                  Margin="26 0 0 0"   Width="80" Height="20" 
+                                  DisplayMemberPath="name"
+                                  SelectedIndex="0"
+                                  ItemsSource="{Binding SelectedNodeArgs}"/>
+                        <Button Margin="2 0 0 0" Content="添加" Click="CreateArgs_Click" Height="20" Width="40"/>
+                        <Button Margin="2 0 0 0" Content="删除" Click="DeleteArgs_Click" Height="20" Width="40"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Content="简述:"></Label>
-                        <TextBox Margin="26 0 0 0" Width="166" Height="20" Text="{Binding SelectedNodeDesc}"></TextBox>
+                        <TextBox Margin="26 0 0 0" Width="166" Height="20" Text="{Binding SelectedNodeDesc, Mode=TwoWay}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"/>
@@ -94,7 +100,9 @@
                          AcceptsReturn="True"
                          Margin="0 0 10 0" 
                          Width="515"
-                         Height="220" Text="{Binding SelectedNodeCode}"></TextBox>
+                         IsReadOnly="True"
+                         Height="220" 
+                         Text="{Binding SelectedNodeCode}"></TextBox>
             </StackPanel>
         </Grid>
         <StackPanel Margin="0 8 12 0" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
