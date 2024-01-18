@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "zUBO03vnL6HNzyW4HBSdf+QTHygbGS5rH2QLBGT7tyg9WZcjqmlry0KxTUKhI7OV9+/yNpEtWQAHar0TYeOldQ==",
+  "dgSpecHash": "kpY8WEfXX7+eS7FmU3NOZJ3QIHbWDfnB8cb4r2QWirgw7mOdKUetgM4cCMx2t+TGlcSsP2jr4ZPKTLets5F83g==",
   "success": true,
-  "projectFilePath": "D:\\workspace\\go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\NodeView\\NodeBehavior.csproj",
+  "projectFilePath": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\NodeView\\NodeBehavior.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

@@ -69,7 +69,7 @@ namespace Editor.Dialogs {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Editor;component/dialogs/createworkspacedialog.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Editor;V1.0.0.0;component/dialogs/createworkspacedialog.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Dialogs\CreateWorkspaceDialog.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
