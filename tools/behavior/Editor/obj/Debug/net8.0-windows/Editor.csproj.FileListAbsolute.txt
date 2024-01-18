@@ -66,3 +66,7 @@ D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\De
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Datas\Xmls\BehaviorNodeClassify.Tables.baml
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\EditNodeDialog.g.cs
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\EditNodeDialog.baml
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Datas\Xmls\BehaviorArgsType.Tables.baml
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Styles\Error.Style.baml
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\ArgsTypeEditDialog.g.cs
+D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\ArgsTypeEditDialog.baml

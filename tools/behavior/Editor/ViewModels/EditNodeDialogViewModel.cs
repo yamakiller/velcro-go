@@ -15,9 +15,9 @@ namespace Editor.ViewModels
     class EditNodeDialogViewModel : ViewModel
     {
 
-        private Datas.Models.BehaviorNodeTypeModel selectedNode;
+        private BehaviorNodeTypeModel selectedNode;
 
-        public Datas.Models.BehaviorNodeTypeModel SelectedNode
+        public BehaviorNodeTypeModel SelectedNode
         {
             get { return selectedNode; }
             set
@@ -85,6 +85,13 @@ namespace Editor.ViewModels
                 if (selectedNode != null)
                 {
                     selectedNode.name = value;
+                    foreach(BehaviorNodeTypeModel t in types)
+                    {
+                        if (t == selectedNode)
+                        {
+                            t.name = value;
+                        }
+                    }
                     RaisePropertyChanged("SelectedNodeName");
                     RaisePropertyChanged("SelectedNode");
                 }
@@ -198,7 +205,7 @@ namespace Editor.ViewModels
             }
         }
 
-        public ArgsDefType[]? SelectedNodeArgs
+        public ObservableCollection<ArgsDefType>? SelectedNodeArgs
         {
             get
             {
@@ -244,16 +251,17 @@ namespace Editor.ViewModels
             }
         }
 
+        private ObservableCollection<BehaviorNodeTypeModel> types;
 
-        public ReadOnlyObservableCollection<Datas.Models.BehaviorNodeTypeModel> Types 
+        public ObservableCollection<BehaviorNodeTypeModel> Types 
         {
-            get;
-            set;
+            get { return types; }
+            set { types = value; }
         }
 
-        public EditNodeDialogViewModel(ObservableCollection<Datas.Models.BehaviorNodeTypeModel> types)
+        public EditNodeDialogViewModel(ObservableCollection<BehaviorNodeTypeModel> s)
         {
-            Types = new ReadOnlyObservableCollection<Datas.Models.BehaviorNodeTypeModel>(types);
+            types = s;
         }
     }
 }

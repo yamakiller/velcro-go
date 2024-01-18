@@ -7,6 +7,9 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Dialogs\ArgsTypeEditDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\CreateWorkspaceDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -36,7 +39,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Datas\Xmls\BehaviorArgsType.Tables.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Datas\Xmls\BehaviorNodeClassify.Tables.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\ArgsTypeEditDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Dialogs\CreateWorkspaceDialog.xaml">
@@ -46,6 +55,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Dialogs\ScanDialog.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Styles\Error.Style.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\BehaviorEditor.xaml">

@@ -189,7 +189,6 @@
 
   <ItemGroup>
     <Folder Include="Framework\" />
-    <Folder Include="Styles\" />
   </ItemGroup>
 
 </Project>

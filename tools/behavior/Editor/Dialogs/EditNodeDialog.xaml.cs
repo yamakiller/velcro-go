@@ -1,22 +1,12 @@
-﻿using Editor.Framework;
+﻿using Editor.Datas.Models;
+using Editor.Framework;
 using Editor.Utils;
 using Editor.ViewModels;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+
 
 namespace Editor.Dialogs
 {
@@ -99,6 +89,58 @@ namespace Editor.Dialogs
             }
         }
 
+        private void CreateArgs_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (((EditNodeDialogViewModel)(DataContext)).SelectedNode == null)
+            {
+                return;
+            }
+
+            ArgsTypeEditDialog argsEditDialog = new ArgsTypeEditDialog(newArgName());
+            var result = argsEditDialog.ShowDialog();
+            if (result != true)
+            {
+                return;
+            }
+
+            ArgsDefType argsType = new ArgsDefType();
+            argsType.name = argsEditDialog.Name == null ? "newArgs" : argsEditDialog.Name;
+            argsType.type = argsEditDialog.Type == null ? "int" : argsEditDialog.Type;
+            argsType.defaultValue = argsEditDialog.DefaultValue;
+            argsType.desc = argsEditDialog.Desc;
+
+            if (((EditNodeDialogViewModel)(DataContext)).SelectedNode.args == null)
+            {
+                ((EditNodeDialogViewModel)(DataContext)).SelectedNode.args = new ObservableCollection<ArgsDefType>();
+            }
+
+            ((EditNodeDialogViewModel)DataContext).SelectedNode.args.Add(argsType);
+            ((EditNodeDialogViewModel)DataContext).SelectedNodeArgs = ((EditNodeDialogViewModel)DataContext).SelectedNode.args;
+        }
+
+        private void DeleteArgs_Click(object sender, RoutedEventArgs e)
+        {
+            if (((EditNodeDialogViewModel)(DataContext)).SelectedNode == null)
+            {
+                return;
+            }
+
+            if (((EditNodeDialogViewModel)(DataContext)).SelectedNode.args == null)
+            {
+                return;
+            }
+
+
+
+            ((EditNodeDialogViewModel)(DataContext)).SelectedNode.args.RemoveAt(ArgsCtrl.SelectedIndex);
+            ((EditNodeDialogViewModel)(DataContext)).SelectedNodeArgs = ((EditNodeDialogViewModel)(DataContext)).SelectedNode.args;
+            if (((EditNodeDialogViewModel)(DataContext)).SelectedNode.args.Count > 0)
+            {
+                ArgsCtrl.SelectedIndex = 0;
+            }
+        }
+
         private void Applay_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
@@ -128,6 +170,32 @@ namespace Editor.Dialogs
                     childContainer.IsSelected = true;
                 }
             }
+        }
+
+        private string newArgName()
+        {
+            string newName = "";
+            for (int i =1;i < 65535;)
+            {
+             new_name_label:
+                newName = "newArgs_" + i.ToString();
+                if (((EditNodeDialogViewModel)(DataContext)).SelectedNode == null ||
+                    ((EditNodeDialogViewModel)(DataContext)).SelectedNode.args == null)
+                {
+                    break;
+                }
+
+                foreach(ArgsDefType t in ((EditNodeDialogViewModel)(DataContext)).SelectedNode.args)
+                {
+                    if (t.name == newName)
+                    {
+                        i++;
+                        goto new_name_label;
+                    }
+                }
+                break;
+            }
+            return newName;
         }
     }
 }
