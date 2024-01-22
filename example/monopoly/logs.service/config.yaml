@@ -1,2 +1,0 @@
-log_acquisition_addr: 0.0.0.0:9092
-log_delivery_addr: http://127.0.0.1:9200

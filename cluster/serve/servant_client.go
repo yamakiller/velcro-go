@@ -2,19 +2,11 @@ package serve
 
 import (
 	"context"
-	"fmt"
-	"math"
 	"reflect"
-	"time"
 
-	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
-	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // Background context.Context
@@ -38,7 +30,7 @@ func (c *ServantClientConn) Accept(ctx network.Context) {
 
 // Recvice 接收到的数据
 func (c *ServantClientConn) Recvice(ctx network.Context) {
-	offset := 0
+	/*offset := 0
 	for {
 
 		n, err := c.recvice.WriteBinary(ctx.Message()[offset:])
@@ -129,7 +121,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 		if offset == len(ctx.Message()) {
 			break
 		}
-	}
+	}*/
 }
 
 // Register 注册方法映射
@@ -157,16 +149,16 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 
 // Ping 客户端主动请求, 这里不处理
 func (c *ServantClientConn) Ping(ctx network.Context) {
-	b, err := messages.MarshalPingProtobuf(fastrand.Uint64n(math.MaxUint64))
+	/*b, err := messages.MarshalPingProtobuf(fastrand.Uint64n(math.MaxUint64))
 	if err != nil {
 		ctx.Close(ctx.Self())
 		return
 	}
 
-	ctx.PostMessage(ctx.Self(), b)
+	ctx.PostMessage(ctx.Self(), b)*/
 }
 
-func (c *ServantClientConn) onRpcPing(ctx network.Context, message *messages.RpcPingMessage) {
+/*func (c *ServantClientConn) onRpcPing(ctx network.Context, message *messages.RpcPingMessage) {
 	// b, err := messages.MarshalPingProtobuf(message.VerifyKey + 1)
 	// if err != nil {
 	// 	ctx.Close(ctx.Self())
@@ -174,7 +166,7 @@ func (c *ServantClientConn) onRpcPing(ctx network.Context, message *messages.Rpc
 	// }
 
 	// ctx.PostMessage(ctx.Self(), b)
-}
+}*/
 
 func (c *ServantClientConn) incarnateActor() {
 	c.actor = c.Servant.Config.Producer(c)

@@ -5,12 +5,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/yamakiller/velcro-go/cluster/proxy"
 	"github.com/yamakiller/velcro-go/cluster/router/material"
-	"github.com/yamakiller/velcro-go/rpc/client"
 	"github.com/yamakiller/velcro-go/utils/files"
 	"gopkg.in/yaml.v2"
 )
@@ -35,7 +33,7 @@ func Loader(filePath string, algorithm string) (*RouterGroup, error) {
 		// TODO: 构建代理对象
 		p, err := proxy.NewRpcProxy(
 			proxy.WithAlgorithm(algorithm),
-			proxy.WithPoolConfig(client.LongConnPoolConfig{
+			/*proxy.WithPoolConfig(client.LongConnPoolConfig{
 				MaxConn: router.MaxConn,
 				MaxIdleConn: router.MaxIdleConn,
 				MaxIdleConnTimeout: time.Duration(router.MaxIdleConnTimeout) * time.Second,
@@ -43,7 +41,7 @@ func Loader(filePath string, algorithm string) (*RouterGroup, error) {
 				// MaxIdleTimeout:     time.Duration(router.MaxIdleTimeout) * time.Minute,
 				// MaxIdleConnTimeout: time.Duration(router.MaxIdleConnTimeout) * time.Second,
 				// Kleepalive:         router.Kleepalive,
-			}),
+			}),*/
 			proxy.WithTargetHost(router.Endpoints))
 		if err != nil {
 			return nil, err

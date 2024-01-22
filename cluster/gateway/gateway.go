@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/network"
@@ -38,7 +37,7 @@ func New(options ...GatewayConfigOption) *Gateway {
 	)
 
 	g.Config = config
-	
+
 	return g
 }
 
@@ -168,9 +167,9 @@ func (g *Gateway) NewClientID(id string) *network.ClientID {
 func (g *Gateway) newServantActor(conn *serve.ServantClientConn) serve.ServantClientActor {
 	actor := &GatewayServantActor{gateway: g}
 
-	conn.Register(&prvs.RequestGatewayPush{}, actor.onRequestGatewayPush)
-	conn.Register(&prvs.RequestGatewayAlterRule{}, actor.onRequestGatewayAlterRule)
-	conn.Register(&prvs.RequestGatewayCloseClient{}, actor.onRequestGatewayCloseClient)
+	//conn.Register(&prvs.RequestGatewayPush{}, actor.onRequestGatewayPush)
+	//conn.Register(&prvs.RequestGatewayAlterRule{}, actor.onRequestGatewayAlterRule)
+	//conn.Register(&prvs.RequestGatewayCloseClient{}, actor.onRequestGatewayCloseClient)
 
 	return actor
 }

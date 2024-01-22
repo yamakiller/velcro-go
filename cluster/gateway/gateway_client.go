@@ -1,24 +1,16 @@
 package gateway
 
 import (
-	"crypto"
-	"crypto/rand"
-	"encoding/base64"
 	"math"
-	"reflect"
 	"sync/atomic"
 
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
-	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
-	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
 	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type Client interface {
@@ -33,23 +25,23 @@ type Client interface {
 
 	alterRule(rule int32)
 
-	onPingReply(ctx network.Context, message *pubs.PingMsg)
-	onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg)
-	onRequestMessage(ctx network.Context, message proto.Message)
+	//onPingReply(ctx network.Context, message *pubs.PingMsg)
+	//onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg)
+	//onRequestMessage(ctx network.Context, message proto.Message)
 
 	referenceIncrement() int32
 	referenceDecrement() int32
 }
 
 type ClientConn struct {
-	gateway        *Gateway
-	clientID       *network.ClientID
-	ruleID         int32  //角色ID
-	secret         []byte //密钥
-	recvice        *circbuf.LinkBuffer
-	ping           uint64
+	gateway  *Gateway
+	clientID *network.ClientID
+	ruleID   int32  //角色ID
+	secret   []byte //密钥
+	recvice  *circbuf.LinkBuffer
+	ping     uint64
 	// requestTimeout int64 //最大超时时间 毫秒级
-	reference      int32 //引用计数器
+	reference int32 //引用计数器
 }
 
 func (dl *ClientConn) ClientID() *network.ClientID {
@@ -63,11 +55,11 @@ func (dl *ClientConn) Secret() []byte {
 func (dl *ClientConn) Accept(ctx network.Context) {
 	dl.clientID = ctx.Self()
 	dl.ruleID = router.NONE_RULE_ID
-	if err := dl.gateway.Register(dl.clientID, dl); err != nil {
+	/*if err := dl.gateway.Register(dl.clientID, dl); err != nil {
 		// 在线满
 		ctx.Close(ctx.Self())
 		return
-	}
+	}*/
 }
 
 func (dl *ClientConn) Ping(ctx network.Context) {
@@ -75,17 +67,16 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 		return
 	}
 
-
 	dl.ping = fastrand.Uint64n(math.MaxUint64)
 
-	msg := &pubs.PingMsg{VerificationKey: dl.ping}
+	/*msg := &pubs.PingMsg{VerificationKey: dl.ping}
 	msgb, err := protomessge.Marshal(msg, dl.secret)
 	if err != nil {
 		vlog.Errorf("ping marshal message [error:%v]", err.Error())
 		return
 	}
 
-	ctx.PostMessage(ctx.Self(), msgb)
+	ctx.PostMessage(ctx.Self(), msgb)*/
 }
 
 func (dl *ClientConn) Post(message interface{}) error {
@@ -133,20 +124,20 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 			}
 			continue
 		}
-		
-		switch message := msg.(type) {
+
+		/*switch message := msg.(type) {
 		case *pubs.PingMsg:
 			dl.onPingReply(ctx, message)
 		case *pubs.PubkeyMsg:
 			dl.onPubkeyReply(ctx, message)
 		default:
 			dl.onRequestMessage(ctx, message)
-		}
+		}*/
 	}
 }
 
 func (dl *ClientConn) Closed(ctx network.Context) {
-	request := &prvs.ClientClosed{
+	/*request := &prvs.ClientClosed{
 		ClientID: ctx.Self(),
 	}
 
@@ -157,7 +148,7 @@ func (dl *ClientConn) Closed(ctx network.Context) {
 		}
 	}
 
-	dl.gateway.UnRegister(ctx.Self()) //关闭释放对象
+	dl.gateway.UnRegister(ctx.Self()) //关闭释放对象*/
 }
 
 func (dl *ClientConn) Destory() {
@@ -167,7 +158,7 @@ func (dl *ClientConn) Destory() {
 	dl.recvice.Release()
 }
 
-func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
+/*func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
 
 	if dl.ping == 0 {
 		vlog.Debug("unrequest ping")
@@ -262,7 +253,6 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 		return
 	}
 
-
 	bodyAny, err := anypb.New(message)
 	if err != nil {
 		vlog.Warnf("%s message encoding failed error %s",
@@ -301,12 +291,12 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 	}
 
 	ctx.PostMessage(ctx.Self(), b)
-}
+}*/
 
 // onUpdateRule 更改角色等级信息
-func (dl *ClientConn) alterRule(rule int32) {
+/*func (dl *ClientConn) alterRule(rule int32) {
 	dl.ruleID = rule
-}
+}*/
 
 // RefInc 引用计数器+1
 func (dl *ClientConn) referenceIncrement() int32 {
