@@ -1,57 +1,40 @@
-﻿using Editor.Datas;
-using Editor.Framework;
+﻿using Editor.Framework;
 using Editor.ViewModels;
+using Editor.Datas;
 using Microsoft.Win32;
-using System.IO;
-using System.Windows;
 
 namespace Editor.Commands
 {
-    class NewWorkspaceCommand : ViewModelCommand<BehaviorEditViewModel>
+    class NewWorkspaceCommand : ViewModelCommand<EditorFrameViewModel>
     {
-        public NewWorkspaceCommand(BehaviorEditViewModel contextViewModel) : base(contextViewModel)
+        public NewWorkspaceCommand(EditorFrameViewModel contextViewModel) : base(contextViewModel)
         {
         }
 
-        public override void Execute(BehaviorEditViewModel contextViewModel, object parameter)
+        public override void Execute(EditorFrameViewModel contextViewModel, object parameter)
         {
-            var newWorkspace = new Dialogs.CreateWorkspaceDialog(); 
-            var result = newWorkspace.ShowDialog();
+            var folderDialog = new OpenFolderDialog()
+            {
+                Title = "Workspace",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                Multiselect = false,
+            };
+
+            var result = folderDialog.ShowDialog();
             if (result != true)
             {
                 return;
             }
 
-            var filepath = Path.Combine(newWorkspace.WorkspaceFolder,
-                newWorkspace.WorkspaceName + ".json");
+            WorkspaceData wks = new WorkspaceData() { Dir = folderDialog.FolderName, 
+                Files = null };
 
-            if (File.Exists(filepath))
-            {
-               if (MessageBoxResult.Cancel == 
-                   MessageBox.Show("文件:" + filepath + "已存在?", "警告", MessageBoxButton.OKCancel))
-               {
-                    return;
-               }
-            }
+            // TODO: 如果存在久的工作空间，哪么将其关闭
 
-            contextViewModel.Workspace.FilePath = filepath;
-            contextViewModel.Workspace.WorkDir = newWorkspace.WorkspaceFolder;
-
-            // 生成默认节点配置文件
-
-            Dialogs.ScanDialog scanDlg = new Dialogs.ScanDialog();
-            scanDlg.Scaning(contextViewModel.Workspace.WorkDir);
-
-            foreach(var file in scanDlg.Files)
-            {
-                contextViewModel.Workspace.Trees.Add(file);
-            }
-            
-            contextViewModel.IsWorkspace = true;
-            contextViewModel.IsWorkspaceModify = true;
+            contextViewModel.CurrWorkspace = wks;
         }
 
-        public override bool CanExecute(BehaviorEditViewModel contextViewModel, object parameter)
+        public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)
         {
             if (contextViewModel.IsReadOnly)
             {

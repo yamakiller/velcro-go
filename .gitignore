@@ -24,4 +24,4 @@ go.work
 */test-logs/
 log.*
 example/monopoly/bin/
-tools/behavior/.vs
+tools/behavior/.vs/

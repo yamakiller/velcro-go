@@ -1,8 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "SC/Ii2f3Wzb8Rpf4GBq6+qiicNplE8LheUEqUI0ECpwhAGWHFdufrAEOiyqj/pW5sd3UjkqjYHRVeazWX35NIw==",
+  "dgSpecHash": "eVNvYxVksZZ7BNgXuwAJFURu5ibAl8qF0eXmizQt6ttkJ4ibPPH6ZVw645lgNAs0Vv/Mf6EyyY6ga79llClAuw==",
   "success": true,
   "projectFilePath": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Administrator\\.nuget\\packages\\dirkster.avalondock\\4.72.1\\dirkster.avalondock.4.72.1.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\dirkster.avalondock.themes.expression\\4.72.1\\dirkster.avalondock.themes.expression.4.72.1.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\materialdesigncolors\\3.0.0-ci508\\materialdesigncolors.3.0.0-ci508.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\materialdesignthemes\\4.9.0\\materialdesignthemes.4.9.0.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.39\\microsoft.xaml.behaviors.wpf.1.1.39.nupkg.sha512"
+  ],
   "logs": []
 }

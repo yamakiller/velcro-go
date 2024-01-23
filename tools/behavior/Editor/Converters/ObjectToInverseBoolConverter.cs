@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Data;
 
 namespace Editor.Converters
@@ -25,6 +24,5 @@ namespace Editor.Converters
         {
             return Convert(value, targetType, parameter, culture);
         }
-
     }
 }

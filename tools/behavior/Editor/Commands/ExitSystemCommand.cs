@@ -1,26 +1,21 @@
 ﻿using Editor.Framework;
 using Editor.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Editor.Commands
 {
-    class ExitSystemCommand : ViewModelCommand<BehaviorEditViewModel>
+    class ExitSystemCommand : ViewModelCommand<EditorFrameViewModel>
     {
-        public ExitSystemCommand(BehaviorEditViewModel contextViewModel) : base(contextViewModel)
+        public ExitSystemCommand(EditorFrameViewModel contextViewModel) : base(contextViewModel)
         {
         }
 
-        public override void Execute(BehaviorEditViewModel contextViewModel, object parameter)
+        public override void Execute(EditorFrameViewModel contextViewModel, object parameter)
         {
             Application.Current.Shutdown();
         }
 
-        public override bool CanExecute(BehaviorEditViewModel contextViewModel, object parameter)
+        public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)
         {
             if (contextViewModel.IsReadOnly)
             {
