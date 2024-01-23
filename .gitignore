@@ -25,3 +25,5 @@ go.work
 log.*
 example/monopoly/bin/
 tools/behavior/.vs/
+tools/behavior/Editor/bin/
+tools/behavior/Editor/obj/
