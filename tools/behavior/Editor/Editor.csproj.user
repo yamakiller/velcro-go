@@ -7,75 +7,30 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Dialogs\ArgsTypeEditDialog.xaml.cs">
+    <Compile Update="Contrels\EditorMenuBar.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Dialogs\CreateWorkspaceDialog.xaml.cs">
+    <Compile Update="Contrels\EditorWorkspace.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Dialogs\EditNodeDialog.xaml.cs">
+    <Compile Update="Dialogs\WhatDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Dialogs\ScanDialog.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\BehaviorEditor.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\BehaviorEditorMenu.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\BehaviorEditorView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\BehaviorNodeTree.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\BehaviorProperty.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\BehaviorWorkspace.xaml.cs">
+    <Compile Update="EditorFrame.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Datas\Xmls\BehaviorArgsType.Tables.xaml">
+    <Page Update="Contrels\EditorMenuBar.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Datas\Xmls\BehaviorNodeClassify.Tables.xaml">
+    <Page Update="Contrels\EditorWorkspace.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Dialogs\ArgsTypeEditDialog.xaml">
+    <Page Update="Dialogs\WhatDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Dialogs\CreateWorkspaceDialog.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Dialogs\EditNodeDialog.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Dialogs\ScanDialog.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Styles\Error.Style.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\BehaviorEditor.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\BehaviorEditorMenu.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\BehaviorEditorView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\BehaviorNodeTree.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\BehaviorProperty.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\BehaviorWorkspace.xaml">
+    <Page Update="EditorFrame.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

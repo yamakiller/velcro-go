@@ -1,5 +1,0 @@
-target-addr: 0.0.0.0:10000
-client-connection-timeout: 200000
-client-number: 50
-interval-second: 5
-screen-refresh-frequency: 4000

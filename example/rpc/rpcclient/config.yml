@@ -1,5 +1,0 @@
-target-addr: 0.0.0.0:8801
-client-connection-timeout: 2000
-client-number: 1
-interval-second: 5
-screen-refresh-frequency: 4000

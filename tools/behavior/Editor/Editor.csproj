@@ -9,186 +9,89 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\CancelDebug.png" />
-    <None Remove="Resources\Collapse.png" />
-    <None Remove="Resources\Connect.png" />
-    <None Remove="Resources\Crashdump.ico" />
-    <None Remove="Resources\DeleteFilderOrFile.png" />
-    <None Remove="Resources\Disconnect.png" />
-    <None Remove="Resources\Edit.png" />
-    <None Remove="Resources\Expand.ico" />
-    <None Remove="Resources\Expand.png" />
-    <None Remove="Resources\Export.ico" />
-    <None Remove="Resources\Export.png" />
-    <None Remove="Resources\Eye.ico" />
-    <None Remove="Resources\File-Open.png" />
-    <None Remove="Resources\Link.png" />
-    <None Remove="Resources\Newfile.png" />
-    <None Remove="Resources\Newfolder.png" />
-    <None Remove="Resources\OpenBehavior.png" />
-    <None Remove="Resources\OpenWorkspace.png" />
-    <None Remove="Resources\Packages\actions\error.go" />
-    <None Remove="Resources\Packages\actions\failer.go" />
-    <None Remove="Resources\Packages\actions\logger.go" />
-    <None Remove="Resources\Packages\actions\runner.go" />
-    <None Remove="Resources\Packages\actions\succeeder.go" />
-    <None Remove="Resources\Packages\actions\wait.go" />
-    <None Remove="Resources\Packages\actions\wait_failure.go" />
-    <None Remove="Resources\Packages\actions\wait_random.go" />
-    <None Remove="Resources\Packages\composites\ifelse.go" />
-    <None Remove="Resources\Packages\composites\parallel.go" />
-    <None Remove="Resources\Packages\composites\parallel_selector.go" />
-    <None Remove="Resources\Packages\composites\parallel_sequence.go" />
-    <None Remove="Resources\Packages\composites\selector.go" />
-    <None Remove="Resources\Packages\composites\selector_random.go" />
-    <None Remove="Resources\Packages\composites\selector_serial.go" />
-    <None Remove="Resources\Packages\composites\sequence.go" />
-    <None Remove="Resources\Packages\composites\sequence_random.go" />
-    <None Remove="Resources\Packages\condition\tick_times.go" />
-    <None Remove="Resources\Packages\default.json" />
-    <None Remove="Resources\ReloadWorkspace.png" />
-    <None Remove="Resources\Save.ico" />
-    <None Remove="Resources\Saveall.ico" />
-    <None Remove="Resources\Saveall.png" />
-    <None Remove="Resources\Workspace.png" />
+    <None Remove="Resources\Roboto\Roboto-Black.ttf" />
+    <None Remove="Resources\Roboto\Roboto-BlackItalic.ttf" />
+    <None Remove="Resources\Roboto\Roboto-Bold.ttf" />
+    <None Remove="Resources\Roboto\Roboto-BoldItalic.ttf" />
+    <None Remove="Resources\Roboto\Roboto-Italic.ttf" />
+    <None Remove="Resources\Roboto\Roboto-Light.ttf" />
+    <None Remove="Resources\Roboto\Roboto-LightItalic.ttf" />
+    <None Remove="Resources\Roboto\Roboto-Medium.ttf" />
+    <None Remove="Resources\Roboto\Roboto-MediumItalic.ttf" />
+    <None Remove="Resources\Roboto\Roboto-Regular.ttf" />
+    <None Remove="Resources\Roboto\Roboto-Thin.ttf" />
+    <None Remove="Resources\Roboto\Roboto-ThinItalic.ttf" />
+    <None Remove="Resources\Roboto\RobotoCondensed-Bold.ttf" />
+    <None Remove="Resources\Roboto\RobotoCondensed-BoldItalic.ttf" />
+    <None Remove="Resources\Roboto\RobotoCondensed-Italic.ttf" />
+    <None Remove="Resources\Roboto\RobotoCondensed-Light.ttf" />
+    <None Remove="Resources\Roboto\RobotoCondensed-LightItalic.ttf" />
+    <None Remove="Resources\Roboto\RobotoCondensed-Regular.ttf" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\DeleteFilderOrFile.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Link.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Newfile.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    <PackageReference Include="Dirkster.AvalonDock" Version="4.72.1" />
+    <PackageReference Include="Dirkster.AvalonDock.Themes.Expression" Version="4.72.1" />
+    <PackageReference Include="MaterialDesignColors" Version="3.0.0-ci508" />
+    <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
+    <PackageReference Include="ShowMeTheXAML" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\Expand.png">
+    <Resource Include="Resources\Roboto\Roboto-Black.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\CancelDebug.png" />
-    <Resource Include="Resources\Connect.png">
+    <Resource Include="Resources\Roboto\Roboto-BlackItalic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Crashdump.ico">
+    <Resource Include="Resources\Roboto\Roboto-Bold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Collapse.png">
+    <Resource Include="Resources\Roboto\Roboto-BoldItalic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Disconnect.png">
+    <Resource Include="Resources\Roboto\Roboto-Italic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Edit.png">
+    <Resource Include="Resources\Roboto\Roboto-Light.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Expand.ico">
+    <Resource Include="Resources\Roboto\Roboto-LightItalic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Export.ico">
+    <Resource Include="Resources\Roboto\Roboto-Medium.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Export.png">
+    <Resource Include="Resources\Roboto\Roboto-MediumItalic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Eye.ico">
+    <Resource Include="Resources\Roboto\Roboto-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\File-Open.png">
+    <Resource Include="Resources\Roboto\Roboto-Thin.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Newfolder.png">
+    <Resource Include="Resources\Roboto\Roboto-ThinItalic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\OpenBehavior.png">
+    <Resource Include="Resources\Roboto\RobotoCondensed-Bold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\OpenWorkspace.png">
+    <Resource Include="Resources\Roboto\RobotoCondensed-BoldItalic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Packages\actions\error.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\actions\failer.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\actions\logger.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\actions\runner.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\actions\succeeder.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\actions\wait.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\actions\wait_failure.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\actions\wait_random.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\ifelse.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\parallel.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\parallel_selector.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\parallel_sequence.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\selector.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\selector_random.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\selector_serial.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\sequence.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\composites\sequence_random.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\condition\tick_times.go">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Packages\default.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\ReloadWorkspace.png">
+    <Resource Include="Resources\Roboto\RobotoCondensed-Italic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Save.ico">
+    <Resource Include="Resources\Roboto\RobotoCondensed-Light.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Saveall.ico">
+    <Resource Include="Resources\Roboto\RobotoCondensed-LightItalic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Saveall.png">
+    <Resource Include="Resources\Roboto\RobotoCondensed-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\Workspace.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NodeView\NodeBehavior.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Framework\" />
   </ItemGroup>
 
 </Project>
