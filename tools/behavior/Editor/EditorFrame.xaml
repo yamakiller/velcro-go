@@ -29,10 +29,13 @@
             <avalondock:LayoutRoot>
                 <avalondock:LayoutPanel Orientation="Horizontal">
                     <!--工作空间面板-->
-                    <avalondock:LayoutAnchorablePane DockWidth="480">
+                    <avalondock:LayoutAnchorablePane DockWidth="240">
                         <!--工作控件窗口-->
                         <avalondock:LayoutAnchorable Title="工作空间">
                             <localCtrl:EditorWorkspace />
+                        </avalondock:LayoutAnchorable>
+                        <avalondock:LayoutAnchorable Title="属性">
+                            
                         </avalondock:LayoutAnchorable>
                     </avalondock:LayoutAnchorablePane>
                     <avalondock:LayoutDocumentPaneGroup >
@@ -40,13 +43,6 @@
                             <avalondock:LayoutDocument ContentId="document1" Title="Document 1">
                                 <Button Content="Document 1 Content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </avalondock:LayoutDocument>
-                        </avalondock:LayoutDocumentPane>
-                    </avalondock:LayoutDocumentPaneGroup>
-
-                    <avalondock:LayoutDocumentPaneGroup  DockWidth="40">
-                        <avalondock:LayoutDocumentPane>
-                            <avalondock:LayoutAnchorable ContentId="alarms" Title="Alarms" >
-                            </avalondock:LayoutAnchorable>
                         </avalondock:LayoutDocumentPane>
                     </avalondock:LayoutDocumentPaneGroup>
                 </avalondock:LayoutPanel>

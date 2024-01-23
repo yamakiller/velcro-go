@@ -130,6 +130,18 @@
         "frameworkReferences": [
           "Microsoft.WindowsDesktop.App.WPF"
         ]
+      },
+      "ShowMeTheXAML/2.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp3.1/ShowMeTheXAML.dll": {}
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/ShowMeTheXAML.dll": {}
+        },
+        "frameworkReferences": [
+          "Microsoft.WindowsDesktop.App.WPF"
+        ]
       }
     }
   },
@@ -302,6 +314,26 @@
         "microsoft.xaml.behaviors.wpf.nuspec",
         "tools/Install.ps1"
       ]
+    },
+    "ShowMeTheXAML/2.0.0": {
+      "sha512": "ljDrkSyGhx3EKIq73c9317m7NsvTjCKVdO0vnqzjwdWAgFkpdfrEd3Nn6uF/Mc+QUTSUfFfjmONJDfYSPwCB3g==",
+      "type": "package",
+      "path": "showmethexaml/2.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/monoandroid10.0/ShowMeTheXAML.dll",
+        "lib/monoandroid90/ShowMeTheXAML.dll",
+        "lib/net472/ShowMeTheXAML.dll",
+        "lib/netcoreapp3.1/ShowMeTheXAML.dll",
+        "lib/netstandard2.0/ShowMeTheXAML.dll",
+        "lib/uap10.0.17763/ShowMeTheXAML.dll",
+        "lib/uap10.0.17763/ShowMeTheXAML.pri",
+        "lib/xamarinios10/ShowMeTheXAML.dll",
+        "lib/xamarinmac20/ShowMeTheXAML.dll",
+        "showmethexaml.2.0.0.nupkg.sha512",
+        "showmethexaml.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
@@ -309,23 +341,29 @@
       "Dirkster.AvalonDock >= 4.72.1",
       "Dirkster.AvalonDock.Themes.Expression >= 4.72.1",
       "MaterialDesignColors >= 3.0.0-ci508",
-      "MaterialDesignThemes >= 4.9.0"
+      "MaterialDesignThemes >= 4.9.0",
+      "ShowMeTheXAML >= 2.0.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Administrator\\.nuget\\packages\\": {}
+    "C:\\Users\\29627\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
+      "projectUniqueName": "D:\\workspace\\go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
       "projectName": "Editor",
-      "projectPath": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
-      "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\obj\\",
+      "projectPath": "D:\\workspace\\go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
+      "packagesPath": "C:\\Users\\29627\\.nuget\\packages\\",
+      "outputPath": "D:\\workspace\\go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\29627\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -333,7 +371,8 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "https://api.nuget.org/v3/index.json": {}
+        "https://api.nuget.org/v3/index.json": {},
+        "https://nuget.pkg.github.com/KDAB/index.json": {}
       },
       "frameworks": {
         "net8.0-windows7.0": {
@@ -366,6 +405,10 @@
           "MaterialDesignThemes": {
             "target": "Package",
             "version": "[4.9.0, )"
+          },
+          "ShowMeTheXAML": {
+            "target": "Package",
+            "version": "[2.0.0, )"
           }
         },
         "imports": [

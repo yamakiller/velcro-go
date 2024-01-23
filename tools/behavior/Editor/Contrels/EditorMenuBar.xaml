@@ -5,13 +5,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Contrels"
-             xmlns:converters="clr-namespace:Editor.Converters"
+             xmlns:converters="clr-namespace:Editor.Converters" 
+             xmlns:viewmodels="clr-namespace:Editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:EditorFrameViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Menu>
             <MenuItem Header="文件">
-                <MenuItem Header="新建工作区"  />
+                <MenuItem Header="新建工作区" Command="{Binding NewWorkspaceCmd}"  />
                 <MenuItem Header="打开工作区" Icon="{materialDesign:PackIcon Kind=FolderOpen}" 
                           InputGestureText="Ctrl+W" />
                 <MenuItem Header="重新加载工作区" InputGestureText="Ctrl+R" />
@@ -33,6 +34,8 @@
             <MenuItem Header="编辑">
             </MenuItem>
             <MenuItem Header="视图">
+                <MenuItem Header="工作空间" IsCheckable="True" IsChecked="True" />
+                <MenuItem Header="属性" IsCheckable="True" IsChecked="True" />
             </MenuItem>
             <MenuItem Header="调试">
             </MenuItem>

@@ -105,6 +105,14 @@
             "fileVersion": "1.1.39.4716"
           }
         }
+      },
+      "ShowMeTheXAML/2.0.0": {
+        "runtime": {
+          "lib/netcoreapp3.1/ShowMeTheXAML.dll": {
+            "assemblyVersion": "2.0.0.62",
+            "fileVersion": "2.0.0.62"
+          }
+        }
       }
     }
   },
@@ -143,6 +151,13 @@
       "sha512": "sha512-8PZKqw9QOcu42xk8puY4P1+EXHL9YGOR9b7qhaYx5cILHul456H073tj99vyPcCt0W0781T9RwHqkx507ZyUpQ==",
       "path": "microsoft.xaml.behaviors.wpf/1.1.39",
       "hashPath": "microsoft.xaml.behaviors.wpf.1.1.39.nupkg.sha512"
+    },
+    "ShowMeTheXAML/2.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ljDrkSyGhx3EKIq73c9317m7NsvTjCKVdO0vnqzjwdWAgFkpdfrEd3Nn6uF/Mc+QUTSUfFfjmONJDfYSPwCB3g==",
+      "path": "showmethexaml/2.0.0",
+      "hashPath": "showmethexaml.2.0.0.nupkg.sha512"
     }
   }
 }
