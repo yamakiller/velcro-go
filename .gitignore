@@ -27,3 +27,8 @@ example/monopoly/bin/
 tools/behavior/.vs/
 tools/behavior/Editor/bin/
 tools/behavior/Editor/obj/
+tools/behavior/Editor/obj/Debug/net8.0-windows/Editor.AssemblyInfo.cs
+tools/behavior/Editor/obj/Debug/net8.0-windows/Editor.AssemblyInfoInputs.cache
+tools/behavior/Editor/obj/Debug/net8.0-windows/Editor.assets.cache
+tools/behavior/Editor/obj/Debug/net8.0-windows/Editor.csproj.AssemblyReference.cache
+tools/behavior/Editor/obj/Debug/net8.0-windows/Editor.GeneratedMSBuildEditorConfig.editorconfig
