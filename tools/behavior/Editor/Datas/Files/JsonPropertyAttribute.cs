@@ -1,5 +1,5 @@
 ﻿
-namespace Editor.Datas
+namespace Editor.Datas.Files
 {
     internal class JsonPropertyAttribute : Attribute
     {

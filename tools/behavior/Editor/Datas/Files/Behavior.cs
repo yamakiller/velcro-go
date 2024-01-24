@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Editor.Datas
+namespace Editor.Datas.Files
 {
     public class Behavior3Node
     {

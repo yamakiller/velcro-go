@@ -12,11 +12,8 @@
         ResizeMode="NoResize"
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        MinWidth="280"
-        MinHeight="140"
-        MaxWidth="320"
-        MaxHeight="150"
-        >
+        WindowStartupLocation="CenterOwner"
+        SizeToContent="WidthAndHeight">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

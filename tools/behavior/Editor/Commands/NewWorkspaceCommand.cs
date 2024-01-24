@@ -26,12 +26,21 @@ namespace Editor.Commands
                 return;
             }
 
-            WorkspaceData wks = new WorkspaceData() { Dir = folderDialog.FolderName, 
-                Files = null };
+            string fileName =  Utils.RandFileName.GetRandName(folderDialog.FolderName, "NewWorkspace", ".json");
+            if (string.IsNullOrEmpty(fileName)) 
+            {
+                Dialogs.WhatDialog.ShowWhatMessage("错误", "生成工作空间名失败");
+                return;
+            }
 
-            // TODO: 如果存在久的工作空间，哪么将其关闭
+            CloseCurrentWorkspace.Close(contextViewModel);
 
-            contextViewModel.CurrWorkspace = wks;
+            Workspace wkdat = new Workspace() { 
+                Name = fileName.Replace(".json", ""),
+                Dir = folderDialog.FolderName, 
+                Trees = new System.Collections.ObjectModel.ObservableCollection<BehaviorTree>()};
+
+            contextViewModel.CurrWorkspace = wkdat;
         }
 
         public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)

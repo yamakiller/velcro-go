@@ -24,5 +24,10 @@ namespace Editor.Contrels
         {
             InitializeComponent();
         }
+
+        private void Workspace_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+
+        }
     }
 }

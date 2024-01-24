@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\App.xaml
-41820929921
+5-1108327962
 
-20-214508008
+28-1487518679
 204-1107214990
-Contrels\EditorMenuBar.xaml;Contrels\EditorWorkspace.xaml;Dialogs\WhatDialog.xaml;EditorFrame.xaml;
+Contrels\EditorMenuBar.xaml;Contrels\EditorWorkspace.xaml;Dialogs\SaveProccessFrame.xaml;Dialogs\WhatDialog.xaml;EditorFrame.xaml;
 
 False
 
