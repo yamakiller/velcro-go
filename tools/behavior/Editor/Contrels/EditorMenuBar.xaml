@@ -29,7 +29,8 @@
                 <Separator />
                 <MenuItem Header="最近打开的行为树" />
                 <MenuItem Header="最近打开的工作区" />
-                <MenuItem Header="退出" Icon="{materialDesign:PackIcon Kind=ExitToApp}" InputGestureText="Ctrl+E" />
+                <MenuItem Header="退出" Command="{Binding ExitSystemCmd}"
+                          Icon="{materialDesign:PackIcon Kind=ExitToApp}" InputGestureText="Ctrl+E" />
             </MenuItem>
             <MenuItem Header="编辑">
             </MenuItem>

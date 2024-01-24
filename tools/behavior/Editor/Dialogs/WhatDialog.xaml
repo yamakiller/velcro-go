@@ -9,7 +9,14 @@
         xmlns:system="clr-namespace:System;assembly=mscorlib" 
         mc:Ignorable="d"
         WindowStyle="None"
-        Height="auto" Width="auto">
+        ResizeMode="NoResize"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        MinWidth="280"
+        MinHeight="140"
+        MaxWidth="320"
+        MaxHeight="150"
+        >
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -30,10 +37,10 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Text="{Binding Message}" />
-                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                    <Button Margin="0,8,8,0"  Content="ACCEPT" Click="Accept_Click" IsDefault="True" Style="{StaticResource MaterialDesignFlatButton}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Cursor="">
+                    <Button Margin="8,8,4,4"  Content="确定" Click="Accept_Click" IsDefault="True" Style="{StaticResource MaterialDesignFlatButton}"/>
 
-                    <Button Margin="0,8,8,0" Content="CANCEL" Click="Cancel_Click" IsCancel="True" Style="{StaticResource MaterialDesignFlatButton}" />
+                    <Button Margin="8,8,4,4" Content="取消" Click="Cancel_Click" IsCancel="True" Style="{StaticResource MaterialDesignFlatButton}" Cursor="Hand" />
                 </StackPanel>
             </Grid>
                

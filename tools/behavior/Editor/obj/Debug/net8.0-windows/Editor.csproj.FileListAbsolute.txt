@@ -129,3 +129,6 @@ D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\De
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Editor.pdb
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Editor.genruntimeconfig.cache
 D:\workspace\go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\ref\Editor.dll
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\bin\Debug\net8.0-windows\ShowMeTheXAML.dll
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\WhatDialog.g.cs
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\WhatDialog.baml

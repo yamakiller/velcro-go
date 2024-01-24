@@ -14,7 +14,10 @@ namespace Editor.Commands
         {
             if (contextViewModel.IsModifyed)
             {
-
+               if (Dialogs.WhatDialog.ShowWhatMessage("警告", "当前工作空间未保存,是否需要保存?"))
+                {
+                    // TODO: 保存
+                }
             }
 
             Application.Current.Shutdown();

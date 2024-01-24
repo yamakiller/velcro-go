@@ -61,7 +61,7 @@ namespace Editor.Contrels {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Editor;V1.0.0.0;component/contrels/editorworkspace.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Editor;component/contrels/editorworkspace.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Contrels\EditorWorkspace.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

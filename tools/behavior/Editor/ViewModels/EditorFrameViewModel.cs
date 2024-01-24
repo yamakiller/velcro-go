@@ -62,6 +62,20 @@ namespace Editor.ViewModels
             } 
         }
 
+        private ExitSystemCommand? excmd = null;
+
+        public ExitSystemCommand ExitSystemCmd
+        {
+            get
+            {
+                if (excmd == null)
+                {
+                    excmd = new ExitSystemCommand(this);
+                }
+                return excmd;
+            }
+        }
+
         #endregion
     }
 }

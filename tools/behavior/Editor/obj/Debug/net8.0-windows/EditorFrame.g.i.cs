@@ -58,7 +58,7 @@ namespace Editor {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Editor;V1.0.0.0;component/editorframe.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Editor;component/editorframe.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\EditorFrame.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
