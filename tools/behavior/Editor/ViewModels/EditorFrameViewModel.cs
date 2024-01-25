@@ -3,7 +3,7 @@ using Editor.Framework;
 
 namespace Editor.ViewModels
 {
-    class EditorFrameViewModel : ViewModel
+    class EditorFrameViewModel : ViewModel, ViewModelData
     {
         #region 属性
         // 是否是只读状态
@@ -13,7 +13,27 @@ namespace Editor.ViewModels
         // 是否是修改状态
         bool isModifyed = false;
 
-        public bool IsModifyed { get { return isModifyed; } set { SetProperty(ref isModifyed, value); } }
+        public bool IsModifyed 
+        { 
+            get { return isModifyed; } 
+            set 
+            {
+                if (value && CurrWorkspace != null)
+                {
+                    Caption = "*[" + CurrWorkspace.Name + "]" + CurrWorkspace.Dir;
+                } 
+                else if (!value && CurrWorkspace != null)
+                {
+                    Caption = "[" + CurrWorkspace.Name + "]" + CurrWorkspace.Dir;
+                }
+                else if (CurrWorkspace == null)
+                {
+                    Caption = "Behavior Editor";
+                }
+
+                SetProperty(ref isModifyed, value); 
+            } 
+        }
         #endregion
 
         /// <summary>
@@ -33,17 +53,6 @@ namespace Editor.ViewModels
             get { return wsd; }
             set 
             {
-                if (value == null)
-                {
-                    IsModifyed = false;
-                    Caption = "Behavior Editor";
-                } 
-                else if (wsd != value)
-                {
-                    IsModifyed = true;
-                    Caption = "*" + value.Dir;
-                }
-
                 SetProperty(ref wsd, value); 
             }
         }
@@ -54,8 +63,6 @@ namespace Editor.ViewModels
             get { return wsdselected; }
             set
             {
-
-
                 SetProperty(ref wsdselected, value);
             }
         }

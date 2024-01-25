@@ -134,3 +134,7 @@ D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\D
 D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\WhatDialog.baml
 D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\SaveProccessFrame.g.cs
 D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\SaveProccessFrame.baml
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\OpenProccessFrame.g.cs
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\obj\Debug\net8.0-windows\Dialogs\OpenProccessFrame.baml
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\bin\Debug\net8.0-windows\NodeBehavior.dll
+D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\Editor\bin\Debug\net8.0-windows\NodeBehavior.pdb

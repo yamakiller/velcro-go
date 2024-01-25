@@ -30,7 +30,8 @@
             <TreeView Visibility="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToVisibilityConverter.Instance}}"
                       SelectedItemChanged="Workspace_SelectedItemChanged">
                 <TreeViewItem ItemsSource="{Binding CurrWorkspace.Trees}" 
-                              IsExpanded="{Binding IsWorkspaceExpanded}">
+                              IsExpanded="{Binding IsWorkspaceExpanded}"
+                              MouseDoubleClick="TreeViewItem_MouseDoubleClick">
                     <TreeViewItem.Header>
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16">
@@ -38,7 +39,10 @@
                                     <materialDesign:PackIcon Kind="AlphaWCircle" Height="24" Width="24" />
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Margin="4,0,0,0" Text="{Binding CurrWorkspace.Name}" />
+                            <TextBlock Margin="4,0,0,0" Text="{Binding CurrWorkspace.Name, Mode=TwoWay}" Width="Auto" />
+                            <TextBox x:Name="renametextbox" Visibility="Collapsed" Margin="4,0,0,0" Text="{Binding CurrWorkspace.Name, Mode=TwoWay}" Width="Auto" 
+                                     KeyDown="renametextbox_KeyDown"
+                                     LostFocus="renametextbox_LostFocus"/>
                         </StackPanel>
                     </TreeViewItem.Header>
                     <TreeViewItem.ItemTemplate>
@@ -49,7 +53,10 @@
                                         <materialDesign:PackIcon Kind="VectorPolyline" Height="24" Width="24" />
                                     </Canvas>
                                 </Viewbox>
-                                <TextBlock Margin="3, 2" Text="{Binding Tree.Title, Mode=TwoWay}"></TextBlock>
+                                <TextBlock Margin="3, 2" Text="{Binding Title, Mode=TwoWay}" Width="Auto"></TextBlock>
+                                <TextBox x:Name="renametextbox" Margin="3, 2" Text="{Binding Title, Mode=TwoWay}" Width="Auto" Visibility="Collapsed" 
+                                         KeyDown="renametextbox_KeyDown"
+                                         LostFocus="renametextbox_LostFocus"></TextBox>
                             </StackPanel>
                         </DataTemplate>
                     </TreeViewItem.ItemTemplate>

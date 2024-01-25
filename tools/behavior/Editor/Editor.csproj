@@ -38,6 +38,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NodeView\NodeBehavior.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\Roboto\Roboto-Black.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>

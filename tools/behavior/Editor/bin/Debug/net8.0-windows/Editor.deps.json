@@ -12,6 +12,7 @@
           "Dirkster.AvalonDock.Themes.Expression": "4.72.1",
           "MaterialDesignColors": "3.0.0-ci508",
           "MaterialDesignThemes": "4.9.0",
+          "NodeBehavior": "1.0.0",
           "ShowMeTheXAML": "2.0.0"
         },
         "runtime": {
@@ -125,6 +126,11 @@
             "fileVersion": "2.0.0.62"
           }
         }
+      },
+      "NodeBehavior/1.0.0": {
+        "runtime": {
+          "NodeBehavior.dll": {}
+        }
       }
     }
   },
@@ -175,6 +181,11 @@
       "sha512": "sha512-ljDrkSyGhx3EKIq73c9317m7NsvTjCKVdO0vnqzjwdWAgFkpdfrEd3Nn6uF/Mc+QUTSUfFfjmONJDfYSPwCB3g==",
       "path": "showmethexaml/2.0.0",
       "hashPath": "showmethexaml.2.0.0.nupkg.sha512"
+    },
+    "NodeBehavior/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

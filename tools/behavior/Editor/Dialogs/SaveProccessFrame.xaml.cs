@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml.Linq;
 
 namespace Editor.Dialogs
 {
@@ -73,7 +74,7 @@ namespace Editor.Dialogs
                     }
                     string filePath = System.IO.Path.Combine(m_currentWorkspace.Dir, tree.FileName);
                     Message = filePath;
-                    if (tree.Tree == null)
+                    /*if (tree.Tree == null)
                     {
                         if (System.IO.File.Exists(filePath))
                         {
@@ -81,14 +82,52 @@ namespace Editor.Dialogs
                         }
                         successTotal++;
                         continue;
-                    }
+                    }*/
 
                     string jsonContent = "";
                     Message = filePath + "[Serializing]";
                     //序列化
                     try
                     {
-                        jsonContent = JsonSerializer.Serialize<Datas.Files.Behavior3Tree>(tree.Tree);
+                        Datas.Files.Behavior3Tree b3tree = new Datas.Files.Behavior3Tree() { 
+                            ID = tree.ID,
+                            Title = tree.Title,
+                            Description = tree.Description,
+                            Properties = tree.Properties,
+                            //Nodes = tree.Nodes,
+                        };
+                        
+                        if (tree.Nodes != null) 
+                        {
+                            b3tree.Nodes = new Dictionary<string, Datas.Files.Behavior3Node>();
+                            foreach (var node in tree.Nodes)
+                            {
+                                Datas.Files.Behavior3Node b3node = new Datas.Files.Behavior3Node()
+                                {
+                                    ID = node.Value.ID,
+                                    Name = node.Value.Name,
+                                    Title = node.Value.Title,
+                                    Category = node.Value.Category,
+                                    Description = node.Value.Description,
+                                    Child = node.Value.Child,
+                                    Properties = node.Value.Properties,
+                                };
+
+                                if (node.Value.Children != null)
+                                {
+                                    b3node.Children = new List<string>();
+                                    foreach(var child in node.Value.Children)
+                                    {
+                                        b3node.Children.Add(child);
+                                    }
+                                }
+
+                                b3tree.Nodes.Add(node.Key, b3node);
+                            }
+                        }
+  
+
+                        jsonContent = JsonSerializer.Serialize<Datas.Files.Behavior3Tree>(b3tree);
                     }
                     catch (NotSupportedException ex) 
                     {

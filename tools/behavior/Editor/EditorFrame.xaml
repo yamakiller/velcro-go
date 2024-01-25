@@ -26,6 +26,22 @@
                 <avalondock:ExpressionDarkTheme />
             </avalondock:DockingManager.Theme>
 
+            <!--This adds the title to the new windows-->
+            <DockingManager.LayoutItemContainerStyle>
+                <Style TargetType="{x:Type LayoutItem}">
+                    <Setter Property="Title" Value="{Binding Model.Title}"/>
+                </Style>
+            </DockingManager.LayoutItemContainerStyle>
+
+            <avalondock:DockingManager.LayoutItemTemplate>
+
+                <avalondock:DockingManager.DocumentPaneTemplate>
+                    <DataTemplate>
+
+                    </DataTemplate>
+                </avalondock:DockingManager.DocumentPaneTemplate>
+               
+            </avalondock:DockingManager.LayoutItemTemplate>
             <avalondock:LayoutRoot>
                 <avalondock:LayoutPanel Orientation="Horizontal">
                     <!--工作空间面板-->
@@ -38,13 +54,12 @@
                             
                         </avalondock:LayoutAnchorable>
                     </avalondock:LayoutAnchorablePane>
-                    <avalondock:LayoutDocumentPaneGroup >
+                    <avalondock:LayoutDocumentPaneGroup>
                         <avalondock:LayoutDocumentPane>
-                            <avalondock:LayoutDocument ContentId="document1" Title="Document 1">
-                                <Button Content="Document 1 Content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </avalondock:LayoutDocument>
+                            
                         </avalondock:LayoutDocumentPane>
                     </avalondock:LayoutDocumentPaneGroup>
+                     
                 </avalondock:LayoutPanel>
             </avalondock:LayoutRoot>
         </avalondock:DockingManager>

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "VJfZNWyZ7cFL8zdnMTI5QEykujHX70hGnySxlyMslmUp7wuFMVMIzfNwOUONUZLXPoIqJzsj2+a5MVWwtEEl2Q==",
+  "dgSpecHash": "MUXy10nDoN5/rO0WNlyez+voO+KC6hXpLZGIhLwIiwoQGnXnz6GTpCy9hWmhDty3nea1CmRzQqk8FY3h9pNN+A==",
   "success": true,
   "projectFilePath": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
   "expectedPackageFiles": [
