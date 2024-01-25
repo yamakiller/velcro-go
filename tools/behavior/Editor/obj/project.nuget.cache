@@ -1,15 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "VJfZNWyZ7cFL8zdnMTI5QEykujHX70hGnySxlyMslmUp7wuFMVMIzfNwOUONUZLXPoIqJzsj2+a5MVWwtEEl2Q==",
+  "dgSpecHash": "YA7MRBMqjSdnSQlPKouADRpIVgy9tWsvoI0+H4SCt1Yh9idwEJpgd68+a76HX1Vs6lLQPjSS670y9jFZC4JSrw==",
   "success": true,
-  "projectFilePath": "D:\\Workspaces\\Go\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
+  "projectFilePath": "D:\\GOPATH\\src\\fenzhi\\velcro-go\\tools\\behavior\\Editor\\Editor.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Administrator\\.nuget\\packages\\dirkster.avalondock\\4.72.1\\dirkster.avalondock.4.72.1.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\dirkster.avalondock.themes.expression\\4.72.1\\dirkster.avalondock.themes.expression.4.72.1.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\materialdesigncolors\\3.0.0-ci508\\materialdesigncolors.3.0.0-ci508.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\materialdesignthemes\\4.9.0\\materialdesignthemes.4.9.0.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.39\\microsoft.xaml.behaviors.wpf.1.1.39.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\showmethexaml\\2.0.0\\showmethexaml.2.0.0.nupkg.sha512"
+    "C:\\Users\\冷帆\\.nuget\\packages\\dirkster.avalondock\\4.72.1\\dirkster.avalondock.4.72.1.nupkg.sha512",
+    "C:\\Users\\冷帆\\.nuget\\packages\\dirkster.avalondock.themes.expression\\4.72.1\\dirkster.avalondock.themes.expression.4.72.1.nupkg.sha512",
+    "C:\\Users\\冷帆\\.nuget\\packages\\materialdesigncolors\\3.0.0-ci508\\materialdesigncolors.3.0.0-ci508.nupkg.sha512",
+    "C:\\Users\\冷帆\\.nuget\\packages\\materialdesignthemes\\4.9.0\\materialdesignthemes.4.9.0.nupkg.sha512",
+    "C:\\Users\\冷帆\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.39\\microsoft.xaml.behaviors.wpf.1.1.39.nupkg.sha512",
+    "C:\\Users\\冷帆\\.nuget\\packages\\showmethexaml\\2.0.0\\showmethexaml.2.0.0.nupkg.sha512"
   ],
   "logs": []
 }
