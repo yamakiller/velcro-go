@@ -16,6 +16,16 @@ namespace Editor.Commands
 
         public override void Execute(EditorFrameViewModel contextViewModel, object parameter)
         {
+            if (contextViewModel.CurrWorkspace == null)
+            {
+                return;
+            }
+
+            Dialogs.SaveProccessFrame spf = new Dialogs.SaveProccessFrame();
+            if (spf.Saving(contextViewModel.CurrWorkspace) == true)
+            {
+                contextViewModel.IsModifyed = false;
+            }
         }
 
         public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)

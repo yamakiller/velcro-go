@@ -5,27 +5,55 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Contrels"
+             xmlns:converters="clr-namespace:Editor.Converters" 
+             xmlns:datas="clr-namespace:Editor.Datas"
+             xmlns:viewmodels="clr-namespace:Editor.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:EditorFrameViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <DockPanel>
             <ToolBarTray DockPanel.Dock="Top">
                 <ToolBar ClipToBounds="False" Style="{StaticResource MaterialDesignToolBar}">
-                    <Button Content="{materialDesign:PackIcon Kind=FolderOpenOutline}" ToolTip="打开工作区" />
+                    <Button Command="{Binding OpenWorkspaceCmd}" Content="{materialDesign:PackIcon Kind=FolderOpenOutline}" ToolTip="打开工作区" />
                     <Separator />
                     <Button Content="{materialDesign:PackIcon Kind=Reload}" ToolTip="重新载入工作区" />
                     <Button Content="{materialDesign:PackIcon Kind=Export}" ToolTip="导出" />
                     <Separator />
-                    <Button Content="{materialDesign:PackIcon Kind=FamilyTree}" ToolTip="新建行为树" />
-                    <Button Content="{materialDesign:PackIcon Kind=FolderPlusOutline}" ToolTip="新建文件夹" />
+                    <Button IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" Command="{Binding NewBehaviorTreeCmd}" Content="{materialDesign:PackIcon Kind=VectorPolylinePlus}" ToolTip="新建行为树" />
+                    <Button IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" Command="{Binding NewBehaviorTreeCmd}" Content="{materialDesign:PackIcon Kind=FolderPlusOutline}" ToolTip="新建文件夹" />
                     <Button Content="{materialDesign:PackIcon Kind=DeleteForeverOutline}" ToolTip="删除" />
                     <Separator />
                     <Button Content="{materialDesign:PackIcon Kind=ExpandAllOutline}" ToolTip="展开全部" />
                     <Button Content="{materialDesign:PackIcon Kind=CollapseAllOutline}" ToolTip="收起全部" />
                 </ToolBar>
             </ToolBarTray>
-            <TreeView>
-                
+            <TreeView Visibility="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToVisibilityConverter.Instance}}"
+                      SelectedItemChanged="Workspace_SelectedItemChanged">
+                <TreeViewItem ItemsSource="{Binding CurrWorkspace.Trees}" 
+                              IsExpanded="{Binding IsWorkspaceExpanded}">
+                    <TreeViewItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16">
+                                <Canvas Width="24" Height="24">
+                                    <materialDesign:PackIcon Kind="AlphaWCircle" Height="24" Width="24" />
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Margin="4,0,0,0" Text="{Binding CurrWorkspace.Name}" />
+                        </StackPanel>
+                    </TreeViewItem.Header>
+                    <TreeViewItem.ItemTemplate>
+                        <DataTemplate DataType="{x:Type datas:BehaviorTree}">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="16" Height="16">
+                                    <Canvas Width="24" Height="24">
+                                        <materialDesign:PackIcon Kind="VectorPolyline" Height="24" Width="24" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Margin="3, 2" Text="{Binding Tree.Title, Mode=TwoWay}"></TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </TreeViewItem.ItemTemplate>
+                </TreeViewItem>
             </TreeView>
         </DockPanel>
     </Grid>

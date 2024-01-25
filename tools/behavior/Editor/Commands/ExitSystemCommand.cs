@@ -12,11 +12,7 @@ namespace Editor.Commands
 
         public override void Execute(EditorFrameViewModel contextViewModel, object parameter)
         {
-            if (contextViewModel.IsModifyed)
-            {
-
-            }
-
+            CloseCurrentWorkspace.Close(contextViewModel);
             Application.Current.Shutdown();
         }
 

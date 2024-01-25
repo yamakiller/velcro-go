@@ -13,6 +13,12 @@
     <Compile Update="Contrels\EditorWorkspace.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\OpenProccessFrame.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Dialogs\SaveProccessFrame.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\WhatDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -25,6 +31,12 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Contrels\EditorWorkspace.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\OpenProccessFrame.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\SaveProccessFrame.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Dialogs\WhatDialog.xaml">
