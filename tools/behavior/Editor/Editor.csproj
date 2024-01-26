@@ -34,6 +34,7 @@
     <PackageReference Include="Dirkster.AvalonDock.Themes.Expression" Version="4.72.1" />
     <PackageReference Include="MaterialDesignColors" Version="3.0.0-ci508" />
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
     <PackageReference Include="ShowMeTheXAML" Version="2.0.0" />
   </ItemGroup>
 

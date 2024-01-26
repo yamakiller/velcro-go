@@ -1,10 +1,10 @@
 ﻿<Window x:Class="Editor.EditorFrame"
+        
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:localCtrl="clr-namespace:Editor.Contrels"
-        xmlns:avalondock="https://github.com/Dirkster99/AvalonDock"
         mc:Ignorable="d"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Medium"
@@ -18,50 +18,6 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <localCtrl:EditorMenuBar Grid.Row="0"/>
-        <avalondock:DockingManager Grid.Row="1"
-                             AllowMixedOrientation="True"
-                             BorderBrush="Black"
-                             BorderThickness="1">
-            <avalondock:DockingManager.Theme>
-                <avalondock:ExpressionDarkTheme />
-            </avalondock:DockingManager.Theme>
-
-            <!--This adds the title to the new windows-->
-            <DockingManager.LayoutItemContainerStyle>
-                <Style TargetType="{x:Type LayoutItem}">
-                    <Setter Property="Title" Value="{Binding Model.Title}"/>
-                </Style>
-            </DockingManager.LayoutItemContainerStyle>
-
-            <avalondock:DockingManager.LayoutItemTemplate>
-
-                <avalondock:DockingManager.DocumentPaneTemplate>
-                    <DataTemplate>
-
-                    </DataTemplate>
-                </avalondock:DockingManager.DocumentPaneTemplate>
-               
-            </avalondock:DockingManager.LayoutItemTemplate>
-            <avalondock:LayoutRoot>
-                <avalondock:LayoutPanel Orientation="Horizontal">
-                    <!--工作空间面板-->
-                    <avalondock:LayoutAnchorablePane DockWidth="240">
-                        <!--工作控件窗口-->
-                        <avalondock:LayoutAnchorable Title="工作空间">
-                            <localCtrl:EditorWorkspace />
-                        </avalondock:LayoutAnchorable>
-                        <avalondock:LayoutAnchorable Title="属性">
-                            
-                        </avalondock:LayoutAnchorable>
-                    </avalondock:LayoutAnchorablePane>
-                    <avalondock:LayoutDocumentPaneGroup>
-                        <avalondock:LayoutDocumentPane>
-                            
-                        </avalondock:LayoutDocumentPane>
-                    </avalondock:LayoutDocumentPaneGroup>
-                     
-                </avalondock:LayoutPanel>
-            </avalondock:LayoutRoot>
-        </avalondock:DockingManager>
+        <localCtrl:EditorContent Grid.Row="1" />
     </Grid>
 </Window>

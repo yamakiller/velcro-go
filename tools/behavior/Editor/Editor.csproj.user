@@ -7,6 +7,9 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Contrels\EditorContent.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Contrels\EditorMenuBar.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -27,6 +30,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Contrels\EditorContent.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Contrels\EditorMenuBar.xaml">
       <SubType>Designer</SubType>
     </Page>

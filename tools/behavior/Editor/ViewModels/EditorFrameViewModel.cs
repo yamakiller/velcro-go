@@ -1,5 +1,8 @@
 ﻿using Editor.Commands;
 using Editor.Framework;
+using MaterialDesignThemes.Wpf;
+using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace Editor.ViewModels
 {
@@ -34,17 +37,14 @@ namespace Editor.ViewModels
                 SetProperty(ref isModifyed, value); 
             } 
         }
-        #endregion
 
-        /// <summary>
-        /// 窗口标题
-        /// </summary>
         private string caption = "Behavior Editor";
         public string Caption
         {
             get { return caption; }
             set { SetProperty(ref caption, value); }
         }
+        #endregion
 
         #region 成员变量
         private Datas.Workspace? wsd = null;
@@ -78,6 +78,16 @@ namespace Editor.ViewModels
                 SetProperty(ref isWorkspaceExpanded, value);
             }
         }
+        #endregion
+
+        #region  Documents
+        private ObservableCollection<EditorBehaviorViewModel> documents;
+        public ReadOnlyObservableCollection<EditorBehaviorViewModel> Documents
+        {
+            get;
+            private set;
+        }
+
         #endregion
 
         #region 命令
@@ -149,6 +159,44 @@ namespace Editor.ViewModels
             }
         }
 
+        #endregion
+
+        #region 函数
+        public EditorFrameViewModel()
+        {
+            documents = new ObservableCollection<EditorBehaviorViewModel>();
+            Documents = new ReadOnlyObservableCollection<EditorBehaviorViewModel>(documents);
+        }
+
+        public void OpenBehaviorTreeView(Datas.BehaviorTree openTree)
+        {
+            var newDocument = new EditorBehaviorViewModel(this, openTree);
+            this.documents.Add(newDocument);
+        }
+
+        public void CloseBehaviorTreeView(Datas.BehaviorTree closeTree)
+        {
+            for (int i=0;i<documents.Count;i++)
+            {
+                if (documents[i].ContentId == closeTree.ID)
+                {
+                    documents.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        public void OnWorkspaceSelectedItemChangedTree(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is Datas.BehaviorTree)
+            {
+                CurrWorkspaceSelectedTree = e.NewValue as Datas.BehaviorTree;
+            }
+            else
+            {
+                CurrWorkspaceSelectedTree = null;
+            }
+        }
         #endregion
     }
 }

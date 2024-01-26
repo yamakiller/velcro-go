@@ -26,9 +26,36 @@ namespace Editor.Contrels
             InitializeComponent();
         }
 
-        private void Workspace_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            DependencyObject source = e.OriginalSource as DependencyObject;
+            while(source != null && source.GetType() != typeof(TreeViewItem))
+                source = System.Windows.Media.VisualTreeHelper.GetParent(source);
+            if (source == null)
+            {
+                tView.ContextMenu = null;
+                return;
+            }
 
+            TreeViewItem item = source as TreeViewItem;
+            if (!(item.DataContext is Datas.BehaviorTree))
+            {
+                tView.ContextMenu = null;
+                return;
+            }
+
+            CreateContextMenu(item);
+        }
+
+        private void CreateContextMenu(object positionItem)
+        {
+          
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem menuItem = new MenuItem();
+            menuItem.Header = "打开视图";
+            // TODO: 加入命令
+            contextMenu.Items.Add(menuItem);
+            tView.ContextMenu = contextMenu;
         }
 
         private void TreeViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
