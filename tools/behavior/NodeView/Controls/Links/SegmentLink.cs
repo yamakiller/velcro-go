@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-namespace Bga.Diagrams.Controls.Links
+namespace Bga.Diagrams.Controls
 {
     public class SegmentLink : LinkBase
     {
@@ -13,7 +13,7 @@ namespace Bga.Diagrams.Controls.Links
         }
         public override void UpdatePath()
         {
-            var linePoints = CalculateSegments();
+            /*var linePoints = CalculateSegments();
             if (CheckPoints(linePoints))
             {
                 CalculatePositions(linePoints);
@@ -25,7 +25,23 @@ namespace Bga.Diagrams.Controls.Links
                 this.PathGeometry = geometry;
             }
             else
+                this.PathGeometry = null;*/
+            // 贝塞尔曲线
+            var linePoints = GetEndPoinds();
+            if (CheckPoints(linePoints))
+            {
+                CalculatePositions(linePoints);
+                PathGeometry geometry = new PathGeometry();
+                PathFigure figure = new PathFigure();
+                figure.StartPoint = StartPoint;
+                figure.Segments.Add(new BezierSegment(MidPoint1, MidPoint2, EndPoint, true));
+                geometry.Figures.Add(figure);
+                this.PathGeometry = geometry;
+            }
+            else
+            {
                 this.PathGeometry = null;
+            }
         }
 
         protected virtual Point[] CalculateSegments()
@@ -76,6 +92,31 @@ namespace Bga.Diagrams.Controls.Links
             EndPoint = linePoints[linePoints.Length - 1];
             StartCapAngle = GeometryHelper.NormalAngle(linePoints[0], linePoints[1]);
             EndCapAngle = GeometryHelper.NormalAngle(linePoints[linePoints.Length - 2], linePoints[linePoints.Length - 1]);
+            
+            if (ControlPoint1 == null)
+            {
+                var point = GeometryHelper.SegmentMiddlePoint(StartPoint, EndPoint);
+                point = GeometryHelper.SegmentMiddlePoint(StartPoint, point);
+                point.Y -= 50;
+                MidPoint1 = point;
+            }
+            else
+            {
+                MidPoint1 = ControlPoint1.Value;
+            }
+
+            if (ControlPoint2 == null)
+            {
+                var point = GeometryHelper.SegmentMiddlePoint(StartPoint, EndPoint);
+                point = GeometryHelper.SegmentMiddlePoint(point, EndPoint);
+                point.Y -= 50;
+                MidPoint2 = point;
+            }
+            else
+            {
+                MidPoint2 = ControlPoint2.Value;
+            }
+            
             var mid = (int)(linePoints.Length / 2);
             var p = GeometryHelper.SegmentMiddlePoint(linePoints[mid - 1], linePoints[mid]);
             LabelPosition = new Point(p.X, p.Y - 15);

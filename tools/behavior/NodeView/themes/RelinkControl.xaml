@@ -1,11 +1,11 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:cls="clr-namespace:Bga.Diagrams.Controls.Links">
+                    xmlns:c="clr-namespace:Bga.Diagrams.Controls">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/Bga.Diagrams;component/Themes/Shared.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
-    <Style TargetType="{x:Type cls:RelinkControl}">
+    <Style TargetType="{x:Type c:RelinkControl}">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -13,10 +13,10 @@
                     <Grid>
 
                         <Canvas Visibility="Hidden" x:Name="PART_RelinkDecorator">
-                            <cls:LinkThumb Width="7" Height="7" Cursor="Cross" Margin="-3 -3 0 0" Kind="Source"
+                            <c:LinkThumb Width="7" Height="7" Cursor="Cross" Margin="-3 -3 0 0" Kind="Source"
 								Template="{StaticResource ThumbRectTemplate}"
 								Canvas.Left="{Binding StartPoint.X}" Canvas.Top="{Binding StartPoint.Y}"/>
-                            <cls:LinkThumb Width="7" Height="7" Cursor="Cross" Margin="-3 -3 0 0" Kind="Target"
+                            <c:LinkThumb Width="7" Height="7" Cursor="Cross" Margin="-3 -3 0 0" Kind="Target"
 								Template="{StaticResource ThumbRectTemplate}"
 								Canvas.Left="{Binding EndPoint.X}" Canvas.Top="{Binding EndPoint.Y}"/>
                         </Canvas>

@@ -1,8 +1,8 @@
 ﻿
-namespace Bga.Diagrams.Controls.Links
+namespace Bga.Diagrams.Controls
 {
     public enum LinkThumbKind
     {
-        Source, Target
+        Source, Target, Control1, Control2
     }
 }

@@ -2,7 +2,7 @@
 using Bga.Diagrams.Utils;
 using System.Windows;
 
-namespace Bga.Diagrams.Controls.Ports
+namespace Bga.Diagrams.Controls
 {
     public class EllipsePort : PortBase
     {

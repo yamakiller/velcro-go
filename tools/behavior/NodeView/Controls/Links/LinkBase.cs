@@ -4,10 +4,9 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows;
 
-using Bga.Diagrams.Controls.Ports;
 using Bga.Diagrams.Adorners;
 
-namespace Bga.Diagrams.Controls.Links
+namespace Bga.Diagrams.Controls
 {
     public abstract class LinkBase : DiagramItem, ILink, INotifyPropertyChanged
     {
@@ -29,129 +28,180 @@ namespace Bga.Diagrams.Controls.Links
 
         #endregion
 
-        private IPort source;
+        private IPort m_source;
         public IPort Source
         {
-            get { return source; }
+            get { return m_source; }
             set
             {
-                if (source != null)
-                    source.Links.Remove(this);
-                source = value;
-                if (source != null)
-                    source.Links.Add(this);
+                if (m_source != null)
+                    m_source.Links.Remove(this);
+                m_source = value;
+                if (m_source != null)
+                    m_source.Links.Add(this);
             }
         }
 
-        private IPort target;
+        private IPort m_target;
         public IPort Target
         {
-            get { return target; }
+            get { return m_target; }
             set
             {
-                if (target != null)
-                    target.Links.Remove(this);
-                target = value;
-                if (target != null)
-                    target.Links.Add(this);
+                if (m_target != null)
+                    m_target.Links.Remove(this);
+                m_target = value;
+                if (m_target != null)
+                    m_target.Links.Add(this);
+            }
+        }
+
+        private IPort m_control1;
+        public IPort Control1
+        {
+            get { return m_control1; }
+            set
+            {
+                if (m_control1 != null)
+                    m_control1.Links.Remove(this);
+                m_control1 = value;
+                if (m_control1 != null)
+                    m_control1.Links.Add(this);
+            }
+        }
+
+        private IPort m_control2;
+        public IPort Control2
+        {
+            get { return m_control2; }
+            set
+            {
+                if (m_control2 != null)
+                    m_control2.Links.Remove(this);
+                m_control2 = value;
+                if (m_control2 != null)
+                    m_control2.Links.Add(this);
             }
         }
 
         public Point? SourcePoint { get; set; }
         public Point? TargetPoint { get; set; }
+        public Point? ControlPoint1 { get; set; }
+        public Point? ControlPoint2 { get; set; }
 
-
-        private bool _startCap;
+        private bool m_startCap;
         public bool StartCap
         {
-            get { return _startCap; }
+            get { return m_startCap; }
             set
             {
-                _startCap = value;
+                m_startCap = value;
                 OnPropertyChanged("StartCap");
             }
         }
 
-        private bool _endCap;
+        private bool m_endCap;
         public bool EndCap
         {
-            get { return _endCap; }
+            get { return m_endCap; }
             set
             {
-                _endCap = value;
+                m_endCap = value;
                 OnPropertyChanged("EndCap");
             }
         }
 
-        private Brush _brush = new SolidColorBrush(Colors.Black);
+        private Brush m_brush = new SolidColorBrush(Colors.Black);
         public Brush Brush
         {
-            get { return _brush; }
-            set { _brush = value; }
+            get { return m_brush; }
+            set { m_brush = value; }
         }
 
-        private Point _startPoint;
+        private Point m_startPoint;
         public Point StartPoint
         {
-            get { return _startPoint; }
+            get { return m_startPoint; }
             protected set
             {
-                _startPoint = value;
+                m_startPoint = value;
                 OnPropertyChanged("StartPoint");
             }
         }
 
-        private Point _endPoint;
+        private Point m_endPoint;
         public Point EndPoint
         {
-            get { return _endPoint; }
+            get { return m_endPoint; }
             protected set
             {
-                _endPoint = value;
+                m_endPoint = value;
                 OnPropertyChanged("EndPoint");
             }
         }
 
-        private double _startCapAngle;
-        public double StartCapAngle
+        private Point m_midPoint1;
+        public Point MidPoint1
         {
-            get { return _startCapAngle; }
+            get { return m_midPoint1; }
             protected set
             {
-                _startCapAngle = value;
+                m_midPoint1 = value;
+                OnPropertyChanged("MidPoint1");
+            }
+        }
+
+        private Point m_midPoint2;
+        public Point MidPoint2
+        {
+            get { return m_midPoint2; }
+            protected set
+            {
+                m_midPoint2 = value;
+                OnPropertyChanged("MidPoint2");
+            }
+        }
+
+        private double m_startCapAngle;
+        public double StartCapAngle
+        {
+            get { return m_startCapAngle; }
+            protected set
+            {
+                m_startCapAngle = value;
                 OnPropertyChanged("StartCapAngle");
             }
         }
 
-        private double _endCapAngle;
+        private double m_endCapAngle;
         public double EndCapAngle
         {
-            get { return _endCapAngle; }
+            get { return m_endCapAngle; }
             protected set
             {
-                _endCapAngle = value;
+                m_endCapAngle = value;
                 OnPropertyChanged("EndCapAngle");
             }
         }
 
-        private PathGeometry _pathGeomtry;
+        private PathGeometry m_pathGeomtry;
         public PathGeometry PathGeometry
         {
-            get { return _pathGeomtry; }
+            get { return m_pathGeomtry; }
             protected set
             {
-                _pathGeomtry = value;
+                m_pathGeomtry = value;
                 OnPropertyChanged("PathGeometry");
             }
         }
 
-        private Point _labelPosition;
+        private Point m_labelPosition;
         public Point LabelPosition
         {
-            get { return _labelPosition; }
+            get { return m_labelPosition; }
             set
             {
-                _labelPosition = value;
+                m_labelPosition = value;
                 OnPropertyChanged("LabelPosition");
             }
         }

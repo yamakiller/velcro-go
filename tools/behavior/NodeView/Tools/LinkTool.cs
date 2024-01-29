@@ -1,7 +1,5 @@
 ﻿using Bga.Diagrams.Adorners;
-using Bga.Diagrams.Controls.Links;
-using Bga.Diagrams.Controls.Nodes;
-using Bga.Diagrams.Controls.Ports;
+using Bga.Diagrams.Controls;
 using Bga.Diagrams.Utils;
 using Bga.Diagrams.Views;
 using System.Windows.Controls;
@@ -12,7 +10,7 @@ namespace Bga.Diagrams.Tools
 {
     public class LinkTool(DiagramView view) : ILinkTool
     {
-        protected DiagramView View { get; private set; } = view;
+        protected DiagramView View { get; private set; }
         protected IDiagramController Controller { get { return View.Controller; } }
         protected Point DragStart { get; set; }
         protected ILink Link { get; set; }
@@ -20,6 +18,7 @@ namespace Bga.Diagrams.Tools
         protected LinkInfo InitialState { get; set; }
         protected LinkAdorner Adorner { get; set; }
         private bool m_isNewLink;
+        private bool m_isOnlyCtrlPtChange; // only control point is adjust
 
         public void BeginDrag(Point start, ILink link, LinkThumbKind thumb)
         {
@@ -29,6 +28,7 @@ namespace Bga.Diagrams.Tools
         protected virtual void BeginDrag(Point start, ILink link, LinkThumbKind thumb, bool isNew)
         {
             m_isNewLink = isNew;
+            m_isOnlyCtrlPtChange = true;
             DragStart = start;
             Link = link;
             Thumb = thumb;
@@ -45,7 +45,12 @@ namespace Bga.Diagrams.Tools
                 .Where(p => p.IsNear(point) && CanLinkTo(p))
                 .OrderBy(p => GeometryHelper.Length(p.Center, point))
                 .FirstOrDefault();
-            System.Diagnostics.Debug.Assert(port != null);
+            
+            if (port == null && (Thumb == LinkThumbKind.Control1 || Thumb == LinkThumbKind.Control2))
+            {
+                port = new EllipsePort();
+            }
+            
             UpdateLink(point, port);
 
             Adorner.Port = port;
@@ -56,11 +61,21 @@ namespace Bga.Diagrams.Tools
         {
             if (Thumb == LinkThumbKind.Source)
             {
+                m_isOnlyCtrlPtChange = false;
                 Link.Source = port;
                 Link.SourcePoint = port == null ? point : (Point?)null;
             }
+            else if (Thumb == LinkThumbKind.Control1)
+            {
+                Link.ControlPoint1 = point;
+            }
+            else if (Thumb == LinkThumbKind.Control2)
+            {
+                Link.ControlPoint2 = point;
+            }
             else
             {
+                m_isOnlyCtrlPtChange = false;
                 Link.Target = port;
                 Link.TargetPoint = port == null ? point : (Point?)null;
             }
@@ -89,7 +104,10 @@ namespace Bga.Diagrams.Tools
         {
             if (doCommit)
             {
-                Controller.UpdateLink(InitialState, Link);
+                if (!m_isOnlyCtrlPtChange)
+                {
+                    Controller.UpdateLink(InitialState, Link);
+                }
             }
             else
             {

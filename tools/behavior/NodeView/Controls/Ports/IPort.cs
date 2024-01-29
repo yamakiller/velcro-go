@@ -1,8 +1,8 @@
-﻿using Bga.Diagrams.Controls.Links;
+﻿
 using System.Windows;
 
 
-namespace Bga.Diagrams.Controls.Ports
+namespace Bga.Diagrams.Controls
 {
     public interface IPort
     {

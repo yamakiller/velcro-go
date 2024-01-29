@@ -1,5 +1,5 @@
-﻿using Bga.Diagrams.Controls.Links;
-using Bga.Diagrams.Controls.Ports;
+﻿
+using Bga.Diagrams.Controls;
 using System.Windows;
 
 namespace Bga.Diagrams.Tools

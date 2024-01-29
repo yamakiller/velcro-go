@@ -3,7 +3,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-using Bga.Diagrams.Controls.Ports;
+using Bga.Diagrams.Controls;
 using Bga.Diagrams.Views;
 
 namespace Bga.Diagrams.Adorners

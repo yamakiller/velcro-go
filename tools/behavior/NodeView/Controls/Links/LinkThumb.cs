@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace Bga.Diagrams.Controls.Links
+namespace Bga.Diagrams.Controls
 {
     public class LinkThumb : Control
     {

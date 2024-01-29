@@ -1,7 +1,7 @@
 ﻿using Bga.Diagrams.Controls.Ports;
 
 
-namespace Bga.Diagrams.Controls.Nodes
+namespace Bga.Diagrams.Controls
 {
     public interface INode
     {

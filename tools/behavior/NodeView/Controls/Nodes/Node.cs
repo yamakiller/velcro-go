@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows;
 
-namespace Bga.Diagrams.Controls.Nodes
+namespace Bga.Diagrams.Controls
 {
     public class Node : DiagramItem, INode
     {

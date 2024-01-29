@@ -1,11 +1,10 @@
-﻿using Bga.Diagrams.Controls.Links;
-using Bga.Diagrams.Controls.Ports;
+﻿
 using Bga.Diagrams.Utils;
 using Bga.Diagrams.Views;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Bga.Diagrams.Controls.Ports
+namespace Bga.Diagrams.Controls
 {
     public abstract class PortBase : Control, IPort
     {

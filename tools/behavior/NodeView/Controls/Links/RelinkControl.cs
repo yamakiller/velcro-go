@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows;
 
-namespace Bga.Diagrams.Controls.Links
+namespace Bga.Diagrams.Controls
 {
     public class RelinkControl : Control
     {
