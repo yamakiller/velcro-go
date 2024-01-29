@@ -29,14 +29,15 @@ namespace Editor.Commands
                 return;
             }
 
-            var tr = new Datas.BehaviorTree() { FileName = treeFileName,
-                Tree = new Datas.Files.Behavior3Tree() {
-                    ID = Utils.ShortGuid.Next(),
-                    Title= treeFileName.Replace(".json", ""),
-                    Description = ""
-                }
+            var tr = new Datas.BehaviorTree(contextViewModel) 
+            { 
+                FileName = treeFileName,
+                ID = Utils.ShortGuid.Next(),
+                Title = treeFileName.Replace(".json", ""),
+                Description= ""
             };
             contextViewModel.CurrWorkspace.Trees.Add(tr);
+            contextViewModel.IsModifyed = true;
             if (!contextViewModel.IsWorkspaceExpanded)
             {
                 contextViewModel.IsWorkspaceExpanded = true;

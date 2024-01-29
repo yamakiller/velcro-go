@@ -62,20 +62,56 @@ namespace Editor.Commands
                 return;
             }
 
-            Datas.Workspace currentWorkspace = new Datas.Workspace()
+            Datas.Workspace currentWorkspace = new Datas.Workspace(contextViewModel)
             {
                 Name = wrk.Name,
                 Dir = wrk.Dir,
                 Trees = new System.Collections.ObjectModel.ObservableCollection<Datas.BehaviorTree>()
             };
 
-            foreach(Datas.Files.Behavior3Tree tree in openProcFame.Trees)
+            foreach(Datas.Files.Behavior3Tree b3tree in openProcFame.Trees)
             {
-                currentWorkspace.Trees.Add(new Datas.BehaviorTree() { FileName = tree.Title + ".json", Tree = tree });
+                Datas.BehaviorTree tree  = new Datas.BehaviorTree(contextViewModel) {
+                    FileName = b3tree.Title + ".json",
+                    ID = b3tree.ID,
+                    Title = b3tree.Title,
+                    Description = b3tree.Description,
+                    Properties = b3tree.Properties,
+                };
+
+                if (b3tree.Nodes != null)
+                {
+                    tree.Nodes = new Dictionary<string, Datas.BehaviorNode>();
+                    foreach ( var b3node in b3tree.Nodes)
+                    {
+                        Datas.BehaviorNode node = new Datas.BehaviorNode(contextViewModel)
+                        {
+                            ID = b3node.Value.ID,
+                            Name = b3node.Value.Name,
+                            Category = b3node.Value.Category,
+                            Title = b3node.Value.Title,
+                            Description = b3node.Value.Description,
+                            Child = b3node.Value.Child,
+                            Properties = b3node.Value.Properties,
+                        };
+
+                        if (b3node.Value.Children != null)
+                        {
+                            node.Children = new System.Collections.ObjectModel.ObservableCollection<string>(b3node.Value.Children);
+                        }
+                        
+                        tree.Nodes.Add(b3node.Key, node);
+                        
+                    }
+                }
+
+                //Nodes = tree.Nodes,
+                currentWorkspace.Trees.Add(tree);
             }
 
             CloseCurrentWorkspace.Close(contextViewModel);
             contextViewModel.CurrWorkspace = currentWorkspace;
+            contextViewModel.IsModifyed = false;
         }
 
         public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)

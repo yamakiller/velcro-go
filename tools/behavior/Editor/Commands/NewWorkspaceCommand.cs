@@ -35,12 +35,13 @@ namespace Editor.Commands
 
             CloseCurrentWorkspace.Close(contextViewModel);
 
-            Workspace wkdat = new Workspace() { 
+            Workspace wkdat = new Workspace(contextViewModel) { 
                 Name = fileName.Replace(".json", ""),
                 Dir = folderDialog.FolderName, 
                 Trees = new System.Collections.ObjectModel.ObservableCollection<BehaviorTree>()};
 
             contextViewModel.CurrWorkspace = wkdat;
+            contextViewModel.IsModifyed = true;
         }
 
         public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)

@@ -1,9 +1,12 @@
 ﻿using Editor.Commands;
 using Editor.Framework;
+using MaterialDesignThemes.Wpf;
+using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace Editor.ViewModels
 {
-    class EditorFrameViewModel : ViewModel
+    class EditorFrameViewModel : ViewModel, ViewModelData
     {
         #region 属性
         // 是否是只读状态
@@ -13,18 +16,35 @@ namespace Editor.ViewModels
         // 是否是修改状态
         bool isModifyed = false;
 
-        public bool IsModifyed { get { return isModifyed; } set { SetProperty(ref isModifyed, value); } }
-        #endregion
+        public bool IsModifyed 
+        { 
+            get { return isModifyed; } 
+            set 
+            {
+                if (value && CurrWorkspace != null)
+                {
+                    Caption = "*[" + CurrWorkspace.Name + "]" + CurrWorkspace.Dir;
+                } 
+                else if (!value && CurrWorkspace != null)
+                {
+                    Caption = "[" + CurrWorkspace.Name + "]" + CurrWorkspace.Dir;
+                }
+                else if (CurrWorkspace == null)
+                {
+                    Caption = "Behavior Editor";
+                }
 
-        /// <summary>
-        /// 窗口标题
-        /// </summary>
+                SetProperty(ref isModifyed, value); 
+            } 
+        }
+
         private string caption = "Behavior Editor";
         public string Caption
         {
             get { return caption; }
             set { SetProperty(ref caption, value); }
         }
+        #endregion
 
         #region 成员变量
         private Datas.Workspace? wsd = null;
@@ -33,17 +53,6 @@ namespace Editor.ViewModels
             get { return wsd; }
             set 
             {
-                if (value == null)
-                {
-                    IsModifyed = false;
-                    Caption = "Behavior Editor";
-                } 
-                else if (wsd != value)
-                {
-                    IsModifyed = true;
-                    Caption = "*" + value.Dir;
-                }
-
                 SetProperty(ref wsd, value); 
             }
         }
@@ -54,8 +63,6 @@ namespace Editor.ViewModels
             get { return wsdselected; }
             set
             {
-
-
                 SetProperty(ref wsdselected, value);
             }
         }
@@ -71,6 +78,16 @@ namespace Editor.ViewModels
                 SetProperty(ref isWorkspaceExpanded, value);
             }
         }
+        #endregion
+
+        #region  Documents
+        private ObservableCollection<EditorBehaviorViewModel> documents;
+        public ReadOnlyObservableCollection<EditorBehaviorViewModel> Documents
+        {
+            get;
+            private set;
+        }
+
         #endregion
 
         #region 命令
@@ -142,6 +159,68 @@ namespace Editor.ViewModels
             }
         }
 
+        private OpenTreeCommand? optcmd = null;
+        public OpenTreeCommand OpenTreeCmd 
+        {
+            get
+            {
+                if (optcmd == null)
+                {
+                    optcmd = new OpenTreeCommand(this);
+                }
+                return optcmd;
+            }
+        }
+        #endregion
+
+        #region 函数
+        public EditorFrameViewModel()
+        {
+            documents = new ObservableCollection<EditorBehaviorViewModel>();
+            Documents = new ReadOnlyObservableCollection<EditorBehaviorViewModel>(documents);
+        }
+
+        public void OpenBehaviorTreeView(Datas.BehaviorTree openTree)
+        {
+            var newDocument = new EditorBehaviorViewModel(this, openTree);
+            this.documents.Add(newDocument);
+        }
+
+        public EditorBehaviorViewModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
+        {
+            for (int i = 0; i < documents.Count; i++)
+            {
+                if (documents[i].ContentId == viewTree.ID)
+                {
+                   return documents[i];
+                }
+            }
+            return null;
+        }
+
+        public void CloseBehaviorTreeView(Datas.BehaviorTree closeTree)
+        {
+            for (int i=0;i<documents.Count;i++)
+            {
+                if (documents[i].ContentId == closeTree.ID)
+                {
+                    documents.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        public void OnWorkspaceSelectedItemChangedTree(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is Datas.BehaviorTree)
+            {
+                CurrWorkspaceSelectedTree = e.NewValue as Datas.BehaviorTree;
+            }
+            else
+            {
+                CurrWorkspaceSelectedTree = null;
+            }
+        }
         #endregion
     }
 }
