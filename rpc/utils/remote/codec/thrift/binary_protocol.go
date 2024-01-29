@@ -221,6 +221,11 @@ func (p *BinaryProtocol) WriteBinary(ctx context.Context, value []byte) error {
 	return e
 }
 
+func (p *BinaryProtocol) WriteUUID(ctx context.Context, value thrift.Tuuid) error {
+	_, e := p.trans.Write(value[:])
+	return e
+}
+
 // malloc ...
 func (p *BinaryProtocol) malloc(size int) ([]byte, error) {
 	buf, err := p.trans.Malloc(size)
@@ -465,9 +470,15 @@ func (p *BinaryProtocol) ReadBinary(ctx context.Context) ([]byte, error) {
 	return p.trans.ReadBinary(int(size))
 }
 
-/*func (p *BinaryProtocol) ReadUUID() (value thrift.Tuuid, err error) {
-	return nil, nil
-}*/
+func (p *BinaryProtocol) ReadUUID(ctx context.Context) (value thrift.Tuuid, err error) {
+	var buf [16]byte
+	_ ,e := p.trans.Read(buf[:])
+	if e != nil {
+		return value, e
+	}
+	copy(value[:], buf[:])
+	return value, err
+}
 
 func (p *BinaryProtocol) Flush(ctx context.Context) (err error) {
 	err = p.trans.Flush()

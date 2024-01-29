@@ -111,13 +111,13 @@ func encodeFastThrift(out remote.ByteBuffer, methodName string, msgType remote.M
 // encodeBasicThrift encode with the old thrift way (slow)
 func encodeBasicThrift(out remote.ByteBuffer, ctx context.Context, method string, msgType remote.MessageType, seqID int32, data interface{}) error {
 	tProt := NewBinaryProtocol(out)
-	if err := tProt.WriteMessageBegin(method, thrift.TMessageType(msgType), seqID); err != nil {
+	if err := tProt.WriteMessageBegin(ctx,method, thrift.TMessageType(msgType), seqID); err != nil {
 		return perrors.NewProtocolErrorWithMsg(fmt.Sprintf("thrift marshal, WriteMessageBegin failed: %s", err.Error()))
 	}
 	if err := marshalBasicThriftData(ctx, tProt, data); err != nil {
 		return err
 	}
-	if err := tProt.WriteMessageEnd(); err != nil {
+	if err := tProt.WriteMessageEnd(ctx); err != nil {
 		return perrors.NewProtocolErrorWithMsg(fmt.Sprintf("thrift marshal, WriteMessageEnd failed: %s", err.Error()))
 	}
 	tProt.Recycle()
@@ -127,7 +127,7 @@ func encodeBasicThrift(out remote.ByteBuffer, ctx context.Context, method string
 // Unmarshal implements the remote.PayloadCodec interface.
 func (c thriftCodec) Unmarshal(ctx context.Context, message remote.Message, in remote.ByteBuffer) error {
 	tProt := NewBinaryProtocol(in)
-	methodName, msgType, seqID, err := tProt.ReadMessageBegin()
+	methodName, msgType, seqID, err := tProt.ReadMessageBegin(ctx)
 	if err != nil {
 		return perrors.NewProtocolErrorWithErrMsg(err, fmt.Sprintf("thrift unmarshal, ReadMessageBegin failed: %s", err.Error()))
 	}
