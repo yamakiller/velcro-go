@@ -222,11 +222,7 @@ func (p *BinaryProtocol) WriteBinary(ctx context.Context, value []byte) error {
 }
 
 func (p *BinaryProtocol) WriteUUID(ctx context.Context, value thrift.Tuuid) error {
-	e := p.WriteByte(ctx,16)
-	if e != nil {
-		return e
-	}
-	_, e = p.trans.WriteBinary(value[:])
+	_, e := p.trans.Write(value[:])
 	return e
 }
 
@@ -475,18 +471,12 @@ func (p *BinaryProtocol) ReadBinary(ctx context.Context) ([]byte, error) {
 }
 
 func (p *BinaryProtocol) ReadUUID(ctx context.Context) (value thrift.Tuuid, err error) {
-	size,e :=  p.ReadByte(ctx)
+	var buf [16]byte
+	_ ,e := p.trans.Read(buf[:])
 	if e != nil {
 		return value, e
 	}
-	if size != 16 {
-		return value, perrors.InvalidDataLength
-	}
-	buf ,e := p.trans.ReadBinary(int(size))
-	if e != nil {
-		return value, e
-	}
-	copy(value[:], buf)
+	copy(value[:], buf[:])
 	return value, err
 }
 
