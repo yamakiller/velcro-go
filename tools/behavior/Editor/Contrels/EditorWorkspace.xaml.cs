@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AvalonDock;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +29,7 @@ namespace Editor.Contrels
 
         private void TreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            DependencyObject source = e.OriginalSource as DependencyObject;
+            DependencyObject? source = e.OriginalSource as DependencyObject;
             while(source != null && source.GetType() != typeof(TreeViewItem))
                 source = System.Windows.Media.VisualTreeHelper.GetParent(source);
             if (source == null)
@@ -37,8 +38,13 @@ namespace Editor.Contrels
                 return;
             }
 
-            TreeViewItem item = source as TreeViewItem;
-            if (!(item.DataContext is Datas.BehaviorTree))
+            TreeViewItem? item = source as TreeViewItem;
+            if (item == null)
+            {
+                tView.ContextMenu = null;
+                return;
+            }
+            if (item.DataContext is not Datas.BehaviorTree)
             {
                 tView.ContextMenu = null;
                 return;
@@ -53,6 +59,24 @@ namespace Editor.Contrels
             ContextMenu contextMenu = new ContextMenu();
             MenuItem menuItem = new MenuItem();
             menuItem.Header = "打开视图";
+            if (this.Parent != null)
+            {
+                var parent = this.Parent as DockingManager;
+                if (parent != null)
+                {
+                    var contextViewMode = parent.DataContext as ViewModels.EditorFrameViewModel;
+                    if (contextViewMode != null)
+                    {
+                        menuItem.Command = contextViewMode.OpenTreeCmd;
+                        menuItem.CommandParameter = (positionItem as TreeViewItem).DataContext;
+                    }
+                    
+                }
+               
+                //menuItem.Command = this.Parent.DataCon
+            }
+            
+            //
             // TODO: 加入命令
             contextMenu.Items.Add(menuItem);
             tView.ContextMenu = contextMenu;

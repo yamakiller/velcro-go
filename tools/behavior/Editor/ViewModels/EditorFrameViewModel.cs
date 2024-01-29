@@ -159,6 +159,18 @@ namespace Editor.ViewModels
             }
         }
 
+        private OpenTreeCommand? optcmd = null;
+        public OpenTreeCommand OpenTreeCmd 
+        {
+            get
+            {
+                if (optcmd == null)
+                {
+                    optcmd = new OpenTreeCommand(this);
+                }
+                return optcmd;
+            }
+        }
         #endregion
 
         #region 函数
@@ -172,6 +184,18 @@ namespace Editor.ViewModels
         {
             var newDocument = new EditorBehaviorViewModel(this, openTree);
             this.documents.Add(newDocument);
+        }
+
+        public EditorBehaviorViewModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
+        {
+            for (int i = 0; i < documents.Count; i++)
+            {
+                if (documents[i].ContentId == viewTree.ID)
+                {
+                   return documents[i];
+                }
+            }
+            return null;
         }
 
         public void CloseBehaviorTreeView(Datas.BehaviorTree closeTree)
