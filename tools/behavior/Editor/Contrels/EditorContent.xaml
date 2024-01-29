@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:localCtrl="clr-namespace:Editor.Contrels"
+             xmlns:localChart="clr-namespace:Editor.Charts"
              xmlns:localViewModels="clr-namespace:Editor.ViewModels"
              xmlns:avalondock="https://github.com/Dirkster99/AvalonDock"
              mc:Ignorable="d" 
@@ -25,7 +26,7 @@
                 <localCtrl:PanesTemplateSelector>
                     <localCtrl:PanesTemplateSelector.EditorBehaviorViewTemplate>
                         <DataTemplate>
-                            <TextBlock Text="1111"></TextBlock>
+                            <localChart:ChartEditor/>
                         </DataTemplate>
                     </localCtrl:PanesTemplateSelector.EditorBehaviorViewTemplate>
                 </localCtrl:PanesTemplateSelector>

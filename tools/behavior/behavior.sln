@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Editor", "Editor\Editor.csproj", "{86AE7C3F-3231-4E02-B3C5-52B1C1E3758A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NodeBehavior", "NodeView\NodeBehavior.csproj", "{4C3C870C-743E-4381-AAD9-454E5BFAC561}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagrams", "NodeView\Diagrams.csproj", "{4C3C870C-743E-4381-AAD9-454E5BFAC561}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

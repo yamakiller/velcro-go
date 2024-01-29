@@ -7,6 +7,9 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Charts\ChartEditor.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Contrels\EditorContent.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -30,6 +33,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Charts\ChartEditor.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Contrels\EditorContent.xaml">
       <SubType>Designer</SubType>
     </Page>

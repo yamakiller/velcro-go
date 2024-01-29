@@ -54,7 +54,6 @@ namespace Editor.Commands
             }
 
             
-
             // 载入行为树数据
             OpenProccessFrame openProcFame = new OpenProccessFrame();
             if (openProcFame.Openning(wrk) != true)
@@ -105,13 +104,20 @@ namespace Editor.Commands
                     }
                 }
 
-                //Nodes = tree.Nodes,
+               
                 currentWorkspace.Trees.Add(tree);
             }
 
             CloseCurrentWorkspace.Close(contextViewModel);
             contextViewModel.CurrWorkspace = currentWorkspace;
+            
             contextViewModel.IsModifyed = false;
+            if (contextViewModel.CurrWorkspace.Trees != null && 
+                contextViewModel.CurrWorkspace.Trees.Count > 0)
+            {
+                contextViewModel.OpenBehaviorTreeView(contextViewModel.CurrWorkspace.Trees[0]);
+                contextViewModel.CurrWorkspaceSelectedTree = contextViewModel.CurrWorkspace.Trees[0];
+            }
         }
 
         public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)

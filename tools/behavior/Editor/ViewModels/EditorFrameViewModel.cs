@@ -210,6 +210,14 @@ namespace Editor.ViewModels
             }
         }
 
+        public void CloseBehaviorTreeViewAll()
+        {
+            while(documents.Count > 0)
+            {
+                documents.RemoveAt(0);
+            }
+        }
+
         public void OnWorkspaceSelectedItemChangedTree(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue is Datas.BehaviorTree)

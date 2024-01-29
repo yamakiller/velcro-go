@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-namespace NodeBehavior.Views
+namespace Bga.Diagrams.Views
 {
-    public class NodeBehaviorScrollView : ScrollViewer
+    public class DiagramScrollView : ScrollViewer
     {
         double m_dx = 0;
         double m_dy = 0;
@@ -23,7 +19,7 @@ namespace NodeBehavior.Views
             set { m_timer.Interval = TimeSpan.FromMilliseconds(value); }
         }
 
-        public NodeBehaviorScrollView()
+        public DiagramScrollView()
         {
             m_timer = new DispatcherTimer();
             m_timer.Tick += new EventHandler(Tick);
@@ -38,7 +34,7 @@ namespace NodeBehavior.Views
 
         private void Tick(object sender, EventArgs e)
         {
-            if (!(Content is NodeBehaviorView) || !((NodeBehaviorView)Content).IsDragging)
+            if (!(Content is DiagramView) || !((DiagramView)Content).IsDragging)
                 return;
 
             if (m_dx != 0)
@@ -49,7 +45,7 @@ namespace NodeBehavior.Views
 
         protected override void OnPreviewMouseMove(MouseEventArgs e)
         {
-            if (!(Content is NodeBehaviorView) || !((NodeBehaviorView)Content).IsDragging)
+            if (!(Content is DiagramView) || !((DiagramView)Content).IsDragging)
             {
                 m_timer.IsEnabled = false;
             }

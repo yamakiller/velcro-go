@@ -24,8 +24,10 @@ namespace Editor.Commands
                         }
                     }
                 }
+                context.CloseBehaviorTreeViewAll();
                 context.CurrWorkspace = null;
                 context.CurrWorkspaceSelectedTree = null;
+                
             }
         }
     }

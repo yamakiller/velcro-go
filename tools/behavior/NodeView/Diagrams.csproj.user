@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup />
+  <ItemGroup>
+    <Page Update="themes\DiagramView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\EllipsePort.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\LinkBase.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\Node.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\RectPort.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\RelinkControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\SelectionFrame.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="themes\Shared.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+</Project>
