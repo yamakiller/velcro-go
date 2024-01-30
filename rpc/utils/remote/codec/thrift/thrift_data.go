@@ -8,6 +8,7 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/utils/protocol/bthrift"
 	"github.com/yamakiller/velcro-go/rpc/utils/remote"
 	"github.com/yamakiller/velcro-go/rpc/utils/remote/codec/perrors"
+	"github.com/yamakiller/velcro-go/utils/lang/memory"
 )
 
 const marshalThriftBufferSize = 1024
@@ -35,7 +36,7 @@ func (c thriftCodec) marshalThriftData(ctx context.Context, data interface{}) ([
 	if c.CodecType&FastWrite != 0 {
 		if msg, ok := data.(ThriftMsgFastCodec); ok {
 			payloadSize := msg.BLength()
-			payload := mcache.Malloc(payloadSize)
+			payload := memory.Malloc(payloadSize)
 			msg.FastWriteNocopy(payload, nil)
 			return payload, nil
 		}
@@ -92,6 +93,7 @@ func UnmarshalThriftData(ctx context.Context, codec remote.PayloadCodec, method 
 	if !ok {
 		c = defaultCodec
 	}
+	//TODO: 
 	tProt := NewBinaryProtocol(remote.NewReaderBuffer(buf))
 	err := c.unmarshalThriftData(ctx, tProt, method, data, len(buf))
 	if err == nil {
