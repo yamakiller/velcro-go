@@ -25,8 +25,12 @@ namespace Editor.BehaviorCharts
         public BehaviorChartEditor()
         {
             InitializeComponent();
+            if (this.DataContext != null )
+            {
+                //editor.Controller = new Controller(editor, this.DataContext as BehaviorChartModel);
+            }
 
-            var model = CreateModel();
+            /*var model = CreateModel();
             editor.Controller = new Controller(editor, model);
             editor.DragDropTool = new DragDropTool(editor, model);
 
@@ -35,10 +39,11 @@ namespace Editor.BehaviorCharts
                 MoveGridCell = editor.GridCellSize
             };
 
-            editor.LinkTool = new CustomLinkTool(editor);
+            editor.Selection.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(Selection_PropertyChanged);*/
+            //editor.LinkTool = new CustomLinkTool(editor);
         }
 
-        private BehaviorChartModel CreateModel() 
+        /*private BehaviorChartModel CreateModel() 
         {
             var model = new BehaviorChartModel();
 
@@ -52,10 +57,10 @@ namespace Editor.BehaviorCharts
 
        
 
-        /*void Selection_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        void Selection_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             var p = editor.Selection.Primary;
-            m_propertiesView.SelectedObject = p != null ? p.ModelElement : null;
+            //m_propertiesView.SelectedObject = p != null ? p.ModelElement : null;
         }*/
     }
 }

@@ -1,4 +1,4 @@
-﻿using Editor.ViewModels;
+﻿using Editor.BehaviorCharts.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +15,7 @@ namespace Editor.Contrels
 
         public override System.Windows.Style SelectStyle(object item, System.Windows.DependencyObject container)
         {
-            if (item is EditorBehaviorViewModel)
+            if (item is BehaviorChartModel)
                 return EditorBehaviorStyle;
 
             return base.SelectStyle(item, container);

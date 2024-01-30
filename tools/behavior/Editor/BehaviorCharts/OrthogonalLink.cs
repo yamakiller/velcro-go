@@ -17,7 +17,7 @@ namespace Editor.BehaviorCharts
         {
         }
 
-        protected override Point[] CalculateSegments()
+        protected override Point[]? CalculateSegments()
         {
             if (Source != null && Target != null)
             {

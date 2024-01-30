@@ -1,4 +1,5 @@
-﻿using Editor.Commands;
+﻿using Editor.BehaviorCharts.Model;
+using Editor.Commands;
 using Editor.Framework;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
@@ -81,8 +82,8 @@ namespace Editor.ViewModels
         #endregion
 
         #region  Documents
-        private ObservableCollection<EditorBehaviorViewModel> documents;
-        public ReadOnlyObservableCollection<EditorBehaviorViewModel> Documents
+        private ObservableCollection<BehaviorChartModel> documents;
+        public ReadOnlyObservableCollection<BehaviorChartModel> Documents
         {
             get;
             private set;
@@ -176,17 +177,17 @@ namespace Editor.ViewModels
         #region 函数
         public EditorFrameViewModel()
         {
-            documents = new ObservableCollection<EditorBehaviorViewModel>();
-            Documents = new ReadOnlyObservableCollection<EditorBehaviorViewModel>(documents);
+            documents = new ObservableCollection<BehaviorChartModel>();
+            Documents = new ReadOnlyObservableCollection<BehaviorChartModel>(documents);
         }
 
         public void OpenBehaviorTreeView(Datas.BehaviorTree openTree)
         {
-            var newDocument = new EditorBehaviorViewModel(this, openTree);
+            var newDocument = new BehaviorChartModel(this, openTree);
             this.documents.Add(newDocument);
         }
 
-        public EditorBehaviorViewModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
+        public BehaviorChartModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
         {
             for (int i = 0; i < documents.Count; i++)
             {

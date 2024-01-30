@@ -1,5 +1,4 @@
-﻿using Bga.Diagrams.Controls.Links;
-using Bga.Diagrams.Controls;
+﻿using Bga.Diagrams.Controls;
 using System.Windows;
 
 namespace Bga.Diagrams.Views
