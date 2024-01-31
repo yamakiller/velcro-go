@@ -37,10 +37,10 @@ namespace Editor.BehaviorCharts
         }
 
         private DiagramView m_view;
-        private BehaviorChartModel m_model;
+        private EditorViewModel m_model;
         private UpdateScope m_updateScope;
 
-        public Controller(DiagramView view, BehaviorChartModel model)
+        public Controller(DiagramView view, EditorViewModel model)
         {
             m_view = view;
             m_model = model;

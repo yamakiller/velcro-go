@@ -27,5 +27,3 @@ log.*
 .vs/
 bin/
 obj/
-#tools/behavior/NodeView/bin/
-#tools/behavior/NodeView/obj/

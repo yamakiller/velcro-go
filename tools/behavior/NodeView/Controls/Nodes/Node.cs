@@ -1,5 +1,4 @@
 ﻿using Bga.Diagrams.Adorners;
-using Bga.Diagrams.Controls.Ports;
 using Bga.Diagrams.Controls;
 
 using System.Windows.Controls;

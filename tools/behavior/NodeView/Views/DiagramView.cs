@@ -1,5 +1,4 @@
 ﻿using Bga.Diagrams.Controls;
-using Bga.Diagrams.Controls.Nodes;
 using Bga.Diagrams.Tools;
 
 using System.Windows;

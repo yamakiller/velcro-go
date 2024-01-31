@@ -5,8 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:localCtrl="clr-namespace:Editor.Contrels"
-             xmlns:localChart="clr-namespace:Editor.Charts"
-             xmlns:localViewModels="clr-namespace:Editor.ViewModels"
+             xmlns:localChart="clr-namespace:Editor.BehaviorCharts"
              xmlns:avalondock="https://github.com/Dirkster99/AvalonDock"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -24,11 +23,11 @@
 
             <DockingManager.LayoutItemTemplateSelector>
                 <localCtrl:PanesTemplateSelector>
-                    <localCtrl:PanesTemplateSelector.EditorBehaviorViewTemplate>
+                    <localCtrl:PanesTemplateSelector.BehaviorChartEditorViewTemplate>
                         <DataTemplate>
-                            <localChart:ChartEditor/>
+                            <localChart:EditorView />
                         </DataTemplate>
-                    </localCtrl:PanesTemplateSelector.EditorBehaviorViewTemplate>
+                    </localCtrl:PanesTemplateSelector.BehaviorChartEditorViewTemplate>
                 </localCtrl:PanesTemplateSelector>
             </DockingManager.LayoutItemTemplateSelector>
 
