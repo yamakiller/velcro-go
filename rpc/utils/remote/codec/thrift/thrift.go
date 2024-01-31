@@ -6,7 +6,9 @@ import (
 	"fmt"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/yamakiller/velcro-go/rpc/utils/protocol/bthrift"
 	"github.com/yamakiller/velcro-go/rpc/utils/remote"
+	"github.com/yamakiller/velcro-go/rpc/utils/remote/codec"
 	"github.com/yamakiller/velcro-go/rpc/utils/remote/codec/perrors"
 	"github.com/yamakiller/velcro-go/rpc/utils/rpcinfo"
 	"github.com/yamakiller/velcro-go/rpc/utils/stats"
@@ -85,7 +87,7 @@ func (c thriftCodec) Marshal(ctx context.Context, message remote.Message, out re
 	// encode with FastWrite
 	if c.CodecType&FastWrite != 0 {
 		if msg, ok := data.(ThriftMsgFastCodec); ok {
-			return encodeFastThrift(out, methodName, msgType, seqID, msg)
+			return encodeFastThrift(ctx,out, methodName, msgType, seqID, msg)
 		}
 	}
 
@@ -94,7 +96,7 @@ func (c thriftCodec) Marshal(ctx context.Context, message remote.Message, out re
 }
 
 // encodeFastThrift encode with the FastCodec way
-func encodeFastThrift(out remote.ByteBuffer, methodName string, msgType remote.MessageType, seqID int32, msg ThriftMsgFastCodec) error {
+func encodeFastThrift(ctx context.Context,out remote.ByteBuffer, methodName string, msgType remote.MessageType, seqID int32, msg ThriftMsgFastCodec) error {
 	// nocopy write is a special implementation of linked buffer, only bytebuffer implement NocopyWrite do FastWrite
 	msgBeginLen := bthrift.Binary.MessageBeginLength(methodName, thrift.TMessageType(msgType), seqID)
 	msgEndLen := bthrift.Binary.MessageEndLength()
@@ -102,9 +104,9 @@ func encodeFastThrift(out remote.ByteBuffer, methodName string, msgType remote.M
 	if err != nil {
 		return perrors.NewProtocolErrorWithMsg(fmt.Sprintf("thrift marshal, Malloc failed: %s", err.Error()))
 	}
-	offset := bthrift.Binary.WriteMessageBegin(buf, methodName, thrift.TMessageType(msgType), seqID)
+	offset := bthrift.Binary.WriteMessageBegin(ctx,buf, methodName, thrift.TMessageType(msgType), seqID)
 	offset += msg.FastWriteNocopy(buf[offset:], nil)
-	bthrift.Binary.WriteMessageEnd(buf[offset:])
+	bthrift.Binary.WriteMessageEnd(ctx, buf[offset:])
 	return nil
 }
 
@@ -157,7 +159,7 @@ func (c thriftCodec) Unmarshal(ctx context.Context, message remote.Message, in r
 		return err
 	}
 
-	if err = tProt.ReadMessageEnd(); err != nil {
+	if err = tProt.ReadMessageEnd(ctx); err != nil {
 		return remote.NewTransError(remote.ProtocolError, err)
 	}
 	tProt.Recycle()
@@ -209,7 +211,7 @@ type MessageReaderWithMethodWithContext interface {
 
 type ThriftMsgFastCodec interface {
 	BLength() int
-	FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int
+	FastWriteNocopy(buf []byte, binaryWriter *bthrift.BinaryWriter) int
 	FastRead(buf []byte) (int, error)
 }
 

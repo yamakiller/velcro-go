@@ -14,7 +14,9 @@ import (
 // Binary protocol for bthrift.
 var Binary binaryProtocol
 
-var _ BTProtocol = binaryProtocol{}
+type BinaryWriter = binaryProtocol
+
+type BTProtocol = binaryProtocol
 
 type binaryProtocol struct{}
 
@@ -40,7 +42,8 @@ func (binaryProtocol) WriteStructEnd(ctx context.Context, buf []byte) int {
 }
 
 func (binaryProtocol) WriteFieldBegin(ctx context.Context, buf []byte, name string, typeID thrift.TType, id int16) int {
-	return Binary.WriteByte(buf, int8(typeID)) + Binary.WriteI16(buf[1:], id)
+	//TODO: 没懂
+	return Binary.WriteByte(ctx, buf, int8(typeID)) + Binary.WriteI16(buf[1:], uint8(id))
 }
 
 func (binaryProtocol) WriteFieldEnd(ctx context.Context, buf []byte) int {
@@ -48,13 +51,13 @@ func (binaryProtocol) WriteFieldEnd(ctx context.Context, buf []byte) int {
 }
 
 func (binaryProtocol) WriteFieldStop(ctx context.Context, buf []byte) int {
-	return Binary.WriteByte(buf, thrift.STOP)
+	return Binary.WriteByte(ctx, buf, thrift.STOP)
 }
 
 func (binaryProtocol) WriteMapBegin(ctx context.Context, buf []byte, keyType, valueType thrift.TType, size int) int {
-	return Binary.WriteByte(buf, int8(keyType)) +
-		Binary.WriteByte(buf[1:], int8(valueType)) +
-		Binary.WriteI32(buf[2:], int32(size))
+	return Binary.WriteByte(ctx, buf, int8(keyType)) +
+		Binary.WriteByte(ctx, buf[1:], int8(valueType)) +
+		Binary.WriteI32(ctx, buf[2:], int32(size))
 }
 
 func (binaryProtocol) WriteMapEnd(ctx context.Context, buf []byte) int {
@@ -62,8 +65,8 @@ func (binaryProtocol) WriteMapEnd(ctx context.Context, buf []byte) int {
 }
 
 func (binaryProtocol) WriteListBegin(ctx context.Context, buf []byte, elemType thrift.TType, size int) int {
-	return Binary.WriteByte(buf, int8(elemType)) +
-		Binary.WriteI32(buf[1:], int32(size))
+	return Binary.WriteByte(ctx, buf, int8(elemType)) +
+		Binary.WriteI32(ctx, buf[1:], int32(size))
 }
 
 func (binaryProtocol) WriteListEnd(ctx context.Context, buf []byte) int {
@@ -71,8 +74,8 @@ func (binaryProtocol) WriteListEnd(ctx context.Context, buf []byte) int {
 }
 
 func (binaryProtocol) WriteSetBegin(ctx context.Context, buf []byte, elemType thrift.TType, size int) int {
-	return Binary.WriteByte(buf, int8(elemType)) +
-		Binary.WriteI32(buf[1:], int32(size))
+	return Binary.WriteByte(ctx, buf, int8(elemType)) +
+		Binary.WriteI32(ctx, buf[1:], int32(size))
 }
 
 func (binaryProtocol) WriteSetEnd(ctx context.Context, buf []byte) int {
@@ -81,9 +84,9 @@ func (binaryProtocol) WriteSetEnd(ctx context.Context, buf []byte) int {
 
 func (binaryProtocol) WriteBool(ctx context.Context, buf []byte, value bool) int {
 	if value {
-		return Binary.WriteByte(buf, 1)
+		return Binary.WriteByte(ctx, buf, 1)
 	}
-	return Binary.WriteByte(buf, 0)
+	return Binary.WriteByte(ctx, buf, 0)
 }
 
 func (binaryProtocol) WriteByte(ctx context.Context, buf []byte, value int8) int {
@@ -107,27 +110,27 @@ func (binaryProtocol) WriteI64(ctx context.Context, buf []byte, value int64) int
 }
 
 func (binaryProtocol) WriteDouble(ctx context.Context, buf []byte, value float64) int {
-	return Binary.WriteI64(buf, int64(math.Float64bits(value)))
+	return Binary.WriteI64(ctx, buf, int64(math.Float64bits(value)))
 }
 
 func (binaryProtocol) WriteString(ctx context.Context, buf []byte, value string) int {
-	l := Binary.WriteI32(buf, int32(len(value)))
+	l := Binary.WriteI32(ctx, buf, int32(len(value)))
 	copy(buf[l:], value)
 	return l + len(value)
 }
 
 func (binaryProtocol) WriteBinary(ctx context.Context, buf, value []byte) int {
-	l := Binary.WriteI32(buf, int32(len(value)))
+	l := Binary.WriteI32(ctx, buf, int32(len(value)))
 	copy(buf[l:], value)
 	return l + len(value)
 }
 
-func (binaryProtocol) WriteStringNocopy(ctx context.Context, buf []byte, binaryWriter BinaryWriter, value string) int {
-	return Binary.WriteBinaryNocopy(buf, binaryWriter, utils.StringToSliceByte(value))
+func (binaryProtocol) WriteStringNocopy(ctx context.Context, buf []byte, value string) int {
+	return Binary.WriteBinaryNocopy(ctx, buf, []byte(value))
 }
 
-func (binaryProtocol) WriteBinaryNocopy(ctx context.Context, buf []byte, binaryWriter BinaryWriter, value []byte) int {
-	l := Binary.WriteI32(buf, int32(len(value)))
+func (binaryProtocol) WriteBinaryNocopy(ctx context.Context, buf []byte, value []byte) int {
+	l := Binary.WriteI32(ctx, buf, int32(len(value)))
 	copy(buf[l:], value)
 	return l + len(value)
 }
@@ -225,7 +228,7 @@ func (binaryProtocol) BinaryLength(value []byte) int {
 }
 
 func (binaryProtocol) StringLengthNocopy(value string) int {
-	return Binary.BinaryLengthNocopy(utils.StringToSliceByte(value))
+	return Binary.BinaryLengthNocopy([]byte(value))
 }
 
 func (binaryProtocol) BinaryLengthNocopy(value []byte) int {
