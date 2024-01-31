@@ -2,31 +2,31 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup />
   <ItemGroup>
-    <Page Update="themes\DiagramView.xaml">
+    <Page Update="Themes\DiagramView.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\EllipsePort.xaml">
+    <Page Update="Themes\EllipsePort.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\generic.xaml">
+    <Page Update="Themes\Generic.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\LinkBase.xaml">
+    <Page Update="Themes\LinkBase.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\Node.xaml">
+    <Page Update="Themes\Node.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\RectPort.xaml">
+    <Page Update="Themes\RectPort.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\RelinkControl.xaml">
+    <Page Update="Themes\RelinkControl.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\SelectionFrame.xaml">
+    <Page Update="Themes\SelectionFrame.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="themes\Shared.xaml">
+    <Page Update="Themes\Shared.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

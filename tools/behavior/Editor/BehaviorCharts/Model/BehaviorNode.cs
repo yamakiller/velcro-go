@@ -17,14 +17,14 @@ namespace Editor.BehaviorCharts.Model
         private int m_row;
         public int Row { get { return m_row; } set { m_row = value; OnPropertyChanged("Row"); } }
 
-        private string m_name;
-        public string Name
+        private string m_text;
+        public string Text
         {
-            get { return m_name; }
+            get { return m_text; }
             set
             {
-                m_name = value;
-                OnPropertyChanged("Name");
+                m_text = value;
+                OnPropertyChanged("Text");
             }
         }
 

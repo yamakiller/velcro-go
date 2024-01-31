@@ -1,6 +1,7 @@
-﻿using Bga.Diagrams.Controls;
-using Bga.Diagrams.Utils;
-using Bga.Diagrams.Views;
+﻿using Bgt.Diagrams.Controls;
+using Bgt.Diagrams.Utils;
+using Bgt.Diagrams;
+
 using Editor.BehaviorCharts.Model;
 using System;
 using System.Collections.Generic;
@@ -122,7 +123,7 @@ namespace Editor.BehaviorCharts
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
-            var b = new Binding("Name");
+            var b = new Binding("Text");
             b.Source = node;
             textBlock.SetBinding(TextBlock.TextProperty, b);
             if (node.Kind == NodeKinds.Root)
@@ -135,7 +136,7 @@ namespace Editor.BehaviorCharts
                 var grid = new Grid();
                 grid.Children.Add(ui);
 
-                node.Name = "Root";
+                node.Text = "Root";
 
                 grid.Children.Add(textBlock);
                 return grid;

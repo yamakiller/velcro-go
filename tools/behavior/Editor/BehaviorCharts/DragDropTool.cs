@@ -1,5 +1,5 @@
-﻿using Bga.Diagrams.Tools;
-using Bga.Diagrams.Views;
+﻿using Bgt.Diagrams.Tools;
+using Bgt.Diagrams;
 using Editor.BehaviorCharts.Model;
 using System;
 using System.Collections.Generic;

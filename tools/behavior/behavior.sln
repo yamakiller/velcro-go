@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Editor", "Editor\Editor.csproj", "{86AE7C3F-3231-4E02-B3C5-52B1C1E3758A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diagrams", "NodeView\Diagrams.csproj", "{4C3C870C-743E-4381-AAD9-454E5BFAC561}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bgt.Diagrams", "Bgt.Diagrams\Bgt.Diagrams.csproj", "{B9236E9D-8D72-4B99-9595-78B814189182}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{86AE7C3F-3231-4E02-B3C5-52B1C1E3758A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86AE7C3F-3231-4E02-B3C5-52B1C1E3758A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86AE7C3F-3231-4E02-B3C5-52B1C1E3758A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4C3C870C-743E-4381-AAD9-454E5BFAC561}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C3C870C-743E-4381-AAD9-454E5BFAC561}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C3C870C-743E-4381-AAD9-454E5BFAC561}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C3C870C-743E-4381-AAD9-454E5BFAC561}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9236E9D-8D72-4B99-9595-78B814189182}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9236E9D-8D72-4B99-9595-78B814189182}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9236E9D-8D72-4B99-9595-78B814189182}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9236E9D-8D72-4B99-9595-78B814189182}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

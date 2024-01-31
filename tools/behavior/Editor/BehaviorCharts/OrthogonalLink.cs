@@ -1,6 +1,6 @@
-﻿using Bga.Diagrams.Controls;
-using Bga.Diagrams.Utils;
-using Bga.Diagrams.Views;
+﻿using Bgt.Diagrams.Controls;
+using Bgt.Diagrams.Utils;
+using Bgt.Diagrams;
 using System;
 using System.Collections.Generic;
 using System.Linq;

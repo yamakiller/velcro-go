@@ -1,5 +1,6 @@
 ﻿
-using Bga.Diagrams.Views;
+using Bgt.Diagrams;
+using Editor.Charts;
 using Editor.Datas;
 using Editor.Framework;
 using Editor.ViewModels;
@@ -60,11 +61,22 @@ namespace Editor.BehaviorCharts.Model
         {
             DiagramView editor = parameter as DiagramView;
             Debug.Assert(editor != null);
-            editor.Controller = new Controller(editor, this);
-            if (editor.Controller != null)
-            {
 
-            }
+            var start = new BehaviorNode(NodeKinds.Root);
+            start.Row = 2;
+            start.Column = 2;
+            start.Text = "Start";
+
+            this.Nodes.Add(start);
+
+            editor.Controller = new Controller(editor, this);
+            editor.DragDropTool = new DragDropTool(editor, this);
+            editor.DragTool = new CustomMoveResizeTool(editor, this)
+            {
+                //MoveGridCell = editor.GridCellSize
+            };
+
+            editor.Selection.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(Selection_PropertyChanged);
         }
 
         private bool CanClose()
@@ -117,6 +129,17 @@ namespace Editor.BehaviorCharts.Model
 
             ContentId = t.ID;
             Title = t.Title;
+        }
+
+        void Selection_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            int a = 100;
+            if (a == 100)
+            {
+
+            }
+            // var p = editor.Selection.Primary;
+            // m_propertiesView.SelectedObject = p != null ? p.ModelElement : null;
         }
     }
 }

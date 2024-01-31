@@ -1,6 +1,6 @@
-﻿using Bga.Diagrams.Controls;
-using Bga.Diagrams.Tools;
-using Bga.Diagrams.Views;
+﻿using Bgt.Diagrams.Controls;
+using Bgt.Diagrams.Tools;
+using Bgt.Diagrams;
 using System.Windows;
 
 namespace Editor.BehaviorCharts
