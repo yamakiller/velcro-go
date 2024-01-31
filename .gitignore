@@ -24,3 +24,4 @@ go.work
 */test-logs/
 log.*
 example/monopoly/bin/
+tools/behavior/Editor/obj/

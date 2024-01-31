@@ -50,7 +50,11 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 		return nil, fmt.Errorf("message name length error %d", msgNameLen)
 	}
 
-	proName := string(bodyByte[1:msgNameLen])
+	if len(bodyByte) < msgNameLen +1{
+		return nil, fmt.Errorf("message name length error %d", len(bodyByte))
+	}
+
+	proName := string(bodyByte[1:msgNameLen+1])
 	//2.解析Protobuf
 	msgName := protoreflect.FullName(proName)
 	msgType, err := protoregistry.GlobalTypes.FindMessageByName(msgName)

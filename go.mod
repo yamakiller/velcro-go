@@ -41,11 +41,10 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mdempsky/gocode v0.0.0-20200405233807-4acdcbdea79d // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	golang.org/x/net v0.20.0 // indirect
-	golang.org/x/tools v0.17.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
 )
 
 require (
