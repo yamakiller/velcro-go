@@ -1,6 +1,4 @@
-﻿using Editor.BehaviorCharts.Model;
-using Editor.Charts;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,17 +16,18 @@ using System.Windows.Shapes;
 namespace Editor.BehaviorCharts
 {
     /// <summary>
-    /// BehaviorChartEditor.xaml 的交互逻辑
+    /// EditorView.xaml 的交互逻辑
     /// </summary>
-    public partial class BehaviorChartEditor : UserControl
+    public partial class EditorView : UserControl
     {
-        public BehaviorChartEditor()
+        public EditorView()
         {
             InitializeComponent();
-            if (this.DataContext != null )
-            {
-                //editor.Controller = new Controller(editor, this.DataContext as BehaviorChartModel);
-            }
+
+            //BehaviorChartModel model = DataContext as BehaviorChartModel;
+            //Debug.Assert(model != null);
+            //editor.Controller = new Controller(editor, model);
+
 
             /*var model = CreateModel();
             editor.Controller = new Controller(editor, model);
@@ -44,23 +43,23 @@ namespace Editor.BehaviorCharts
         }
 
         /*private BehaviorChartModel CreateModel() 
-        {
-            var model = new BehaviorChartModel();
+      {
+          var model = new BehaviorChartModel();
 
-            // var start = new BehaviorNode(NodeKinds.Root);
-            // start.Row = 0;
-            // start.Column = 1;
-            // start.Name = "Root";
+          // var start = new BehaviorNode(NodeKinds.Root);
+          // start.Row = 0;
+          // start.Column = 1;
+          // start.Name = "Root";
 
-            return model;
-        }
+          return model;
+      }
 
-       
 
-        void Selection_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            var p = editor.Selection.Primary;
-            //m_propertiesView.SelectedObject = p != null ? p.ModelElement : null;
-        }*/
+
+      void Selection_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+      {
+          var p = editor.Selection.Primary;
+          //m_propertiesView.SelectedObject = p != null ? p.ModelElement : null;
+      }*/
     }
 }

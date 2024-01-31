@@ -14,10 +14,10 @@ namespace Editor.Charts
     class DragDropTool : IDragDropTool
     {
         DiagramView m_view;
-        BehaviorChartModel m_model;
+        EditorViewModel m_model;
         int m_row, m_column;
 
-        public DragDropTool(DiagramView view, BehaviorChartModel model)
+        public DragDropTool(DiagramView view, EditorViewModel model)
         {
             m_view = view;
             m_model = model;

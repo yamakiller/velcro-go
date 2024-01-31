@@ -23,11 +23,11 @@
 
             <DockingManager.LayoutItemTemplateSelector>
                 <localCtrl:PanesTemplateSelector>
-                    <localCtrl:PanesTemplateSelector.BehaviorChartViewTemplate>
+                    <localCtrl:PanesTemplateSelector.BehaviorChartEditorViewTemplate>
                         <DataTemplate>
-                            <localChart:BehaviorChartEditor/>
+                            <localChart:EditorView />
                         </DataTemplate>
-                    </localCtrl:PanesTemplateSelector.BehaviorChartViewTemplate>
+                    </localCtrl:PanesTemplateSelector.BehaviorChartEditorViewTemplate>
                 </localCtrl:PanesTemplateSelector>
             </DockingManager.LayoutItemTemplateSelector>
 

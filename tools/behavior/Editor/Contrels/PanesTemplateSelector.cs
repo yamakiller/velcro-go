@@ -14,7 +14,7 @@ namespace Editor.Contrels
 
         }
 
-        public DataTemplate BehaviorChartViewTemplate
+        public DataTemplate BehaviorChartEditorViewTemplate
         {
             get;
             set;
@@ -22,8 +22,11 @@ namespace Editor.Contrels
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
             var itemAsLayoutContent = item as LayoutContent;
-            if (item is BehaviorChartModel)
-                return BehaviorChartViewTemplate;
+            if (item is EditorViewModel)
+            {
+                return BehaviorChartEditorViewTemplate;
+            }
+                
             return base.SelectTemplate(item, container);
         }
     }

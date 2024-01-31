@@ -7,7 +7,7 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="BehaviorCharts\BehaviorChartEditor.xaml.cs">
+    <Compile Update="BehaviorCharts\EditorView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Contrels\EditorContent.xaml.cs">
@@ -33,7 +33,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="BehaviorCharts\BehaviorChartEditor.xaml">
+    <Page Update="BehaviorCharts\EditorView.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Contrels\EditorContent.xaml">

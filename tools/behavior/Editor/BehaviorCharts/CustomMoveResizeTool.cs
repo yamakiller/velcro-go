@@ -11,8 +11,8 @@ namespace Editor.BehaviorCharts
 {
     class CustomMoveResizeTool : MoveResizeTool
     {
-        private BehaviorChartModel m_model;
-        public CustomMoveResizeTool(DiagramView view, BehaviorChartModel model)
+        private EditorViewModel m_model;
+        public CustomMoveResizeTool(DiagramView view, EditorViewModel model)
             : base(view)
         {
             m_model = model;

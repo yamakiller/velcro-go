@@ -1,18 +1,20 @@
 ﻿
+using Bga.Diagrams.Views;
 using Editor.Datas;
 using Editor.Framework;
 using Editor.ViewModels;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 
 
 namespace Editor.BehaviorCharts.Model
 {
-    class BehaviorChartModel : PaneViewModel
+    class EditorViewModel : PaneViewModel
     {
         private EditorFrameViewModel m_parentViewModel;
         private BehaviorTree m_btree;
-        private PaneCommand  m_closeCommand;
+        
 
         #region 字段
         public string FileName
@@ -20,6 +22,20 @@ namespace Editor.BehaviorCharts.Model
             get { return m_btree.FileName; }
         }
 
+        private PaneCommand m_loadedCommand;
+        public ICommand LoadedCommand
+        {
+            get
+            {
+                if (m_loadedCommand == null)
+                {
+                    m_loadedCommand = new PaneCommand((p) => OnLoaded(p), (p) => CanLoaded(p));
+                }
+                return m_loadedCommand;
+            }
+        }
+
+        private PaneCommand m_closeCommand;
         public ICommand CloseCommand
         {
             get
@@ -34,6 +50,23 @@ namespace Editor.BehaviorCharts.Model
         #endregion
 
         #region methods
+
+        private bool CanLoaded(object parameter)
+        {
+            return true;
+        }
+
+        private void OnLoaded(object parameter)
+        {
+            DiagramView editor = parameter as DiagramView;
+            Debug.Assert(editor != null);
+            editor.Controller = new Controller(editor, this);
+            if (editor.Controller != null)
+            {
+
+            }
+        }
+
         private bool CanClose()
         {
             return true;
@@ -77,7 +110,7 @@ namespace Editor.BehaviorCharts.Model
             get { return this.m_links; }
         }
 
-        public BehaviorChartModel(EditorFrameViewModel viewModel, BehaviorTree t)
+        public EditorViewModel(EditorFrameViewModel viewModel, BehaviorTree t)
         {
             m_parentViewModel = viewModel;
             m_btree = t;

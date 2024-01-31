@@ -82,8 +82,8 @@ namespace Editor.ViewModels
         #endregion
 
         #region  Documents
-        private ObservableCollection<BehaviorChartModel> documents;
-        public ReadOnlyObservableCollection<BehaviorChartModel> Documents
+        private ObservableCollection<EditorViewModel> documents;
+        public ReadOnlyObservableCollection<EditorViewModel> Documents
         {
             get;
             private set;
@@ -177,17 +177,17 @@ namespace Editor.ViewModels
         #region 函数
         public EditorFrameViewModel()
         {
-            documents = new ObservableCollection<BehaviorChartModel>();
-            Documents = new ReadOnlyObservableCollection<BehaviorChartModel>(documents);
+            documents = new ObservableCollection<EditorViewModel>();
+            Documents = new ReadOnlyObservableCollection<EditorViewModel>(documents);
         }
 
         public void OpenBehaviorTreeView(Datas.BehaviorTree openTree)
         {
-            var newDocument = new BehaviorChartModel(this, openTree);
+            var newDocument = new EditorViewModel(this, openTree);
             this.documents.Add(newDocument);
         }
 
-        public BehaviorChartModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
+        public EditorViewModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
         {
             for (int i = 0; i < documents.Count; i++)
             {

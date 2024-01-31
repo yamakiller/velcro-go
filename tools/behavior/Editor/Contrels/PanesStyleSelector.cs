@@ -15,7 +15,7 @@ namespace Editor.Contrels
 
         public override System.Windows.Style SelectStyle(object item, System.Windows.DependencyObject container)
         {
-            if (item is BehaviorChartModel)
+            if (item is EditorViewModel)
                 return EditorBehaviorStyle;
 
             return base.SelectStyle(item, container);
