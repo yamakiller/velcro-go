@@ -3,6 +3,7 @@ package tcpclient
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	// "crypto"
@@ -46,12 +47,12 @@ type RecviceMessage struct {
 type ClosedMessage struct {
 }
 
-
 func NewConn() *Conn {
 	return &Conn{
-		mailbox:      make(chan interface{}, 1),
-		reqsbox:      cmap.New(),
-		state:        LCS_Disconnected,
+		mailbox: make(chan interface{}, 1),
+		reqsbox: cmap.New(),
+		state:   LCS_Disconnected,
+		methods: make(map[interface{}]func(ctx context.Context, message proto.Message) error),
 	}
 }
 
@@ -79,7 +80,9 @@ type Conn struct {
 	currentGoroutineId int
 	state              int32
 	secret             []byte
-	sequenceID int32
+	sequenceID         int32
+
+	methods map[interface{}]func(ctx context.Context, message proto.Message) error
 }
 
 func (c *Conn) Dial(addr string, timeout time.Duration) error {
@@ -89,7 +92,6 @@ func (c *Conn) Dial(addr string, timeout time.Duration) error {
 	}
 	c.state = LCS_Connecting
 	c.conn, err = net.DialTimeout("tcp", address.AddrPort().String(), timeout)
-	// c.conn, err = net.Dial("tcp", addr)
 	if err != nil {
 		c.state = LCS_Disconnected
 		fmt.Println(err.Error())
@@ -114,16 +116,12 @@ func (c *Conn) EscalateFailure(reason interface{}, message interface{}) {
 	vlog.Errorf("%s \nstack%s", reason.(error).Error(), message.(string))
 }
 
-
-// func (c *Conn) Register(key interface{}, f func(ctx context.Context, message proto.Message) (proto.Message, error)) {
-// 	c.methods[reflect.TypeOf(key)] = f
-// }
+func (c *Conn) Register(key interface{}, f func(ctx context.Context, message proto.Message) error) {
+	c.methods[reflect.TypeOf(key)] = f
+}
 
 func (c *Conn) IsConnected() bool {
-	if atomic.LoadInt32(&c.state) == LCS_Connected {
-		return true
-	}
-	return false
+	return atomic.LoadInt32(&c.state) == LCS_Connected
 }
 
 func (c *Conn) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
@@ -147,7 +145,7 @@ func (c *Conn) RequestMessage(message proto.Message, timeout int64) (proto.Messa
 		t:          time.NewTimer(time.Duration(timeout) * time.Millisecond),
 	}
 
-	b, err := protomessge.Marshal(message.(proto.Message), c.secret)
+	b, err := protomessge.Marshal(message, c.secret)
 	if err != nil {
 		future.cond = nil
 		future.request = nil
@@ -212,65 +210,6 @@ func (c *Conn) Close() {
 		c.conn.Close()
 	}
 	c.done.Wait()
-	c.guardianDone.Wait()
-}
-
-func (c *Conn) Destory() {
-	close(c.mailbox)
-	// c.sendbox = nil
-}
-
-func (c *Conn) onError(err *pubs.Error){
-	future := c.getFuture(c.sequenceID)
-	if future == nil {
-		return
-	}
-	future.cond.L.Lock()
-	if future.done {
-		future.cond.L.Unlock()
-		return
-	}
-	if err != nil {
-		future.result = nil
-		
-		future.err = fmt.Errorf("message %v error:%v",err.Name,err.Err)
-	}
-	future.done = true
-
-	tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
-	if tp != nil {
-		tp.Stop()
-	}
-	c.sequenceID = 0
-	future.cond.Signal()
-	future.cond.L.Unlock()
-}
-
-func (c *Conn) onResponse(msg protoreflect.ProtoMessage) {
-	future := c.getFuture(c.sequenceID)
-	if future == nil {
-		return
-	}
-	future.cond.L.Lock()
-	if future.done {
-		future.cond.L.Unlock()
-		return
-	}
-
-	if msg != nil {
-		future.result = msg
-	}
-
-	future.done = true
-
-	tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
-	if tp != nil {
-		tp.Stop()
-	}
-	c.sequenceID = 0
-	future.cond.Signal()
-	future.cond.L.Unlock()
-	
 }
 
 func (c *Conn) reader() {
@@ -289,7 +228,6 @@ func (c *Conn) reader() {
 
 		offsetWrite int
 		nWrite      int
-
 	)
 	for {
 
@@ -344,7 +282,9 @@ exit_reader_lable:
 
 func (c *Conn) guardian() {
 	c.currentGoroutineId = utils.GetCurrentGoroutineID()
-
+	defer func() {
+		c.guardianDone.Done()
+	}()
 	for {
 		msg, ok := <-c.mailbox
 		if !ok {
@@ -384,7 +324,64 @@ exit_guardian_lable:
 	}
 	atomic.StoreInt32(&c.state, LCS_Disconnected)
 }
+func (c *Conn) onError(err *pubs.Error) {
+	future := c.getFuture(c.sequenceID)
+	if future == nil {
+		return
+	}
+	future.cond.L.Lock()
+	if future.done {
+		future.cond.L.Unlock()
+		return
+	}
+	if err != nil {
+		future.result = nil
 
+		future.err = fmt.Errorf("message %v error:%v", err.Name, err.Err)
+	}
+	future.done = true
+
+	tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
+	if tp != nil {
+		tp.Stop()
+	}
+	c.sequenceID = 0
+	future.cond.Signal()
+	future.cond.L.Unlock()
+}
+
+func (c *Conn) onResponse(msg protoreflect.ProtoMessage) {
+	future := c.getFuture(c.sequenceID)
+	if future == nil {
+		return
+	}
+
+	if f,ok := c.methods[reflect.TypeOf(msg)]; ok {
+		go f(context.Background(),msg)
+		return
+	}
+
+	future.cond.L.Lock()
+	if future.done {
+		future.cond.L.Unlock()
+		return
+	}
+
+	if msg != nil {
+		future.result = msg
+	}
+
+	future.done = true
+
+	tp := (*time.Timer)(atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&future.t))))
+	if tp != nil {
+		tp.Stop()
+	}
+	c.sequenceID = 0
+	future.cond.Signal()
+	future.cond.L.Unlock()
+
+}
 func (dl *Conn) onPubkeyReply(message *pubs.PubkeyMsg) {
 
 	// var (

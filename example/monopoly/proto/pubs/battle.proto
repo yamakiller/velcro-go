@@ -24,7 +24,8 @@ message BattleSpaceDataSimple {
     string masterUid = 3;
     string masterIcon = 4;
     string masterDisplay = 5;
-    repeated BattleSpacePlayerSimple players = 6;
+    int32 maxCount = 6;
+    repeated BattleSpacePlayerSimple players = 7;
 }
 
 

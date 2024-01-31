@@ -91,6 +91,8 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx context.Context) (proto.Messa
 		spacse.MasterUid = result[rdsconst.BattleSpaceMasterUid]
 		spacse.MasterIcon = result[rdsconst.BattleSpaceMasterIcon]
 		spacse.MasterDisplay = result[rdsconst.BattleSpaceMasterDisplay]
+		max_count ,_ := strconv.Atoi(result[rdsconst.BattleSpacePlayerCount]) 
+		spacse.MaxCount =int32(max_count) 
 		battleSpacePos := result[rdsconst.BattleSpacePlayerPos]
 		for _, id := range strings.Split(battleSpacePos, "&") {
 			player_data := rdsconst.SplitData(result[rdsconst.GetBattleSpacePlayerDataKey(id)])

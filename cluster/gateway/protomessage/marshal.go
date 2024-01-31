@@ -2,7 +2,6 @@ package protomessge
 
 import (
 	"encoding/binary"
-	"strings"
 
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/encryption"
@@ -24,7 +23,7 @@ func Marshal(message proto.Message, secret []byte) ([]byte, error) {
 	}
 
 	msgName := proto.MessageName(message)
-	msgNameLen := strings.Count(string(msgName), "")
+	msgNameLen :=len(msgName) //strings.Count(string(msgName), "") - 1
 	dataLen := msgNameLen + len(msgBytes) + 1
 
 	packetLen := HeaderSize + dataLen
