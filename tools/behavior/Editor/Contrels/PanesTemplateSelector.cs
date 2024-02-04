@@ -1,6 +1,6 @@
 ﻿
 using AvalonDock.Layout;
-using Editor.BehaviorCharts.Model;
+using Editor.Panels.Model;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -14,17 +14,18 @@ namespace Editor.Contrels
 
         }
 
-        public DataTemplate BehaviorChartEditorViewTemplate
+        public DataTemplate PanelViewTemplate
         {
             get;
             set;
         }
+
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
             var itemAsLayoutContent = item as LayoutContent;
-            if (item is EditorViewModel)
+            if (item is PanelViewModel)
             {
-                return BehaviorChartEditorViewTemplate;
+                return PanelViewTemplate;
             }
                 
             return base.SelectTemplate(item, container);

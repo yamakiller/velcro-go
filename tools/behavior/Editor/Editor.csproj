@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bgt.Diagrams\Bgt.Diagrams.csproj" />
+    <ProjectReference Include="..\Behavior.Diagrams\Behavior.Diagrams.csproj" />
   </ItemGroup>
 
   <ItemGroup>

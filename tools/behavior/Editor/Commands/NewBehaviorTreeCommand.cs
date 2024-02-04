@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Editor.Commands
 {
@@ -34,8 +35,20 @@ namespace Editor.Commands
                 FileName = treeFileName,
                 ID = Utils.ShortGuid.Next(),
                 Title = treeFileName.Replace(".json", ""),
-                Description= ""
+                Nodes = new Dictionary<string, Datas.BehaviorNode>(),
+                Description = ""
             };
+
+            var rootNode = new Datas.BehaviorNode(contextViewModel) {
+                ID = Utils.ShortGuid.Next(),
+                Name = "root",
+                Title ="",
+                Description = "",
+                Category = "root",
+                Child = ""
+            };
+
+            tr.Nodes.Add(rootNode.Name, rootNode);
             contextViewModel.CurrWorkspace.Trees.Add(tr);
             contextViewModel.IsModifyed = true;
             if (!contextViewModel.IsWorkspaceExpanded)

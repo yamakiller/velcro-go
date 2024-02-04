@@ -1,8 +1,9 @@
-﻿using Editor.BehaviorCharts.Model;
-using Editor.Commands;
+﻿using Editor.Commands;
 using Editor.Framework;
+using Editor.Panels.Model;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 
 namespace Editor.ViewModels
@@ -82,11 +83,37 @@ namespace Editor.ViewModels
         #endregion
 
         #region  Documents
-        private ObservableCollection<EditorViewModel> documents;
-        public ReadOnlyObservableCollection<EditorViewModel> Documents
+        private ObservableCollection<PanelViewModel> documents;
+        public ReadOnlyObservableCollection<PanelViewModel> Documents
         {
             get;
             private set;
+        }
+
+        private object propertiesSelectedObject;
+        public object PropertiesSelectedObject
+        {
+            get { return propertiesSelectedObject; }
+            set
+            {
+                if (propertiesSelectedObject != value)
+                {
+                    var obj = propertiesSelectedObject as INotifyPropertyChanged;
+                    if (obj != null)
+                        obj.PropertyChanged -= PropertiesPropertyChanged;
+                    propertiesSelectedObject = value;
+                    DisplayProperties();
+
+                    obj = propertiesSelectedObject as INotifyPropertyChanged;
+                    if (obj != null)
+                        obj.PropertyChanged += PropertiesPropertyChanged;
+                }
+            }
+        }
+
+        void PropertiesPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            DisplayProperties();
         }
 
         #endregion
@@ -177,17 +204,17 @@ namespace Editor.ViewModels
         #region 函数
         public EditorFrameViewModel()
         {
-            documents = new ObservableCollection<EditorViewModel>();
-            Documents = new ReadOnlyObservableCollection<EditorViewModel>(documents);
+            documents = new ObservableCollection<PanelViewModel>();
+            Documents = new ReadOnlyObservableCollection<PanelViewModel>(documents);
         }
 
         public void OpenBehaviorTreeView(Datas.BehaviorTree openTree)
         {
-            var newDocument = new EditorViewModel(this, openTree);
+            var newDocument = new PanelViewModel(this, openTree);
             this.documents.Add(newDocument);
         }
 
-        public EditorViewModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
+        public PanelViewModel FindBehaviorTreeView(Datas.BehaviorTree viewTree)
         {
             for (int i = 0; i < documents.Count; i++)
             {
@@ -229,6 +256,11 @@ namespace Editor.ViewModels
             {
                 CurrWorkspaceSelectedTree = null;
             }
+        }
+
+        private void DisplayProperties()
+        {
+            //TODO: 显示属性
         }
         #endregion
     }

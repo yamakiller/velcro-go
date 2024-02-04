@@ -1,0 +1,39 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="clr-namespace:Behavior.Diagrams.Controls">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Behavior.Diagrams;component/Themes/Shared.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <Style TargetType="{x:Type c:LinkBase}">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Canvas.ZIndex" Value="-1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Canvas DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                        <Path
+                  StrokeThickness="2"
+                  Stroke="{Binding Brush}"
+                  Data="{Binding PathGeometry}">
+                        </Path>
+                        <Canvas Visibility="{Binding StartCap, Converter={StaticResource VisibilityConverter}}"
+					  Canvas.Left="{Binding StartPoint.X}"
+					  Canvas.Top="{Binding StartPoint.Y}">
+                            <Canvas.LayoutTransform>
+                                <RotateTransform Angle="{Binding StartCapAngle}"/>
+                            </Canvas.LayoutTransform>
+                        </Canvas>
+                        <Canvas Visibility="{Binding EndCap, Converter={StaticResource VisibilityConverter}}"
+					  Canvas.Left="{Binding EndPoint.X}"
+					  Canvas.Top="{Binding EndPoint.Y}">
+                            <Canvas.LayoutTransform>
+                                <RotateTransform Angle="{Binding EndCapAngle}"/>
+                            </Canvas.LayoutTransform>
+                        </Canvas>
+                    </Canvas>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

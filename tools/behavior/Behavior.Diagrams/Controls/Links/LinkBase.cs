@@ -1,0 +1,226 @@
+﻿
+using System;
+using System.ComponentModel;
+using System.Windows;
+using System.Windows.Media;
+
+namespace Behavior.Diagrams.Controls
+{
+    public abstract class LinkBase : DiagramItem, ILink, INotifyPropertyChanged
+    {
+        #region 属性
+
+        #region 节点属性
+        #region 源节点
+        private IPort m_source;
+        public IPort Source
+        {
+            get { return m_source; }
+            set
+            {
+                if (m_source != null)
+                    m_source.Links.Remove(this);
+                m_source = value;
+                if (m_source != null)
+                    m_source.Links.Add(this);
+            }
+        }
+        #endregion
+
+        #region 目标节点
+        private IPort m_target;
+        public IPort Target
+        {
+            get { return m_target; }
+            set
+            {
+                if (m_target != null)
+                    m_target.Links.Remove(this);
+                m_target = value;
+                if (m_target != null)
+                    m_target.Links.Add(this);
+            }
+        }
+        #endregion
+
+        #region 曲线折点
+        private IPort m_control1;
+        public IPort Control1
+        {
+            get { return m_control1; }
+            set
+            {
+                if (m_control1 != null)
+                    m_control1.Links.Remove(this);
+                m_control1 = value;
+                if (m_control1 != null)
+                    m_control1.Links.Add(this);
+            }
+        }
+
+        private IPort m_control2;
+        public IPort Control2
+        {
+            get { return m_control2; }
+            set
+            {
+                if (m_control2 != null)
+                    m_control2.Links.Remove(this);
+                m_control2 = value;
+                if (m_control2 != null)
+                    m_control2.Links.Add(this);
+            }
+        }
+        #endregion
+        #endregion
+
+        #region 节点点属性
+        public Point SourcePoint { get; set; }
+        public Point TargetPoint { get; set; }
+        public Point ControlPoint1 { get; set; }
+        public Point ControlPoint2 { get; set; }
+        #endregion
+
+        #region 点属性
+        private bool m_startCap;
+        public bool StartCap
+        {
+            get { return m_startCap; }
+            set
+            {
+                m_startCap = value;
+                OnPropertyChanged("StartCap");
+            }
+        }
+
+        private bool m_endCap;
+        public bool EndCap
+        {
+            get { return m_endCap; }
+            set
+            {
+                m_endCap = value;
+                OnPropertyChanged("EndCap");
+            }
+        }
+
+        private Point m_startPoint;
+        public Point StartPoint
+        {
+            get { return m_startPoint; }
+            protected set
+            {
+                m_startPoint = value;
+                OnPropertyChanged("StartPoint");
+            }
+        }
+
+        private Point m_endPoint;
+        public Point EndPoint
+        {
+            get { return m_endPoint; }
+            protected set
+            {
+                m_endPoint = value;
+                OnPropertyChanged("EndPoint");
+            }
+        }
+
+        private Point m_midPoint1;
+        public Point MidPoint1
+        {
+            get { return m_midPoint1; }
+            protected set
+            {
+                m_midPoint1 = value;
+                OnPropertyChanged("MidPoint1");
+            }
+        }
+
+        private Point m_midPoint2;
+        public Point MidPoint2
+        {
+            get { return m_midPoint2; }
+            protected set
+            {
+                m_midPoint2 = value;
+                OnPropertyChanged("MidPoint2");
+            }
+        }
+
+        private double m_startCapAngle;
+        public double StartCapAngle
+        {
+            get { return m_startCapAngle; }
+            protected set
+            {
+                m_startCapAngle = value;
+                OnPropertyChanged("StartCapAngle");
+            }
+        }
+
+        private double m_endCapAngle;
+        public double EndCapAngle
+        {
+            get { return m_endCapAngle; }
+            protected set
+            {
+                m_endCapAngle = value;
+                OnPropertyChanged("EndCapAngle");
+            }
+        }
+
+        private PathGeometry m_pathGeomtry;
+        public PathGeometry PathGeometry
+        {
+            get { return m_pathGeomtry; }
+            protected set
+            {
+                m_pathGeomtry = value;
+                OnPropertyChanged("PathGeometry");
+            }
+        }
+
+
+        #endregion
+
+        #region 画刷属性
+        private Brush m_brush = new SolidColorBrush(Colors.Black);
+        public Brush Brush
+        {
+            get { return m_brush; }
+            set { m_brush = value; }
+        }
+        #endregion
+
+        #region INotifyPropertyChanged 属性
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+                handler(this, new PropertyChangedEventArgs(name));
+        }
+        #endregion
+
+        public override Rect Bounds
+        {
+            get
+            {
+                var x = Math.Min(StartPoint.X, EndPoint.X);
+                var y = Math.Min(StartPoint.Y, EndPoint.Y);
+                var mx = Math.Max(StartPoint.X, EndPoint.X);
+                var my = Math.Max(StartPoint.Y, EndPoint.Y);
+                return new Rect(x, y, mx - x, my - y);
+            }
+        }
+        #endregion
+
+        protected LinkBase()
+        {
+            UpdatePath();
+        }
+
+        public abstract void UpdatePath();
+    }
+}

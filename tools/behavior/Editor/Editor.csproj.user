@@ -7,7 +7,10 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="BehaviorCharts\EditorView.xaml.cs">
+    <Compile Update="Contrels\AddButton.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Contrels\DelButton.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Contrels\EditorContent.xaml.cs">
@@ -31,9 +34,15 @@
     <Compile Update="EditorFrame.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Panels\PanelView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="BehaviorCharts\EditorView.xaml">
+    <Page Update="Contrels\AddButton.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Contrels\DelButton.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Contrels\EditorContent.xaml">
@@ -55,6 +64,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="EditorFrame.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Panels\PanelView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
