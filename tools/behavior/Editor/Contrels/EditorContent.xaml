@@ -54,7 +54,7 @@
                             <c:EditorWorkspace />
                         </avalondock:LayoutAnchorable>
                         <avalondock:LayoutAnchorable Title="属性">
-
+                            <c:EditorProperty />
                         </avalondock:LayoutAnchorable>
                     </avalondock:LayoutAnchorablePane>
                     

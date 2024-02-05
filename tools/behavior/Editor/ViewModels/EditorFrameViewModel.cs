@@ -111,6 +111,8 @@ namespace Editor.ViewModels
             }
         }
 
+
+
         void PropertiesPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             DisplayProperties();
@@ -261,6 +263,8 @@ namespace Editor.ViewModels
         private void DisplayProperties()
         {
             //TODO: 显示属性
+
+
         }
         #endregion
     }
