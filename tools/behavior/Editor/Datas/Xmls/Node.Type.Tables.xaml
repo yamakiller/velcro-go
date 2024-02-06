@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <XmlDataProvider x:Key="NoeTypeEnums">
+    <x:XData>
+      <Types xmlns="">
+        <Type Name="Root" Value="root"></Type>
+        <Type Name="Action" Value="action"></Type>
+        <Type Name="Condition" Value="condition"></Type>
+        <Type Name="Composites" Value="composites"></Type>
+        <Type Name="Decorators" Value="decorators"></Type>
+      </Types>
+    </x:XData>
+  </XmlDataProvider>
+</ResourceDictionary>

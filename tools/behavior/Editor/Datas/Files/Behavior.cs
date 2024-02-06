@@ -20,8 +20,8 @@ namespace Editor.Datas.Files
         public required string Description { get; set; }
         [JsonProperty(PropertyName = "children")]
         public List<string>? Children { get; set;}
-        [JsonProperty(PropertyName = "child")]
-        public required string Child {  get; set; }
+        [JsonProperty(PropertyName = "color")]
+        public string Color {  get; set; }
         [JsonProperty(PropertyName = "properties")]
         public Dictionary<string, object>? Properties { get; set; }
     }

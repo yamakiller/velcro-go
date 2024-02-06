@@ -60,6 +60,9 @@
     <Page Update="Contrels\EditorWorkspace.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Datas\Xmls\Node.Color.Tables.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Dialogs\OpenProccessFrame.xaml">
       <SubType>Designer</SubType>
     </Page>

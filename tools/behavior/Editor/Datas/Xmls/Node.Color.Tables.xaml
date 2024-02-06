@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <XmlDataProvider x:Key="NoeColorEnums">
+        <x:XData>
+            <Colors xmlns="">
+                <Color Name="Root" Value="root"></Color>
+                <Type Name="Action" Value="action"></Type>
+                <Type Name="Condition" Value="condition"></Type>
+                <Type Name="Composites" Value="composites"></Type>
+                <Type Name="Decorators" Value="decorators"></Type>
+            </Colors>
+        </x:XData>
+    </XmlDataProvider>
+</ResourceDictionary>

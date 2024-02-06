@@ -93,6 +93,21 @@ namespace Editor.Datas
         }
         public Dictionary<string, object>? Properties { get; set; }
 
+        private string color = "";
+        public string Color
+        {
+            get { return color; }
+            set
+            {
+                string oldColor = color;
+                child = value;
+                if (contextViewModel != null && oldColor != value)
+                {
+                    contextViewModel.IsModifyed = true;
+                }
+            }
+        }
+
         public BehaviorNode(ViewModelData model)
         {
             contextViewModel = model;
