@@ -59,7 +59,7 @@ namespace Editor.Datas
 
         public Dictionary<string, object>? Properties { get; set; }
 
-        public Dictionary<string, BehaviorNode>? Nodes { get; set; }
+        public Dictionary<string, BehaviorNode> Nodes { get; set; }
 
         public BehaviorTree(ViewModelData model)
         {

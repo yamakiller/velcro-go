@@ -90,7 +90,7 @@ namespace Editor.Commands
                             Category = b3node.Value.Category,
                             Title = b3node.Value.Title,
                             Description = b3node.Value.Description,
-                            Child = b3node.Value.Child,
+                            Color = b3node.Value.Color,
                             Properties = b3node.Value.Properties,
                         };
 

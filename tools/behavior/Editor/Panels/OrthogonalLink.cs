@@ -108,11 +108,11 @@ namespace Editor.Panels
             var port = iPort as PortBase;
             double x = (int)(point.X / cellSize.Width) + 0.5;
             double y = (int)(point.Y / cellSize.Height) + 0.5;
-            if (port.VerticalAlignment == VerticalAlignment.Top)
+            if (port?.VerticalAlignment == VerticalAlignment.Top)
                 return new Point(x, y - 0.5);
-            else if (port.VerticalAlignment == VerticalAlignment.Bottom)
+            else if (port?.VerticalAlignment == VerticalAlignment.Bottom)
                 return new Point(x, y + 0.5);
-            else if (port.HorizontalAlignment == HorizontalAlignment.Left)
+            else if (port?.HorizontalAlignment == HorizontalAlignment.Left)
                 return new Point(x - 0.5, y);
             else
                 return new Point(x + 0.5, y);

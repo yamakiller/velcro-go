@@ -15,6 +15,6 @@ namespace Editor.Framework
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged;
     }
 }

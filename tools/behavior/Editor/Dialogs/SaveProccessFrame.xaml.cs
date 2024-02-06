@@ -109,7 +109,7 @@ namespace Editor.Dialogs
                                     Title = node.Value.Title,
                                     Category = node.Value.Category,
                                     Description = node.Value.Description,
-                                    Child = node.Value.Child,
+                                    Color = node.Value.Color,
                                     Properties = node.Value.Properties,
                                 };
 

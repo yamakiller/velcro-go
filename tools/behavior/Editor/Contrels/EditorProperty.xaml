@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:converter="clr-namespace:Editor.Converters"
+             xmlns:ctrl="clr-namespace:Editor.Contrels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -87,7 +88,8 @@
                                             ItemsSource="{Binding Source={StaticResource NoeTypeEnums},XPath=/Types/Type}"/>
                 <Line Grid.Row="5" Style="{StaticResource gridHorizontalLineStyle}"></Line>
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="颜色" Margin="4"></TextBlock>
-                    <TextBlock Grid.Row="6" Grid.Column="1" Text="Read" Margin="4"></TextBlock>
+                    <ctrl:ColorPicker  Grid.Row="6" Grid.Column="1" Height="24" SelectColor="Black" Margin="4"></ctrl:ColorPicker>
+
                     <Line Grid.Row="7" Style="{StaticResource gridHorizontalLineStyle}"></Line>
                 <TextBlock Grid.Row="8" Grid.Column="0" Text="属性表" Margin="4 10 4 4"></TextBlock>
                 <Button Grid.Row="8" Grid.Column="1" Content="{materialDesign:PackIcon DotsHorizontal}" Margin="2"></Button>

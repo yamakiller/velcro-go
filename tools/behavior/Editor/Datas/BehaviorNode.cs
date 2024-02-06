@@ -77,20 +77,6 @@ namespace Editor.Datas
         }
         public ObservableCollection<string>? Children { get; set; }
 
-        private string child = "";
-        public required string Child
-        {
-            get { return child; }
-            set
-            {
-                string oldChild = child;
-                child = value;
-                if (contextViewModel != null && oldChild != value)
-                {
-                    contextViewModel.IsModifyed = true;
-                }
-            }
-        }
         public Dictionary<string, object>? Properties { get; set; }
 
         private string color = "";
@@ -100,7 +86,7 @@ namespace Editor.Datas
             set
             {
                 string oldColor = color;
-                child = value;
+                color = value;
                 if (contextViewModel != null && oldColor != value)
                 {
                     contextViewModel.IsModifyed = true;

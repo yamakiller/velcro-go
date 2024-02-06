@@ -33,7 +33,7 @@ namespace Editor.Framework
 
         public bool HasErrors => _validationErrors.Any();
 
-        public IEnumerable GetErrors(string propertyName)
+        public IEnumerable GetErrors(string? propertyName)
         {
             if (String.IsNullOrEmpty(propertyName))
                 return _validationErrors.SelectMany(kvp => kvp.Value);
@@ -60,21 +60,24 @@ namespace Editor.Framework
                 _validationErrors.Remove(propertyName);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
         protected void RaisePropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+        protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
         {
             if (EqualityComparer<T>.Default.Equals(storage, value))
                 return false;
 
             storage = value;
-            RaisePropertyChanged(propertyName);
+            if (propertyName != null)
+            {
+                RaisePropertyChanged(propertyName);
+            }
             return true;
         }
     }

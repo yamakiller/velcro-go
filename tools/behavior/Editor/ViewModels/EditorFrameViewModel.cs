@@ -90,8 +90,8 @@ namespace Editor.ViewModels
             private set;
         }
 
-        private object propertiesSelectedObject;
-        public object PropertiesSelectedObject
+        private object? propertiesSelectedObject;
+        public object? PropertiesSelectedObject
         {
             get { return propertiesSelectedObject; }
             set
@@ -216,7 +216,7 @@ namespace Editor.ViewModels
             this.documents.Add(newDocument);
         }
 
-        public PanelViewModel FindBehaviorTreeView(Datas.BehaviorTree viewTree)
+        public PanelViewModel? FindBehaviorTreeView(Datas.BehaviorTree viewTree)
         {
             for (int i = 0; i < documents.Count; i++)
             {

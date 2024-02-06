@@ -42,10 +42,10 @@ namespace Editor.Commands
             var rootNode = new Datas.BehaviorNode(contextViewModel) {
                 ID = Utils.ShortGuid.Next(),
                 Name = "root",
-                Title ="",
+                Title = "",
                 Description = "",
                 Category = "root",
-                Child = ""
+                Color = "#FFB8860B",
             };
 
             tr.Nodes.Add(rootNode.Name, rootNode);

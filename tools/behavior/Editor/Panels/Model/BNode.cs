@@ -25,7 +25,7 @@ namespace Editor.Panels.Model
         private int m_height;
         public int Hegith { get { return m_height; } set { m_height = value; OnPropertyChanged("Height"); } }
 
-        private string m_id;
+        private string m_id = "";
         public string Id
         {
             get { return m_id; }
@@ -36,7 +36,7 @@ namespace Editor.Panels.Model
             }
         }
 
-        private string m_name;
+        private string m_name = "";
         public string Name
         {
             get { return m_name; }
@@ -47,7 +47,18 @@ namespace Editor.Panels.Model
             }
         }
 
-        private string m_description;
+        private string m_color = "";
+        public string Color
+        {
+            get { return m_color; }
+            set
+            {
+                m_color = value;
+                OnPropertyChanged("Color");
+            }
+        }
+
+        private string m_description = "";
         public string Description
         {
             get { return m_description; }
@@ -61,7 +72,7 @@ namespace Editor.Panels.Model
 
         #region INotifyPropertyChanged Members
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string name)
         {

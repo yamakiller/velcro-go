@@ -21,7 +21,7 @@ namespace Editor.Datas.Files
         [JsonProperty(PropertyName = "children")]
         public List<string>? Children { get; set;}
         [JsonProperty(PropertyName = "color")]
-        public string Color {  get; set; }
+        public string? Color {  get; set; }
         [JsonProperty(PropertyName = "properties")]
         public Dictionary<string, object>? Properties { get; set; }
     }
