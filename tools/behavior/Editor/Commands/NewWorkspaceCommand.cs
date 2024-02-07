@@ -26,7 +26,7 @@ namespace Editor.Commands
                 return;
             }
 
-            string fileName =  Utils.RandFileName.GetRandName(folderDialog.FolderName, "NewWorkspace", ".json");
+            string fileName =  Utils.RandFileName.GetRandName(folderDialog.FolderName, null, "NewWorkspace", ".json");
             if (string.IsNullOrEmpty(fileName)) 
             {
                 Dialogs.WhatDialog.ShowWhatMessage("错误", "生成工作空间名失败");

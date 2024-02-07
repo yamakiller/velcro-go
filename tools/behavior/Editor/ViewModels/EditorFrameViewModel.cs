@@ -4,6 +4,7 @@ using Editor.Panels.Model;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 
 namespace Editor.ViewModels
@@ -90,6 +91,19 @@ namespace Editor.ViewModels
             private set;
         }
 
+        private PanelViewModel activeDocument;
+        public PanelViewModel ActiveDocument
+        {
+            get { return  activeDocument; }
+            set
+            {
+                if (activeDocument != value)
+                {
+                    SetProperty(ref activeDocument, value);
+                }
+            }
+        }
+
         private object? propertiesSelectedObject;
         public object? PropertiesSelectedObject
         {
@@ -107,7 +121,38 @@ namespace Editor.ViewModels
                     obj = propertiesSelectedObject as INotifyPropertyChanged;
                     if (obj != null)
                         obj.PropertyChanged += PropertiesPropertyChanged;
+
                 }
+            }
+        }
+
+
+        private string propertiesSelectedId;
+        public string PropertiesSelectedId
+        {
+            get
+            {
+                return propertiesSelectedId;
+            }
+
+            set
+            {
+                string newValue = "";
+                if (propertiesSelectedObject != null)
+                {
+                    BNode bnode = propertiesSelectedObject as BNode;
+                    if (bnode != null)
+                    {
+                        var activeNode = activeDocument.FindNode(bnode.Id);
+                        if (activeNode != null)
+                        {
+                            newValue = activeNode.ID;
+                        }
+                        
+                    }
+                }
+
+                SetProperty(ref propertiesSelectedId, newValue);
             }
         }
 
@@ -263,8 +308,7 @@ namespace Editor.ViewModels
         private void DisplayProperties()
         {
             //TODO: 显示属性
-
-
+            PropertiesSelectedId = "";
         }
         #endregion
     }

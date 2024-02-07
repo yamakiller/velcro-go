@@ -22,8 +22,13 @@ namespace Editor.Commands
                 return;
             }
 
-            string treeFileName = Utils.RandFileName.GetRandName(contextViewModel.CurrWorkspace.Dir,
-                "NewBehaviorTree", ".json");
+            List<string> files = new List<string>();
+            foreach(var t in contextViewModel.CurrWorkspace.Trees)
+            {
+                files.Add(t.FileName);
+            }
+
+            string treeFileName = Utils.RandFileName.GetRandName(contextViewModel.CurrWorkspace.Dir, files, "NewBehaviorTree", ".json");
             if (string.IsNullOrEmpty(treeFileName) )
             {
                 Dialogs.WhatDialog.ShowWhatMessage("错误", "创建行为树名失败");

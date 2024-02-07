@@ -9,7 +9,7 @@ namespace Editor.Utils
 {
     public static class RandFileName
     {
-        public static string GetRandName(string dir, string prefix, string suffix="") 
+        public static string GetRandName(string dir, List<string>? files, string prefix, string suffix="") 
         {
             for (int i = 1; i < UInt16.MaxValue; i++) 
             { 
@@ -17,6 +17,13 @@ namespace Editor.Utils
                 if (File.Exists(filePath))
                 {
                     continue;
+                } 
+                else if (files != null && files.Count > 0)
+                {
+                    if (files.Find(x => x.Equals(prefix + i + suffix)) != null)
+                    {
+                        continue;
+                    }
                 }
                 return prefix + i + suffix;
             }

@@ -15,7 +15,7 @@
                       AllowMixedOrientation="True"
                       BorderBrush="Black"
                       BorderThickness="1"
-                      ActiveContent=""
+                      ActiveContent="{Binding ActiveDocument, Mode=TwoWay}"
                       DocumentsSource="{Binding Documents}">
             <avalondock:DockingManager.Theme>
                 <avalondock:ExpressionDarkTheme />
