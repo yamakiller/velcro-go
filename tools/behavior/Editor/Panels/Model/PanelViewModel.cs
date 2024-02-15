@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Xml;
 
 namespace Editor.Panels.Model
 {
@@ -70,7 +71,7 @@ namespace Editor.Panels.Model
             {
                 if (m_closeCommand == null)
                 {
-                    m_closeCommand = new PaneCommand((p) => onClose(), (p) => isClose());
+                    m_closeCommand = new PaneCommand((p) => onClose(p), (p) => isClose());
                 }
                 return m_closeCommand;
             }
@@ -171,11 +172,16 @@ namespace Editor.Panels.Model
         /// <summary>
         /// 关闭处理函数
         /// </summary>
-        private void onClose()
+        private void onClose(object parameter)
         {
+            var parentBNode = parameter as BNode;
             Debug.Assert(m_parentViewModel != null);
             Debug.Assert(m_btree != null);
-            m_parentViewModel.CloseBehaviorTreeView(m_btree);
+
+
+            DelNode(parentBNode);
+
+            //m_parentViewModel.CloseBehaviorTreeView(m_btree);
         }
 
         private void onInsert(object parameter)
@@ -191,6 +197,9 @@ namespace Editor.Panels.Model
                 NewNode(parentBNode, "Runner", "action");
             }
         }
+
+
+
 
         /// <summary>
         /// 构建节点
@@ -399,6 +408,70 @@ namespace Editor.Panels.Model
         }
 
         /// <summary>
+        /// 删除一个新节点
+        /// </summary>
+        /// <param name="parent"></param>
+        public void DelNode(BNode parent)
+        {
+            if (parent == null) return;
+            BLink? source = FindSourceBlink(parent);
+            while (source != null)
+            {
+                DelNode(source.Target);
+                source = FindSourceBlink(source.Source);
+            }
+
+            BLink? target = FindTargetBlink(parent);
+            if (target != null)
+            {
+                Datas.BehaviorNode? sourceNodeData = FindNode(target.Source.Id);
+                if (sourceNodeData != null)
+                {
+                    for (int j = 0; j < sourceNodeData.Children.Count; j++)
+                    {
+                        if (sourceNodeData.Children[j] == parent.Id)
+                        {
+                            sourceNodeData.Children.RemoveAt(j);
+                            break;
+                        }
+                    }
+                    for (int j = 0; j < sourceNodeData.Children.Count; j++)
+                    {
+
+                    }
+                        if (sourceNodeData.Children.Count == 1)
+                    {
+                    }
+                    else
+                    {
+                        int h = (sourceNodeData.Children.Count * UnitRow) + ((sourceNodeData.Children.Count - 1) * UnitRowCap);
+                        int startRow = (parent.Row - (h / 2)) + 1;
+                        foreach (var curr in sourceNodeData.Children)
+                        {
+                            var currNode = FindBNode(curr);
+                            if (currNode == null)
+                            {
+                                continue;
+                            }
+
+                            currNode.Row = startRow;
+                            startRow += UnitRow + UnitRowCap;
+                        }
+                    }
+                }
+                Links.Remove(target);
+            }
+
+            Nodes.Remove(parent);
+            m_btree.Nodes.Remove(parent.Id);
+        }
+
+        public void ResetSize()
+        {
+
+        }
+
+        /// <summary>
         /// 通过ID在图中查找节点
         /// </summary>
         /// <param name="id"></param>
@@ -443,6 +516,30 @@ namespace Editor.Panels.Model
                 }
             }
             return -1;
+        }
+
+        private BLink? FindSourceBlink(BNode source)
+        {
+            for (int lc = 0; lc < Links.Count; lc++)
+            {
+                if (Links[lc].Source == source)
+                {
+                    return Links[lc];
+                }
+            }
+            return null;
+        }
+
+        private BLink? FindTargetBlink(BNode target)
+        {
+            for (int lc = 0; lc < Links.Count; lc++)
+            {
+                if (Links[lc].Target == target)
+                {
+                    return Links[lc];
+                }
+            }
+            return null;
         }
         #endregion
 

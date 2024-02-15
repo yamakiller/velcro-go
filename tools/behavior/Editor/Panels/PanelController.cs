@@ -277,6 +277,10 @@ namespace Editor.Panels
                 delBtn.Width = 16;
                 delBtn.Height = 16;
 
+                // 加入点击事件
+                delBtn.Command = m_model.CloseCommand;
+                delBtn.CommandParameter = node;
+
                 stackPanel.Children.Add(delBtn);
             }
 
