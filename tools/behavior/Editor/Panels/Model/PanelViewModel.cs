@@ -27,8 +27,8 @@ namespace Editor.Panels.Model
 
         #region 成员
         private EditorFrameViewModel? m_parentViewModel = null;
-        private DiagramView?  m_editor = null;
-        private BehaviorTree? m_btree  = null;
+        private DiagramView? m_editor = null;
+        private BehaviorTree? m_btree = null;
         #endregion
 
         #region 节点/线表
@@ -152,7 +152,7 @@ namespace Editor.Panels.Model
                         int childCount = rootNode.Children.Count;
                         int childIndex = 0;
                         foreach (var child in rootNode.Children)
-                        { 
+                        {
                             var childNode = m_btree.Nodes.GetValueOrDefault(child, null);
                             if (childNode == null) continue;
                             constructNode(rootBNode, childNode, childCount, childIndex);
@@ -206,12 +206,12 @@ namespace Editor.Panels.Model
 
             var nodeKind = NodeKindConvert.ToKind(node.Category);
             var newBNode = new BNode(nodeKind);
-            newBNode.Id   = node.ID;
+            newBNode.Id = node.ID;
             newBNode.Name = node.Name;
             newBNode.Color = node.Color;
             if (string.IsNullOrEmpty(newBNode.Color))
             {
-                switch(nodeKind)
+                switch (nodeKind)
                 {
                     case NodeKinds.Condition:
                         newBNode.Color = "#FFDEB887";
@@ -269,8 +269,8 @@ namespace Editor.Panels.Model
         /// <param name="parent"></param>
         /// <param name="name"></param>
         /// <param name="category"></param>
-        public void NewNode(BNode parent, 
-                            string name, 
+        public void NewNode(BNode parent,
+                            string name,
                             string category)
         {
 
@@ -279,8 +279,8 @@ namespace Editor.Panels.Model
             Debug.Assert(m_btree != null);
             Datas.BehaviorNode? parentNodeData = FindNode(parent.Id);
             if (parentNodeData == null) { return; }
-            if (parent.Kind == Model.NodeKinds.Root && 
-                parentNodeData.Children != null && 
+            if (parent.Kind == Model.NodeKinds.Root &&
+                parentNodeData.Children != null &&
                 parentNodeData.Children.Count > 0)
             {
                 return;
@@ -344,11 +344,13 @@ namespace Editor.Panels.Model
             parentNodeData.Children?.Add(newNode.ID);
 
             // TODO: 在视图中显示节点
-       
+
             var newBNode = new BNode(nodeKind);
             newBNode.Id = newNode.ID;
             newBNode.Name = newNode.Name;
-         
+            newBNode.Color = newNode.Color;
+            newBNode.Description = newNode.Description;
+            
             if (insertIndex >= Nodes.Count)
             {
                 Nodes.Add(newBNode);
@@ -357,9 +359,9 @@ namespace Editor.Panels.Model
             {
                 Nodes.Insert(insertIndex, newBNode);
             }
-            
-            
-           
+
+
+
 
 
             newBNode.Column = parent.Column + (parent.Width / 20) + UnitColumnGap;
@@ -390,7 +392,7 @@ namespace Editor.Panels.Model
 
 
 
-                if (parent != null) // 增加连接线
+            if (parent != null) // 增加连接线
             {
                 Links.Add(new BLink(parent, Model.PortKinds.Right, newBNode, Model.PortKinds.Left));
             }
@@ -420,7 +422,7 @@ namespace Editor.Panels.Model
 
         private BNode? FindBNode(string id)
         {
-            foreach(var curr in Nodes)
+            foreach (var curr in Nodes)
             {
                 if (curr.Id == id)
                 {
@@ -433,7 +435,7 @@ namespace Editor.Panels.Model
 
         private int FindeBNodeIndex(string id)
         {
-            for (int i = 0; i < Nodes.Count;i++)
+            for (int i = 0; i < Nodes.Count; i++)
             {
                 if (Nodes[i].Id == id)
                 {
