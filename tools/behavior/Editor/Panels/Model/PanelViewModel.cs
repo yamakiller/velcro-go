@@ -144,7 +144,7 @@ namespace Editor.Panels.Model
                     rootBNode.Id = rootNode.ID;
                     rootBNode.Row = 30;
                     rootBNode.Column = 1;
-                    rootBNode.Color = "#FFB8860B";
+                    rootBNode.Color = rootNode.Color;// "#FFB8860B";
 
                     Nodes.Add(rootBNode);
 
@@ -218,6 +218,10 @@ namespace Editor.Panels.Model
             newBNode.Id = node.ID;
             newBNode.Name = node.Name;
             newBNode.Color = node.Color;
+            newBNode.Description = node.Description;
+            newBNode.Category = node.Category;
+            newBNode.Title = node.Title;
+
             if (string.IsNullOrEmpty(newBNode.Color))
             {
                 switch (nodeKind)
@@ -357,6 +361,8 @@ namespace Editor.Panels.Model
             var newBNode = new BNode(nodeKind);
             newBNode.Id = newNode.ID;
             newBNode.Name = newNode.Name;
+            newBNode.Category = newNode.Category;
+            newBNode.Title = newNode.Title;
             newBNode.Color = newNode.Color;
             newBNode.Description = newNode.Description;
             

@@ -2,6 +2,7 @@
 using Behavior.Diagrams.Controls;
 using Behavior.Diagrams.Utils;
 using Editor.Contrels;
+using Editor.Converters;
 using Editor.Panels.Model;
 using System.ComponentModel;
 using System.Windows;
@@ -189,11 +190,11 @@ namespace Editor.Panels
             return item;
         }
 
-        private Grid CreateNode(BNode  node, 
-                                double width, 
-                                SolidColorBrush brushColor, 
+        private Grid CreateNode(BNode node,
+                                double width,
+                                SolidColorBrush brushColor,
                                 Geometry icon,
-                                int      btn)
+                                int btn)
         {
 
             var textBlock = new TextBlock()
@@ -207,6 +208,7 @@ namespace Editor.Panels
             textBlock.SetBinding(TextBlock.TextProperty, b);
 
 
+
             var blackui = new Rectangle();
             blackui.Width = 160;
             blackui.Height = 50;
@@ -215,10 +217,14 @@ namespace Editor.Panels
             blackui.Stroke = brushColor;
             blackui.StrokeThickness = 3;
             blackui.Fill = Brushes.White;
+           
 
             var grid = new Grid();
             grid.Children.Add(blackui);
 
+            var colorbing = new Binding("Color");
+            colorbing.Source = node;
+            colorbing.Converter = StringToSolidColorBrushConverter.Instance;
             var capui = new Graphics.RoundedCornersPolygon
             {
                 StrokeThickness = 1,
@@ -227,6 +233,7 @@ namespace Editor.Panels
                 UseRoundnessPercentage = false,
                 IsClosed = true
             };
+            capui.SetBinding(Graphics.RoundedCornersPolygon.FillProperty, colorbing);
 
             double innerCircle = blackui.StrokeThickness + 1;
             capui.Points.Add(new Point(innerCircle, innerCircle));

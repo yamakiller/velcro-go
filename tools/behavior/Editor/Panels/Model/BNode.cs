@@ -47,6 +47,28 @@ namespace Editor.Panels.Model
             }
         }
 
+        private string m_category = "";
+        public string Category
+        {
+            get { return m_category; }
+            set
+            {
+                m_category = value;
+                OnPropertyChanged("Category");
+            }
+        }
+
+        private string m_title = "";
+        public string Title
+        {
+            get { return m_title; }
+            set
+            {
+                m_title = value;
+                OnPropertyChanged("Title");
+            }
+        }
+
         private string m_color = "";
         public string Color
         {
