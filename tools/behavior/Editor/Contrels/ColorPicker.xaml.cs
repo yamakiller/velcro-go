@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,7 +22,7 @@ namespace Editor.Contrels
     /// <summary>
     /// ColorPicker.xaml 的交互逻辑
     /// </summary>
-    public partial class ColorPicker : UserControl, INotifyPropertyChanged
+    public partial class ColorPicker : UserControl
     {
         double H = 0;
         double S = 1;
@@ -41,7 +42,6 @@ namespace Editor.Contrels
 
             Hcolor = new HsbaColor(H, S, B, 1);
             SelectColor = Hcolor.SolidColorBrush;
-
             ColorChange(Hcolor.RgbaColor);
         }
 
@@ -52,21 +52,17 @@ namespace Editor.Contrels
             HsbaColor Hcolor = new HsbaColor(H, S, B, 1);
 
             SelectColor = Hcolor.SolidColorBrush;
-
             ColorChange(Hcolor.RgbaColor);
         }
+        public static readonly DependencyProperty SelectColorProperty =
+        DependencyProperty.Register("SelectColor", typeof(SolidColorBrush), typeof(ColorPicker));
 
-        SolidColorBrush _SelectColor = Brushes.Transparent;
         public SolidColorBrush SelectColor
         {
-            get
-            {
-                return _SelectColor;
-            }
+            get => (SolidColorBrush)GetValue(SelectColorProperty);
             set
             {
-                _SelectColor = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SelectColor"));
+                SetValue(SelectColorProperty, value);
             }
         }
 
@@ -75,7 +71,7 @@ namespace Editor.Contrels
         int _B = 255;
         int A = 255;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        //public event PropertyChangedEventHandler PropertyChanged;
 
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -141,9 +137,9 @@ namespace Editor.Contrels
         {
             pop.IsOpen = true;
 
-            SelectColor = btn.Background as SolidColorBrush;
+            //SelectColor = btn.Background as SolidColorBrush;
 
-            RgbaColor Hcolor = new RgbaColor(SelectColor);
+            RgbaColor Hcolor = new RgbaColor(btn.Background);
             ColorChange(Hcolor);
 
             var xpercent = Hcolor.HsbaColor.S;

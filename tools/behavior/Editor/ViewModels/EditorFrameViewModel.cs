@@ -5,7 +5,11 @@ using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Xml;
 
 namespace Editor.ViewModels
 {
@@ -104,28 +108,51 @@ namespace Editor.ViewModels
             }
         }
 
-        private object? propertiesSelectedObject;
+        private object? propertiesSelectedObject = null;
         public object? PropertiesSelectedObject
         {
-            get { return propertiesSelectedObject; }
+            get { 
+                return propertiesSelectedObject; 
+            }
             set
             {
-                if (propertiesSelectedObject != value)
+                //if (propertiesSelectedObject != value)
+                //{
+                //    var obj = propertiesSelectedObject as INotifyPropertyChanged;
+                //    if (obj != null)
+                //        obj.PropertyChanged -= PropertiesPropertyChanged;
+                //    propertiesSelectedObject = value;
+                //    DisplayProperties();
+
+                //    obj = propertiesSelectedObject as INotifyPropertyChanged;
+                //    if (obj != null)
+                //        obj.PropertyChanged += PropertiesPropertyChanged;
+                //}
+
+                var old  = propertiesSelectedObject;
+                SetProperty(ref propertiesSelectedObject, value);
+                if (old != value)
                 {
-                    var obj = propertiesSelectedObject as INotifyPropertyChanged;
-                    if (obj != null)
-                        obj.PropertyChanged -= PropertiesPropertyChanged;
-                    propertiesSelectedObject = value;
                     DisplayProperties();
-
-                    obj = propertiesSelectedObject as INotifyPropertyChanged;
-                    if (obj != null)
-                        obj.PropertyChanged += PropertiesPropertyChanged;
-
                 }
             }
         }
 
+        public string propertiesSelectedVisibility;
+        public string PropertiesSelectedVisibility
+        {
+            get { return propertiesSelectedVisibility; }
+            set
+            {
+                string newValue = string.Empty;
+                if (propertiesSelectedObject != null)
+                {
+                    newValue = value;
+                }
+
+                SetProperty(ref propertiesSelectedVisibility, newValue);
+            }
+        }
 
         private string propertiesSelectedId;
         public string PropertiesSelectedId
@@ -156,8 +183,156 @@ namespace Editor.ViewModels
             }
         }
 
+        private string propertiesSelectedName;
+        public string PropertiesSelectedName
+        {
+            get
+            {
+                return propertiesSelectedName;
+            }
+            set
+            {
+                string newValue = "";
+                if (propertiesSelectedObject != null)
+                {
+                    BNode bnode = propertiesSelectedObject as BNode;
+                    if (bnode != null)
+                    {
+                        var activeNode = activeDocument.FindNode(bnode.Id);
+                        if (activeNode != null)
+                        {
+                            if (value != "")
+                            {
+                                newValue = value;
+                                activeNode.Name = newValue;
+                                bnode.Name = newValue;
+                            }
+                            else
+                            {
+                                newValue = activeNode.Name;
+                            }
+                        }
+                    }
+                }
+                SetProperty(ref propertiesSelectedName, newValue);
+            }
+        }
+
+        private string propertiesSelectedCategory;
+        public string PropertiesSelectedCategory
+        {
+            get {
+                return propertiesSelectedCategory;
+            }
+            set
+            {
+                string newValue = "";
+                if (propertiesSelectedObject != null)
+                {
+                    BNode bnode = propertiesSelectedObject as BNode;
+                    if (bnode != null)
+                    {
+                        var activeNode = activeDocument.FindNode(bnode.Id);
+                        if (activeNode != null)
+                        {
+                            if (value.ToString() != "")
+                            {
+
+                                newValue = value.ToString();
+                                activeNode.Category = newValue;
+                                bnode.Category = newValue;
+                            }
+                            else
+                            {
+                                newValue = activeNode.Category;
+                                
+                            }
+                        }
+                    }
+                    PropertiesSelectedIndex = (int)NodeKindConvert.ToKind(newValue);
+                }
+                SetProperty(ref propertiesSelectedCategory, newValue);
+            }
+        }
+
+        private int propertiesSelectedIndex;
+        public int PropertiesSelectedIndex
+        {
+            get { return propertiesSelectedIndex; }
+            set
+            {
+                SetProperty(ref propertiesSelectedIndex, value);
+            }
+        }
+
+        private string propertiesSelectedColor;
+        public string PropertiesSelectedColor
+        {
+            get
+            {
+                return propertiesSelectedColor;
+            }
+            set
+            {
+                string newValue = "";
+                if (propertiesSelectedObject != null)
+                {
+                    BNode bnode = propertiesSelectedObject as BNode;
+                    if (bnode != null)
+                    {
+                        var activeNode = activeDocument.FindNode(bnode.Id);
+                        if (activeNode != null)
+                        {
+                            if(value.ToString() != "")
+                            {
+                                newValue = value.ToString();
+                                activeNode.Color = newValue;
+                                bnode.Color = newValue;
+                            }
+                            else
+                            {
+                                newValue = activeNode.Color;
+                            }
+                        }
+                    }
+                }
+
+                SetProperty(ref propertiesSelectedColor, newValue);
+            }
+        }
 
 
+        private string propertiesSelectedDesc;
+        public string PropertiesSelectedDesc
+        {
+            get { return propertiesSelectedDesc;}
+            set
+            {
+                string newValue = "";
+                if (propertiesSelectedObject != null)
+                {
+                    BNode bnode = propertiesSelectedObject as BNode;
+                    if (bnode != null)
+                    {
+                        var activeNode = activeDocument.FindNode(bnode.Id);
+                        if (activeNode != null)
+                        {
+                            if (value != "")
+                            {
+                                newValue = value;
+                                activeNode.Description = newValue;
+                                bnode.Description = newValue;
+                            }
+                            else
+                            {
+                                newValue = activeNode.Description;
+                            }
+                        }
+                    }
+                }
+                SetProperty(ref propertiesSelectedDesc, newValue);
+            }
+        }
         void PropertiesPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             DisplayProperties();
@@ -309,6 +484,11 @@ namespace Editor.ViewModels
         {
             //TODO: 显示属性
             PropertiesSelectedId = "";
+            PropertiesSelectedName = "";
+            PropertiesSelectedColor = "";
+            PropertiesSelectedDesc = "";
+            PropertiesSelectedVisibility = "";
+            PropertiesSelectedCategory = "";
         }
         #endregion
     }

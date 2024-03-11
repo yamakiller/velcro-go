@@ -22,9 +22,6 @@
     <Compile Update="Contrels\EditorMenuBar.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Contrels\EditorProperty.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="Contrels\EditorWorkspace.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

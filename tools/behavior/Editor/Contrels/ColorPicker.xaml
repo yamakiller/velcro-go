@@ -75,7 +75,7 @@
         </Style>
     </UserControl.Resources>
     <Grid>
-        <Button x:Name="btn"  Background="{Binding SelectColor,ElementName=root}" Click="btn_Click" Style="{DynamicResource ButtonStyle1}">
+        <Button x:Name="btn"  Background="{Binding SelectColor,Mode=TwoWay,ElementName=root}" Click="btn_Click" Style="{DynamicResource ButtonStyle1}">
         </Button>
         <Popup AllowsTransparency="True"  PlacementTarget="{Binding ElementName=btn}" Placement="Bottom" VerticalOffset="10" StaysOpen="False" Name="pop" >
             <Border Padding="0,10,0,0">
@@ -148,7 +148,7 @@
                                     <StackPanel Margin="10,5,10,5" Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Label Foreground="White" Width="30">A</Label>
                                         <TextBox x:Name="TextA" LostFocus="TextBox_LostFocus" Width="70" VerticalAlignment="Center"  >255</TextBox>
-                                        <!--<Label Foreground="White">%</Label>-->
+                                        <!-- <Label Foreground="White">%</Label> -->
                                     </StackPanel>
                                     <StackPanel  Margin="10,5,10,5" Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Label Foreground="White" Width="30"></Label>
