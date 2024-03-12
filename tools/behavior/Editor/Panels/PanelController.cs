@@ -76,7 +76,7 @@ namespace Editor.Panels
             var fn = sender as BNode;
             var n = m_view.Children.OfType<Behavior.Diagrams.Controls.Node>().FirstOrDefault(p => p.ModelElement == fn);
             if (fn != null && n != null)
-                UpdateNode(fn, n);
+                UpdateNode(fn, n,e);
         }
 
 
@@ -87,20 +87,27 @@ namespace Editor.Panels
                 m_view.Children.Clear();
 
                 foreach (var node in m_model.Nodes)
-                    m_view.Children.Add(UpdateNode(node, null));
+                    m_view.Children.Add(UpdateNode(node, null,null));
+
+                m_model.ResetNodeRow();
+
 
                 foreach (var link in m_model.Links)
                     m_view.Children.Add(CreateLink(link));
             }
         }
 
-        private Behavior.Diagrams.Controls.Node UpdateNode(BNode node, Behavior.Diagrams.Controls.Node? item)
+        private Behavior.Diagrams.Controls.Node UpdateNode(BNode node, Behavior.Diagrams.Controls.Node? item, PropertyChangedEventArgs e)
         {
             if (item == null)
             {
                 item = new Behavior.Diagrams.Controls.Node();
                 item.ModelElement = node;
                 CreatePorts(node, item);
+                item.Content = CreateContent(node);
+            }
+            if(e?.PropertyName == "Category")
+            {
                 item.Content = CreateContent(node);
             }
 
@@ -110,6 +117,7 @@ namespace Editor.Panels
 
             item.SetValue(Canvas.LeftProperty, node.Column * m_view.GridCellSize.Width + 10);
             item.SetValue(Canvas.TopProperty, node.Row * m_view.GridCellSize.Height + 25);
+
             return item;
         }
 
@@ -117,7 +125,7 @@ namespace Editor.Panels
         {
             if (node.Kind == Model.NodeKinds.Root)
             {
-                node.Name = "Root";
+                //node.Name = "Root";
                 return CreateNode(node,
                                   160,
                                   new SolidColorBrush(ColorHelper.ToColor(node.Color)),
@@ -222,9 +230,7 @@ namespace Editor.Panels
             var grid = new Grid();
             grid.Children.Add(blackui);
 
-            var colorbing = new Binding("Color");
-            colorbing.Source = node;
-            colorbing.Converter = StringToSolidColorBrushConverter.Instance;
+
             var capui = new Graphics.RoundedCornersPolygon
             {
                 StrokeThickness = 1,
@@ -233,6 +239,10 @@ namespace Editor.Panels
                 UseRoundnessPercentage = false,
                 IsClosed = true
             };
+
+            var colorbing = new Binding("Color");
+            colorbing.Source = node;
+            colorbing.Converter = StringToSolidColorBrushConverter.Instance;
             capui.SetBinding(Graphics.RoundedCornersPolygon.FillProperty, colorbing);
 
             double innerCircle = blackui.StrokeThickness + 1;
@@ -247,7 +257,6 @@ namespace Editor.Panels
             capicon.Stroke = Brushes.Black;
             capicon.StrokeThickness = 1;
             capicon.Fill = Brushes.Black;
-            var converter = new GeometryConverter();
             capicon.Stretch = Stretch.Uniform;
             capicon.Data = icon;
             capicon.Width = 16;

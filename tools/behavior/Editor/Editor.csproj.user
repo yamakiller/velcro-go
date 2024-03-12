@@ -10,6 +10,9 @@
     <Compile Update="Contrels\AddButton.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Contrels\AttributeList.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Contrels\ColorPicker.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -46,6 +49,9 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Contrels\AddButton.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Contrels\AttributeList.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Contrels\ColorPicker.xaml">

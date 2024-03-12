@@ -77,7 +77,20 @@ namespace Editor.Datas
         }
         public ObservableCollection<string>? Children { get; set; }
 
-        public Dictionary<string, object>? Properties { get; set; }
+        private Dictionary<string, object>? properties;
+        public Dictionary<string, object>? Properties
+        {
+            get { return properties; }
+            set
+            {
+                Dictionary<string, object>? old = properties;
+                properties = value;
+                if (contextViewModel != null && old != value)
+                { 
+                    contextViewModel.IsModifyed = true;
+                }
+            }
+        }
 
         private string color = "";
         public string Color

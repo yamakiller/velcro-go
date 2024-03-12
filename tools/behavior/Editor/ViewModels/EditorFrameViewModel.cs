@@ -116,19 +116,6 @@ namespace Editor.ViewModels
             }
             set
             {
-                //if (propertiesSelectedObject != value)
-                //{
-                //    var obj = propertiesSelectedObject as INotifyPropertyChanged;
-                //    if (obj != null)
-                //        obj.PropertyChanged -= PropertiesPropertyChanged;
-                //    propertiesSelectedObject = value;
-                //    DisplayProperties();
-
-                //    obj = propertiesSelectedObject as INotifyPropertyChanged;
-                //    if (obj != null)
-                //        obj.PropertyChanged += PropertiesPropertyChanged;
-                //}
-
                 var old  = propertiesSelectedObject;
                 SetProperty(ref propertiesSelectedObject, value);
                 if (old != value)
@@ -333,6 +320,39 @@ namespace Editor.ViewModels
                 SetProperty(ref propertiesSelectedDesc, newValue);
             }
         }
+
+        private Dictionary<string,object>? propertiesSelectedAttributeMap;
+        public Dictionary<string, object>? PropertiesSelectedAttributeMap
+        {
+            get { return propertiesSelectedAttributeMap; }
+            set
+            {
+                Dictionary<string, object>? newValue = null;
+                if (propertiesSelectedObject != null)
+                {
+                    BNode bnode = propertiesSelectedObject as BNode;
+                    if (bnode != null)
+                    {
+                        var activeNode = activeDocument.FindNode(bnode.Id);
+                        if (activeNode != null)
+                        {
+                            if (value != null)
+                            {
+                                newValue = value;
+                                activeNode.Properties = newValue;
+                            }
+                            else
+                            {
+                                newValue = activeNode.Properties;
+                            }
+                        }
+                    }
+                }
+                SetProperty(ref propertiesSelectedAttributeMap, newValue);
+            }
+        }
+
+
         void PropertiesPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             DisplayProperties();
@@ -489,6 +509,7 @@ namespace Editor.ViewModels
             PropertiesSelectedDesc = "";
             PropertiesSelectedVisibility = "";
             PropertiesSelectedCategory = "";
+            PropertiesSelectedAttributeMap = null;
         }
         #endregion
     }

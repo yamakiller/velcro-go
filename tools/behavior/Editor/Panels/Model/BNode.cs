@@ -16,8 +16,8 @@ namespace Editor.Panels.Model
 
         private int m_column;
         public int Column { get { return m_column; } set { m_column = value; OnPropertyChanged("Column"); } }
-        private int m_row;
-        public int Row { get { return m_row; } set { m_row = value; OnPropertyChanged("Row"); } }
+        private float m_row;
+        public float Row { get { return m_row; } set { m_row = value; OnPropertyChanged("Row"); } }
 
         private int m_width;
         public int Width { get { return m_width; } set { m_width = value; OnPropertyChanged("Width"); } }
@@ -54,6 +54,7 @@ namespace Editor.Panels.Model
             set
             {
                 m_category = value;
+                Kind = NodeKindConvert.ToKind(value);
                 OnPropertyChanged("Category");
             }
         }
