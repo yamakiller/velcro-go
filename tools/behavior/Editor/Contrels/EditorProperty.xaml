@@ -84,24 +84,27 @@
             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PropertiesSelectedId}" Margin="4"></TextBlock>
 
             <TextBlock Grid.Row="1" Grid.Column="0" Text="名称" Margin="4 10 4 4"></TextBlock>
-            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PropertiesSelectedName, UpdateSourceTrigger=PropertyChanged}" Margin="4"  ></TextBox>
+            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" HorizontalContentAlignment="Center" IsReadOnly="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeIsRootConverter.Instance}}" Text="{Binding PropertiesSelectedName, UpdateSourceTrigger=PropertyChanged}" Margin="4"  ></TextBox>
 
             <TextBlock Grid.Row="2" Grid.Column="0" Text="类别" Margin="4 10 4 4"></TextBlock>
             <ComboBox  Grid.Row="2" Grid.Column="1"
                                  Margin="4"
                                  DisplayMemberPath="@Name"
                                  SelectedValuePath="@Value"
+                                HorizontalContentAlignment="Center"
+                                HorizontalAlignment="Center"
+                                 Visibility="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeNoRootToVisibilityConverter.Instance}}"
                                  SelectedValue="{Binding PropertiesSelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                 SelectedIndex="{Binding PropertiesSelectedIndex}"
+                                 SelectedIndex="{Binding PropertiesSelectedCategory, Converter={x:Static converter:NodeNoRootToSelectIndexConverter.Instance}}"
                                  ItemsSource="{Binding Source={StaticResource NoeTypeEnums},XPath=/Types/Type}"
                            />
-
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="Root" Visibility="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeIsRootToVisibilityConverter.Instance}}" Margin="4 6 4 4"></TextBlock>
             <TextBlock Grid.Row="3" Grid.Column="0" Text="颜色" Margin="4 6 4 4"></TextBlock>
 
-            <ctrl:ColorPicker Grid.Row="3" Grid.Column="1" Height="24" SelectColor="{Binding PropertiesSelectedColor,UpdateSourceTrigger=PropertyChanged ,Converter={x:Static converter:StringToSolidColorBrushConverter.Instance},Mode=TwoWay}" Margin="4"></ctrl:ColorPicker>
+            <ctrl:ColorPicker Grid.Row="3" Grid.Column="1" Height="24" IsEnabled="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeNoRootConverter.Instance}}" SelectColor="{Binding PropertiesSelectedColor,UpdateSourceTrigger=PropertyChanged ,Converter={x:Static converter:StringToSolidColorBrushConverter.Instance},Mode=TwoWay}" Margin="4"></ctrl:ColorPicker>
             <TextBlock Grid.Row="4" Grid.Column="0" Text="属性表" Margin="4 10 4 4"></TextBlock>
             <!--<Button Grid.Row="4" Grid.Column="1" Content="{materialDesign:PackIcon DotsHorizontal}" Margin="4 2 4 2"></Button>-->
-            <ctrl:AttributeList Grid.Row="4" Grid.Column="1" AttributeMap="{Binding PropertiesSelectedAttributeMap, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ></ctrl:AttributeList>
+            <ctrl:AttributeList Grid.Row="4" Grid.Column="1" IsEnabled="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeNoRootConverter.Instance}}" AttributeMap="{Binding PropertiesSelectedAttributeMap,UpdateSourceTrigger=PropertyChanged,Converter={x:Static converter:MapToObservableConverter.Instance}, Mode=TwoWay}" ></ctrl:AttributeList>
             <TextBlock Grid.Row="5" Grid.Column="0" Text="说明" Margin="4"></TextBlock>
             <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding PropertiesSelectedDesc, UpdateSourceTrigger=PropertyChanged}" Margin="4" TextWrapping="Wrap"></TextBox>
 

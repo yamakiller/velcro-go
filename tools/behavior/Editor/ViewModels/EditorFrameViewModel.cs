@@ -222,7 +222,7 @@ namespace Editor.ViewModels
                         var activeNode = activeDocument.FindNode(bnode.Id);
                         if (activeNode != null)
                         {
-                            if (value.ToString() != "")
+                            if (value != null && value?.ToString() != "")
                             {
 
                                 newValue = value.ToString();
@@ -321,13 +321,13 @@ namespace Editor.ViewModels
             }
         }
 
-        private Dictionary<string,object>? propertiesSelectedAttributeMap;
-        public Dictionary<string, object>? PropertiesSelectedAttributeMap
+        private Dictionary<string,KeyValuePair<string,object>>? propertiesSelectedAttributeMap;
+        public Dictionary<string, KeyValuePair<string, object>>? PropertiesSelectedAttributeMap
         {
             get { return propertiesSelectedAttributeMap; }
             set
             {
-                Dictionary<string, object>? newValue = null;
+                Dictionary<string, KeyValuePair<string, object>>? newValue = null;
                 if (propertiesSelectedObject != null)
                 {
                     BNode bnode = propertiesSelectedObject as BNode;

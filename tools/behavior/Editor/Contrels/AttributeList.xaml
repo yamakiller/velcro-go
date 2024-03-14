@@ -8,20 +8,34 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <Button x:Name="btn" Click="btn_Click" Content="{materialDesign:PackIcon DotsHorizontal}" Margin="4 2 4 2" ></Button>
+        <Button x:Name="btn" Click="Button_Init_Click" Content="{materialDesign:PackIcon DotsHorizontal}" Margin="4 2 4 2" ></Button>
         <Popup AllowsTransparency="True"  PlacementTarget="{Binding ElementName=btn}" Placement="Bottom" VerticalOffset="10" StaysOpen="False" Name="pop">
             <Border Padding="0,10,0,0" BorderThickness="0 0 0 0">
-                <Border Padding="5" CornerRadius="5" Background="#808080" Width="367" Height="201">
+                <Border Padding="5" CornerRadius="5" Background="#808080" Width="400" Height="300">
                     <Grid>
                         <Polygon Fill="#808080" StrokeThickness="5" Points="20,0 40,0 30,-10"/>
                         <Grid>
-                            <DataGrid ItemsSource="{Binding AttributeMap ,Mode=TwoWay}" AutoGenerateColumns="True" >
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="50"/>
+                            </Grid.RowDefinitions>
+                            <DataGrid x:Name="datagrid" Grid.Row="0" ColumnWidth="*" CanUserAddRows="False" AutoGenerateColumns="False" CanUserSortColumns="False" CanUserDeleteRows="True" ItemsSource="{Binding AttributeMap,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" >
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="属性" Binding="{Binding Key}"/>
-                                    <DataGridTextColumn Header="值" Binding="{Binding Value}"/>
+                                    <DataGridTextColumn IsReadOnly="False" Header="属性" Binding="{Binding Key,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                    <DataGridTextColumn IsReadOnly="False" Header="属性值" Binding="{Binding Value,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                                    <DataGridTemplateColumn Header="操作">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Width="100" Height="25" Content="删除" Click="ClickDelete" CommandParameter="{Binding Key}" Background="Red" Foreground="White"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                 </DataGrid.Columns>
-                            </DataGrid>
                                 
+                            </DataGrid>
+                            <Button Grid.Row="1" Content="增加" Click="Button_Add_Click"></Button>
                         </Grid>
 
                     </Grid>

@@ -77,13 +77,13 @@ namespace Editor.Datas
         }
         public ObservableCollection<string>? Children { get; set; }
 
-        private Dictionary<string, object>? properties;
-        public Dictionary<string, object>? Properties
+        private Dictionary<string, KeyValuePair<string,object>>? properties;
+        public Dictionary<string, KeyValuePair<string, object>>? Properties
         {
             get { return properties; }
             set
             {
-                Dictionary<string, object>? old = properties;
+                Dictionary<string, KeyValuePair<string, object>>? old = properties;
                 properties = value;
                 if (contextViewModel != null && old != value)
                 { 

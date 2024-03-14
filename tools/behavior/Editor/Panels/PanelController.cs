@@ -108,6 +108,11 @@ namespace Editor.Panels
             }
             if(e?.PropertyName == "Category")
             {
+                if (NodeKindConvert.ToKind(node.Category) == NodeKinds.Action)
+                {
+                    m_model.RemoveAllChildNode(node);
+                }
+                node.Color = NodeKindConvert.ToColor(NodeKindConvert.ToKind(node.Category));
                 item.Content = CreateContent(node);
             }
 

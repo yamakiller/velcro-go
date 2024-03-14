@@ -164,5 +164,38 @@ namespace Editor.Panels.Model
             }
 
         }
+
+        public static string ToCategory(NodeKinds kind)
+        {
+            switch (kind)
+            {
+                case NodeKinds.Root:
+                    return "root";
+                case NodeKinds.Action:
+                    return "action";
+                case NodeKinds.Condition:
+                    return "condition";
+                case NodeKinds.Composites:
+                    return "composites";
+                case NodeKinds.Decorators:
+                    return "decorators";
+                default:
+                    throw new ArgumentException("unknown parameters");
+            }
+        }
+        public static string ToColor(NodeKinds kind)
+        {
+            switch (kind)
+            {
+                case NodeKinds.Condition:
+                    return "#FFDEB887";
+                case NodeKinds.Decorators:
+                    return "#FFBDB76B";
+                case NodeKinds.Composites:
+                    return "#FF87CEEB";
+                default:
+                    return "#FF00FF7F";
+            }
+        }
     }
 }

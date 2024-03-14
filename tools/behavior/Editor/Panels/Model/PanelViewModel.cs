@@ -229,21 +229,7 @@ namespace Editor.Panels.Model
             newBNode.Width = 160;
             if (string.IsNullOrEmpty(newBNode.Color))
             {
-                switch (nodeKind)
-                {
-                    case NodeKinds.Condition:
-                        newBNode.Color = "#FFDEB887";
-                        break;
-                    case NodeKinds.Decorators:
-                        newBNode.Color = "#FFBDB76B";
-                        break;
-                    case NodeKinds.Composites:
-                        newBNode.Color = "#FF87CEEB";
-                        break;
-                    default:
-                        newBNode.Color = "#FF00FF7F";
-                        break;
-                }
+                newBNode.Color = NodeKindConvert.ToColor(nodeKind);
             }
 
 
@@ -265,7 +251,7 @@ namespace Editor.Panels.Model
                 childIndex++;
             }
 
-            
+
         }
         #endregion
 
@@ -417,7 +403,24 @@ namespace Editor.Panels.Model
             m_btree.Nodes.Remove(parent.Id);
         }
 
-
+        public void RemoveAllChildNode(BNode parent)
+        {
+            Datas.BehaviorNode? sourceParentData = FindNode(parent.Id);
+            ObservableCollection<string> childs = new ObservableCollection<string>();
+            for (int i = 0; i < sourceParentData.Children?.Count; i++)
+            {
+                childs.Add(sourceParentData.Children[i]);
+            }
+            for (int i = 0; i < childs?.Count; i++)
+            {
+                BNode? child = FindBNode(childs[i]);
+                if (child == null)
+                {
+                    continue;
+                }
+                DelNode(child);
+            }
+        }
         public void ResetNodeRow()
         {
             foreach (var node in m_btree.Nodes)
@@ -426,7 +429,7 @@ namespace Editor.Panels.Model
                 if (kind == NodeKinds.Root)
                 {
                     BNode root = FindBNode(node.Value.ID);
-                    if(root != null)
+                    if (root != null)
                     {
                         NodeResetRow(root, 5);
                     }
@@ -435,11 +438,11 @@ namespace Editor.Panels.Model
             }
         }
 
-        private void NodeResetRow(BNode parent,float startY)
+        private void NodeResetRow(BNode parent, float startY)
         {
             Datas.BehaviorNode? sourceParentData = FindNode(parent.Id);
             float count = (float)GetAllChildNodeCountNoParentNode(sourceParentData);
-            float startRow = startY +((count / 2));
+            float startRow = startY + ((count / 2));
 
             parent.Row = (startRow) * UnitRow;// + ((startRow -1))* UnitRowCap;
 

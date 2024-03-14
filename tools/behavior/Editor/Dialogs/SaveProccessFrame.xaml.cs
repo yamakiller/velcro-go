@@ -110,8 +110,17 @@ namespace Editor.Dialogs
                                     Category = node.Value.Category,
                                     Description = node.Value.Description,
                                     Color = node.Value.Color,
-                                    Properties = node.Value.Properties,
+                                    //Properties = node.Value.Properties,
                                 };
+                                if (node.Value.Properties != null)
+                                {
+                                    b3node.Properties = new Dictionary<string, object>();
+                                    foreach (var item in node.Value.Properties)
+                                    {
+                                        b3node.Properties.Add(item.Value.Key, item.Value.Value);
+                                    }
+                                }
+
 
                                 if (node.Value.Children != null)
                                 {

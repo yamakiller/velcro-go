@@ -91,8 +91,17 @@ namespace Editor.Commands
                             Title = b3node.Value.Title,
                             Description = b3node.Value.Description,
                             Color = b3node.Value.Color,
-                            Properties = b3node.Value.Properties,
+                            //Properties = b3node.Value.Properties,
                         };
+                        if (b3node.Value.Properties != null)
+                        {
+                            node.Properties = new Dictionary<string, KeyValuePair<string, object>>();
+                            foreach (var item in b3node.Value.Properties)
+                            {
+                                node.Properties.Add(Guid.NewGuid().ToString(), new KeyValuePair<string, object>(item.Key, item.Value));
+                            }
+                        }
+
 
                         if (b3node.Value.Children != null)
                         {
