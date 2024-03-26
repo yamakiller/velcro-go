@@ -54,7 +54,10 @@ namespace Editor.Panels.Model
             set
             {
                 m_category = value;
-                Kind = NodeKindConvert.ToKind(value);
+                if (value != null && value != "")
+                {
+                    Kind = NodeKindConvert.ToKind(value);
+                }
                 OnPropertyChanged("Category");
             }
         }
@@ -136,12 +139,15 @@ namespace Editor.Panels.Model
                     yield return PortKinds.Left;
                     yield return PortKinds.Right;
                     break;
+                case NodeKinds.Tree:
+                      yield return PortKinds.Left;
+                    break;
 
             }
         }
     }
 
-    enum NodeKinds { Root, Action, Condition, Composites, Decorators }
+    enum NodeKinds { Root, Action, Condition, Composites, Decorators ,Tree}
 
     static class NodeKindConvert
     {
@@ -159,6 +165,8 @@ namespace Editor.Panels.Model
                     return NodeKinds.Composites;
                 case "decorators":
                     return NodeKinds.Decorators;
+                case "tree":
+                    return NodeKinds.Tree;
                 default:
                     throw new ArgumentException("unknown parameters");
             }
@@ -179,6 +187,8 @@ namespace Editor.Panels.Model
                     return "composites";
                 case NodeKinds.Decorators:
                     return "decorators";
+                case NodeKinds.Tree:
+                    return "tree";
                 default:
                     throw new ArgumentException("unknown parameters");
             }
@@ -187,12 +197,16 @@ namespace Editor.Panels.Model
         {
             switch (kind)
             {
+                case NodeKinds.Root:
+                    return "#FFB8860B";
                 case NodeKinds.Condition:
                     return "#FFDEB887";
                 case NodeKinds.Decorators:
                     return "#FFBDB76B";
                 case NodeKinds.Composites:
                     return "#FF87CEEB";
+                case NodeKinds.Tree:
+                    return "#FF9A4545";
                 default:
                     return "#FF00FF7F";
             }

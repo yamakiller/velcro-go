@@ -29,7 +29,7 @@ namespace Editor.Converters
                 {
                     Index = attribute.Key,
                     Key = attribute.Value.Key,
-                    Value = attribute.Value.Value.ToString(),
+                    Value = attribute.Value.Value,
                 });
             }
             return newValue;

@@ -66,7 +66,11 @@ func (node *Behavior3Node) GetFloat64(name string) float64 {
 	if v == nil {
 		return 0
 	}
-	return v.(float64)
+	f,err := strconv.ParseFloat(v.(string),64)
+	if err != nil{
+		return 0
+	}
+	return f
 }
 
 func (node *Behavior3Node) GetInt(name string) int {

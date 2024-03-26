@@ -124,7 +124,7 @@ namespace Editor.Panels.Model
             Debug.Assert(editor != null);
             Debug.Assert(m_btree != null);
             Debug.Assert(m_btree.Nodes != null);
-
+            m_nodes.Clear();
             m_editor = editor;
             if (m_btree.Nodes != null)
             {
@@ -170,7 +170,6 @@ namespace Editor.Panels.Model
 
             editor.Controller = new PanelController(editor, this);
             editor.DragDropTool = new PanelDragDropTool(editor, this);
-
             editor.Selection.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(onSelectionPropertyChanged);
         }
 
@@ -290,23 +289,7 @@ namespace Editor.Panels.Model
                 Description = "",
             };
 
-
-            switch (nodeKind)
-            {
-                case NodeKinds.Condition:
-                    newNode.Color = "#FFDEB887";
-                    break;
-                case NodeKinds.Decorators:
-                    newNode.Color = "#FFBDB76B";
-                    break;
-                case NodeKinds.Composites:
-                    newNode.Color = "#FF87CEEB";
-                    break;
-                default:
-                    newNode.Color = "#FF00FF7F";
-                    break;
-            }
-
+            newNode.Color = NodeKindConvert.ToColor(nodeKind);
 
             if (m_btree.Nodes == null)
                 m_btree.Nodes = new Dictionary<string, BehaviorNode>();

@@ -112,7 +112,6 @@ namespace Editor.Panels
                 {
                     m_model.RemoveAllChildNode(node);
                 }
-                node.Color = NodeKindConvert.ToColor(NodeKindConvert.ToKind(node.Category));
                 item.Content = CreateContent(node);
             }
 
@@ -213,13 +212,15 @@ namespace Editor.Panels
             var textBlock = new TextBlock()
             {
                 VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center
+                HorizontalAlignment = HorizontalAlignment.Center,
+                TextWrapping = TextWrapping.WrapWithOverflow,
+                MaxWidth= 60,
+
             };
 
             var b = new Binding("Name");
             b.Source = node;
             textBlock.SetBinding(TextBlock.TextProperty, b);
-
 
 
             var blackui = new Rectangle();

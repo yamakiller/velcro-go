@@ -98,8 +98,8 @@ namespace Editor.Contrels
                     _key = value;
                 }
             }
-            private string _value;
-            public string Value
+            private object? _value;
+            public object? Value
             {
                 get
                 {
@@ -157,7 +157,7 @@ namespace Editor.Contrels
             var model = tmp.FirstOrDefault(t => t.Key == "新增Key");
             if (model == null)
             {
-                var att = new Attribute() { Index = Guid.NewGuid().ToString(), Key = "新增Key", Value = "新增Value" };
+                var att = new Attribute() { Index = Guid.NewGuid().ToString(), Key = "新增Key" };
                 att.PropertyChanged += AttributePropertyChanged;
                 tmp.Add(att);
 

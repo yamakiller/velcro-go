@@ -8,6 +8,7 @@
         <Type Name="Condition" Value="condition"></Type>
         <Type Name="Composites" Value="composites"></Type>
         <Type Name="Decorators" Value="decorators"></Type>
+        <Type Name="Tree" Value="tree"></Type>
       </Types>
     </x:XData>
   </XmlDataProvider>

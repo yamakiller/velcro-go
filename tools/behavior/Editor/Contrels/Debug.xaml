@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="Editor.Contrels.Debug"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Editor.Contrels" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
+
+        <Button x:Name="btn" Grid.Row="0" Click="Button_Init_Click"  Content="启动" IsEnabled="True" Margin="4 2 4 2" ></Button>
+        <Popup AllowsTransparency="True"  PlacementTarget="{Binding ElementName=btn}" Placement="Bottom" VerticalOffset="10" StaysOpen="False" Name="pop">
+        </Popup>
+        <Button Content="停止" Grid.Row="1" IsEnabled="False"></Button>
+    </Grid>
+</UserControl>
