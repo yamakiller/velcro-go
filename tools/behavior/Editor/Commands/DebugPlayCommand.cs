@@ -22,8 +22,15 @@ namespace Editor.Commands
                 return;
             }
             contextViewModel.IsWordspaceDebug = true;
+            for (int i =0; i < contextViewModel.CurrWorkspace.Trees.Count; i++)
+            {
+                if (contextViewModel.FindBehaviorTreeView(contextViewModel.CurrWorkspace.Trees[i]) == null)
+                {
+                    contextViewModel.OpenBehaviorTreeView(contextViewModel.CurrWorkspace.Trees[i]);
+                }
+            }
             Utils.KafkaConsumer.CallbackEvent += contextViewModel.OnWorkspaceSelectedNode;
-            Utils.KafkaConsumer.StartConsume("");
+            Utils.KafkaConsumer.StartConsume("127.0.0.1:9092");
         }
 
         public override bool CanExecute(EditorFrameViewModel contextViewModel, object parameter)

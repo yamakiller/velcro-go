@@ -1,84 +1,81 @@
 ﻿using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
+using static Confluent.Kafka.ConfigPropertyNames;
 
 namespace Editor.Utils
 {
     public class KafkaConsumer
     {
         public static string brokerUrl = "127.0.0.1:9092";
-        public static string topic = "BehaviorNode";// ConfigurationManager.AppSettings["ConsumeTopic"];
-        public static string groupid = "Behavior";//  ConfigurationManager.AppSettings["GroupID"];
-        private static CancellationTokenSource? cts = null;
-        public static event EventHandler<EventArgs> CallbackEvent;
-        private static Task _task;
-        public static async Task StartConsume(string url)
+        public static string topic = "behavior_node";// ConfigurationManager.AppSettings["ConsumeTopic"];
+        public static string groupid = "behavior";//  ConfigurationManager.AppSettings["GroupID"];
+        public static Action<string>? CallbackEvent = null;
+        public static IConsumer<string, string>? consumer = null;
+        public static CancellationTokenSource cts;
+        private static Thread? _task;
+        public static void StartConsume(string url)
         {
-            var brokerList = brokerUrl;
             if (url != "")
             {
-                brokerList = url;
-            }      
-            List<string> topics = new List<string>(topic.Split(','));
-            
-            try
-            {
-                cts = new CancellationTokenSource();
-
-                _task = Task.Run(() => RunConsume(brokerList, topics, cts.Token));
+                brokerUrl = url;
             }
-            catch (Exception ex)
-            {
-                StopConsume();
-            }
-
+            cts = new CancellationTokenSource();
+            _task = new Thread(new ThreadStart(RunConsume));
+            _task.Start();
+                  
         }
         /// <summary>
         ///     In this example
         ///         - offsets are manually committed.
         ///         - no extra thread is created for the Poll (Consume) loop.
         /// </summary>
-        private static async Task RunConsume(string brokerList, List<string> topics, CancellationToken cancellationToken)
+        private static void RunConsume()
         {
             var config = new ConsumerConfig
             {
-                BootstrapServers = brokerList,
+                BootstrapServers = brokerUrl,
                 GroupId = groupid,
-                EnableAutoCommit = false,
-                StatisticsIntervalMs = 5000,
-                SessionTimeoutMs = 6000,
-                AutoOffsetReset =AutoOffsetReset.Earliest,
+                AutoOffsetReset = AutoOffsetReset.Latest,
+                StatisticsIntervalMs = 0,
+                EnableAutoCommit = true
             };
 
-            using (var consumer = new ConsumerBuilder<Ignore, string>(config).SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}")).Build())
+            using (consumer = new ConsumerBuilder<string, string>(config).SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}")).Build())
             {
-                consumer.Subscribe(topics);
+                consumer.Subscribe(topic);
                 try
                 {
-                    while (!cancellationToken.IsCancellationRequested)
+                    while (!cts.IsCancellationRequested)
                     {
                         try
                         {
-                            var consumeResult = consumer.Consume(cancellationToken);
-                            Console.WriteLine($"Received message at {consumeResult.TopicPartitionOffset}: ${consumeResult.Message.Value}");
-                            consumer.StoreOffset(consumeResult);//<----this
-                            CallbackEvent?.Invoke(consumeResult.Message.Value,null);
+                            var consumeResult = consumer.Consume(cts.Token);
+                            Application.Current.Dispatcher.Invoke(() => CallbackEvent?.Invoke(consumeResult.Message.Value));
+                           
+                            if (!(bool)config.EnableAutoCommit)
+                            {
+                                consumer.Commit(consumeResult);//手动提交，如果上面的EnableAutoCommit=true表示自动提交，则无需调用Commit方法
+                            }
                         }
-                        catch (ConsumeException e)
+                        catch(Exception e)
                         {
-                            Console.WriteLine($"Error occured: {e.Error.Reason}");
+
                         }
                     }
                 }
                 catch (OperationCanceledException)
                 {
                     // Ensure the consumer leaves the group cleanly and final offsets are committed.
-                    consumer.Close();
+                   
                 }
             }
         }
@@ -88,7 +85,7 @@ namespace Editor.Utils
             try
             {
                 cts.Cancel();
-                _task.Dispose();
+                consumer = null;
             }
             catch (Exception)
             {

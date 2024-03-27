@@ -31,6 +31,7 @@ namespace Editor.Panels.Model
         private EditorFrameViewModel? m_parentViewModel = null;
         private DiagramView? m_editor = null;
         private BehaviorTree? m_btree = null;
+        public bool IsInit = false;
         #endregion
 
         #region 节点/线表
@@ -120,7 +121,7 @@ namespace Editor.Panels.Model
 
         private void onLoaded(object parameter)
         {
-            DiagramView editor = parameter as DiagramView;
+            DiagramView? editor = parameter as DiagramView;
             Debug.Assert(editor != null);
             Debug.Assert(m_btree != null);
             Debug.Assert(m_btree.Nodes != null);
@@ -171,6 +172,7 @@ namespace Editor.Panels.Model
             editor.Controller = new PanelController(editor, this);
             editor.DragDropTool = new PanelDragDropTool(editor, this);
             editor.Selection.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(onSelectionPropertyChanged);
+            this.IsInit = true;
         }
 
         /// <summary>
@@ -533,6 +535,21 @@ namespace Editor.Panels.Model
                 }
             }
             return null;
+        }
+
+        public void SelectionNode(string id)
+        {
+            if (m_editor == null)
+            {
+                return;
+            }
+            
+            var item = m_editor.Children.OfType<Behavior.Diagrams.Controls.Node>().FirstOrDefault(p => ((BNode)p.ModelElement).Id == id);
+            if (item != null && !item.IsSelected)
+            {
+                m_editor.Selection.Set(item);
+            }
+
         }
         #endregion
 

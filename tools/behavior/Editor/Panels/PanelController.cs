@@ -94,6 +94,11 @@ namespace Editor.Panels
 
                 foreach (var link in m_model.Links)
                     m_view.Children.Add(CreateLink(link));
+                
+                if(m_view.Selection.Primary != null)
+                {
+                    m_view.Selection.Set(m_view.Selection.Primary);
+                }
             }
         }
 
@@ -423,6 +428,11 @@ namespace Editor.Panels
                 }
             }
         }
+        public bool IsInprogress()
+        {
+            return m_updateScope.IsInprogress;
+        }
+
         #endregion
     }
 }

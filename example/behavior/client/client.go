@@ -1,12 +1,12 @@
 package client
 
 import (
-	"fmt"
-	"os"
+	"time"
 
 	"github.com/yamakiller/velcro-go/behavior/core"
 	"github.com/yamakiller/velcro-go/behavior/loader"
 	"github.com/yamakiller/velcro-go/behavior/registers"
+	"github.com/yamakiller/velcro-go/example/behavior/kafka"
 	"github.com/yamakiller/velcro-go/example/behavior/nodes"
 	"github.com/yamakiller/velcro-go/vlog"
 )
@@ -23,13 +23,16 @@ func BInt(path string) {
 	selectedtree := tree.SelectedBehaviorDefaultTree()
 	b := core.NewBlackboard()
 	b.Set("CurrStreeNode","",selectedtree.GetID(),"")
-	sss := ""
-	for i:= 0; i < 100000000; i ++{
-		selectedtree.Tick(i,b)
-		b:= b.Get("CurrStreeNode",selectedtree.GetID(),"").(string)
-		if b != sss{
-			sss = b
-			fmt.Fprintf(os.Stderr, "tree %s, node %s \n",selectedtree.GetID(), sss)	
+	t1:= time.NewTicker(1*time.Second).C
+	for{
+		select{
+		case <-t1:
+			selectedtree.Tick(0,b)
+			kafka.WriteCurrTree(selectedtree.GetID(),b.Get("CurrStreeNode",selectedtree.GetID(),"").(string))
 		}
+	}
+	for i:= 0; i >= 0; i ++{
+		selectedtree.Tick(i,b)
+		
 	}
 }

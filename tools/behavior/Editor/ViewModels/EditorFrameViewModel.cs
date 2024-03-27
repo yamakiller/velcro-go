@@ -1,4 +1,5 @@
-﻿using Editor.Commands;
+﻿using Behavior.Diagrams;
+using Editor.Commands;
 using Editor.Framework;
 using Editor.Panels.Model;
 using MaterialDesignThemes.Wpf;
@@ -542,11 +543,51 @@ namespace Editor.ViewModels
             }
         }
 
-        public void OnWorkspaceSelectedNode(object sender, EventArgs e)
+        public void OnWorkspaceSelectedNode(object sender)
         {
+            if (CurrWorkspace == null)
+            {
+                return;
+            }
+
             if (sender is string)
             {
-                string nodeID = sender as string;
+                string msg = sender as string;
+                string[] list = msg.Split(",");
+
+                for (int i = 0; i < CurrWorkspace.Trees.Count; i++)
+                {
+                    var tree = CurrWorkspace.Trees[i];
+
+
+                    for (int j = 0; j < tree.Nodes.Count; j++)
+                    {
+                        foreach (var item in tree.Nodes)
+                        {
+                            if (item.Value.ID == list[1])
+                            {
+                                var view = FindBehaviorTreeView(tree);
+                                if (ActiveDocument.Title != view.Title)
+                                {
+                                    ActiveDocument = view;
+                                    CurrWorkspaceSelectedTree = tree;
+                                }
+                                if (ActiveDocument.IsInit)
+                                {
+                                    var obj = ActiveDocument.FindNode(item.Value.ID);
+                                    if(PropertiesSelectedObject != obj)
+                                    {
+                                        PropertiesSelectedObject = obj;
+                                    }
+                                    
+                                    ActiveDocument.SelectionNode(item.Value.ID);
+                                }
+
+                                return;
+                            }
+                        }
+                    }
+                }
             }
         }
         private void DisplayProperties()

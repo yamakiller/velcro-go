@@ -3,6 +3,7 @@ package apps
 import (
 	"github.com/kardianos/service"
 	"github.com/yamakiller/velcro-go/example/behavior/client"
+	"github.com/yamakiller/velcro-go/example/behavior/kafka"
 )
 
 type Program struct {
@@ -11,9 +12,9 @@ type Program struct {
 
 func (p *Program) Start(s service.Service) error {
 
+	kafka.ListenAndServe("127.0.0.1:9092")
 	
 	client.BInt("D:/GOPATH/src/fenzhi/velcro-go/tools/behavior/test2.b3")
-
 	// if err := p.System.Open("127.0.0.1:9860"); err != nil {
 	// 	vlog.Errorf("Listening 127.0.0.1:9860 fail[error:%s]", err.Error())
 	// 	return err
