@@ -3,11 +3,12 @@
   <XmlDataProvider x:Key="NoeTypeEnums">
     <x:XData>
       <Types xmlns="">
-        <Type Name="Root" Value="root"></Type>
+        <!--<Type Name="Root" Value="root"></Type>-->
         <Type Name="Action" Value="action"></Type>
         <Type Name="Condition" Value="condition"></Type>
         <Type Name="Composites" Value="composites"></Type>
         <Type Name="Decorators" Value="decorators"></Type>
+        <Type Name="Tree" Value="tree"></Type>
       </Types>
     </x:XData>
   </XmlDataProvider>

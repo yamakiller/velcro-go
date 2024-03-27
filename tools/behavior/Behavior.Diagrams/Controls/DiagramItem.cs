@@ -31,7 +31,7 @@ namespace Behavior.Diagrams.Controls
         public bool IsSelected
         {
             get { return (bool)GetValue(IsSelectedProperty); }
-            internal set { SetValue(IsSelectedProperty, value); }
+            set { SetValue(IsSelectedProperty, value); }
         }
 
         private static void onIsSelectedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

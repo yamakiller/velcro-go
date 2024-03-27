@@ -61,8 +61,10 @@ func (bb *BehaviorTree) Load(data *datas.Behavior3Tree) {
 		var node IBaseNode
 		if spec.Category == "tree" {
 			node = new(SubTree)
+		}else if  spec.Category == "root"{
+			node = new(Root)
 		} else {
-			if tnode, err := registers.New(spec.Name); err != nil {
+			if tnode, err := registers.New(spec.Name); err == nil {
 				node = tnode.(IBaseNode)
 			}
 		}
@@ -93,9 +95,13 @@ func (bb *BehaviorTree) Load(data *datas.Behavior3Tree) {
 		} else if node.GetCategory() == behavior.DECORATOR && len(spec.Child) > 0 {
 			dec := node.(IDecorator)
 			dec.SetChild(nodes[spec.Child])
+		}else if node.GetCategory() == behavior.Root && len(spec.Child) > 0{
+			rot := node.(IRoot)
+			rot.SetChild(nodes[spec.Child])
 		}
 	}
-	bb.root = nodes[data.Root]
+	// bb.root = nodes[data.Root]
+	bb.root = nodes["root"]
 }
 
 // 从根部开始在树中传播刻度信号

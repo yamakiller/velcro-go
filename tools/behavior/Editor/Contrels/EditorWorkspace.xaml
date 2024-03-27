@@ -18,7 +18,8 @@
                     <Button Command="{Binding OpenWorkspaceCmd}" Content="{materialDesign:PackIcon Kind=FolderOpenOutline}" ToolTip="打开工作区" />
                     <Separator />
                     <Button Content="{materialDesign:PackIcon Kind=Reload}" ToolTip="重新载入工作区" />
-                    <Button Content="{materialDesign:PackIcon Kind=Export}" ToolTip="导出" />
+                    <Button Command="{Binding ExportWorkspaceCmd}" Content="{materialDesign:PackIcon Kind=Export}" ToolTip="导出" />
+                    <Popup></Popup>
                     <Separator />
                     <Button IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" Command="{Binding NewBehaviorTreeCmd}" Content="{materialDesign:PackIcon Kind=VectorPolylinePlus}" ToolTip="新建行为树" />
                     <Button IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" Command="{Binding NewBehaviorTreeCmd}" Content="{materialDesign:PackIcon Kind=FolderPlusOutline}" ToolTip="新建文件夹" />

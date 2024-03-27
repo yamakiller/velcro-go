@@ -1,4 +1,5 @@
-﻿using Editor.Commands;
+﻿using Behavior.Diagrams;
+using Editor.Commands;
 using Editor.Framework;
 using Editor.Panels.Model;
 using MaterialDesignThemes.Wpf;
@@ -23,15 +24,15 @@ namespace Editor.ViewModels
         // 是否是修改状态
         bool isModifyed = false;
 
-        public bool IsModifyed 
-        { 
-            get { return isModifyed; } 
-            set 
+        public bool IsModifyed
+        {
+            get { return isModifyed; }
+            set
             {
                 if (value && CurrWorkspace != null)
                 {
                     Caption = "*[" + CurrWorkspace.Name + "]" + CurrWorkspace.Dir;
-                } 
+                }
                 else if (!value && CurrWorkspace != null)
                 {
                     Caption = "[" + CurrWorkspace.Name + "]" + CurrWorkspace.Dir;
@@ -41,8 +42,8 @@ namespace Editor.ViewModels
                     Caption = "Behavior Editor";
                 }
 
-                SetProperty(ref isModifyed, value); 
-            } 
+                SetProperty(ref isModifyed, value);
+            }
         }
 
         private string caption = "Behavior Editor";
@@ -58,9 +59,9 @@ namespace Editor.ViewModels
         public Datas.Workspace? CurrWorkspace
         {
             get { return wsd; }
-            set 
+            set
             {
-                SetProperty(ref wsd, value); 
+                SetProperty(ref wsd, value);
             }
         }
 
@@ -85,6 +86,17 @@ namespace Editor.ViewModels
                 SetProperty(ref isWorkspaceExpanded, value);
             }
         }
+
+        private bool isWorkspaceDebug = false;
+        public bool IsWordspaceDebug
+        {
+            get { return isWorkspaceDebug; }
+            set
+            {
+                SetProperty(ref isWorkspaceDebug, value);
+            }
+        }
+
         #endregion
 
         #region  Documents
@@ -98,7 +110,7 @@ namespace Editor.ViewModels
         private PanelViewModel activeDocument;
         public PanelViewModel ActiveDocument
         {
-            get { return  activeDocument; }
+            get { return activeDocument; }
             set
             {
                 if (activeDocument != value)
@@ -111,25 +123,12 @@ namespace Editor.ViewModels
         private object? propertiesSelectedObject = null;
         public object? PropertiesSelectedObject
         {
-            get { 
-                return propertiesSelectedObject; 
+            get {
+                return propertiesSelectedObject;
             }
             set
             {
-                //if (propertiesSelectedObject != value)
-                //{
-                //    var obj = propertiesSelectedObject as INotifyPropertyChanged;
-                //    if (obj != null)
-                //        obj.PropertyChanged -= PropertiesPropertyChanged;
-                //    propertiesSelectedObject = value;
-                //    DisplayProperties();
-
-                //    obj = propertiesSelectedObject as INotifyPropertyChanged;
-                //    if (obj != null)
-                //        obj.PropertyChanged += PropertiesPropertyChanged;
-                //}
-
-                var old  = propertiesSelectedObject;
+                var old = propertiesSelectedObject;
                 SetProperty(ref propertiesSelectedObject, value);
                 if (old != value)
                 {
@@ -175,7 +174,7 @@ namespace Editor.ViewModels
                         {
                             newValue = activeNode.ID;
                         }
-                        
+
                     }
                 }
 
@@ -183,8 +182,8 @@ namespace Editor.ViewModels
             }
         }
 
-        private string propertiesSelectedName;
-        public string PropertiesSelectedName
+        private string? propertiesSelectedName;
+        public string? PropertiesSelectedName
         {
             get
             {
@@ -201,7 +200,7 @@ namespace Editor.ViewModels
                         var activeNode = activeDocument.FindNode(bnode.Id);
                         if (activeNode != null)
                         {
-                            if (value != "")
+                            if (value != null)
                             {
                                 newValue = value;
                                 activeNode.Name = newValue;
@@ -218,8 +217,8 @@ namespace Editor.ViewModels
             }
         }
 
-        private string propertiesSelectedCategory;
-        public string PropertiesSelectedCategory
+        private string? propertiesSelectedCategory;
+        public string? PropertiesSelectedCategory
         {
             get {
                 return propertiesSelectedCategory;
@@ -235,38 +234,31 @@ namespace Editor.ViewModels
                         var activeNode = activeDocument.FindNode(bnode.Id);
                         if (activeNode != null)
                         {
-                            if (value.ToString() != "")
+                            if (value != null)
                             {
-
+                                var oldCategory = activeNode.Category;
                                 newValue = value.ToString();
                                 activeNode.Category = newValue;
                                 bnode.Category = newValue;
+                                if (oldCategory != activeNode.Category)
+                                {
+                                    PropertiesSelectedColor = NodeKindConvert.ToColor(NodeKindConvert.ToKind(activeNode.Category));
+                                }
                             }
                             else
                             {
                                 newValue = activeNode.Category;
-                                
+
                             }
                         }
                     }
-                    PropertiesSelectedIndex = (int)NodeKindConvert.ToKind(newValue);
                 }
                 SetProperty(ref propertiesSelectedCategory, newValue);
             }
         }
 
-        private int propertiesSelectedIndex;
-        public int PropertiesSelectedIndex
-        {
-            get { return propertiesSelectedIndex; }
-            set
-            {
-                SetProperty(ref propertiesSelectedIndex, value);
-            }
-        }
-
-        private string propertiesSelectedColor;
-        public string PropertiesSelectedColor
+        private string? propertiesSelectedColor;
+        public string? PropertiesSelectedColor
         {
             get
             {
@@ -283,7 +275,7 @@ namespace Editor.ViewModels
                         var activeNode = activeDocument.FindNode(bnode.Id);
                         if (activeNode != null)
                         {
-                            if(value.ToString() != "")
+                            if (value != null)
                             {
                                 newValue = value.ToString();
                                 activeNode.Color = newValue;
@@ -302,10 +294,10 @@ namespace Editor.ViewModels
         }
 
 
-        private string propertiesSelectedDesc;
-        public string PropertiesSelectedDesc
+        private string? propertiesSelectedDesc;
+        public string? PropertiesSelectedDesc
         {
-            get { return propertiesSelectedDesc;}
+            get { return propertiesSelectedDesc; }
             set
             {
                 string newValue = "";
@@ -317,7 +309,7 @@ namespace Editor.ViewModels
                         var activeNode = activeDocument.FindNode(bnode.Id);
                         if (activeNode != null)
                         {
-                            if (value != "")
+                            if (value != null)
                             {
                                 newValue = value;
                                 activeNode.Description = newValue;
@@ -333,6 +325,39 @@ namespace Editor.ViewModels
                 SetProperty(ref propertiesSelectedDesc, newValue);
             }
         }
+
+        private Dictionary<string, KeyValuePair<string, object>>? propertiesSelectedAttributeMap;
+        public Dictionary<string, KeyValuePair<string, object>>? PropertiesSelectedAttributeMap
+        {
+            get { return propertiesSelectedAttributeMap; }
+            set
+            {
+                Dictionary<string, KeyValuePair<string, object>>? newValue = null;
+                if (propertiesSelectedObject != null)
+                {
+                    BNode bnode = propertiesSelectedObject as BNode;
+                    if (bnode != null)
+                    {
+                        var activeNode = activeDocument.FindNode(bnode.Id);
+                        if (activeNode != null)
+                        {
+                            if (value != null)
+                            {
+                                newValue = value;
+                                activeNode.Properties = newValue;
+                            }
+                            else
+                            {
+                                newValue = activeNode.Properties;
+                            }
+                        }
+                    }
+                }
+                SetProperty(ref propertiesSelectedAttributeMap, newValue);
+            }
+        }
+
+
         void PropertiesPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             DisplayProperties();
@@ -342,15 +367,15 @@ namespace Editor.ViewModels
 
         #region 命令
         private NewWorkspaceCommand? nwcmd = null;
-        public NewWorkspaceCommand NewWorkspaceCmd { 
-            get 
-            { 
+        public NewWorkspaceCommand NewWorkspaceCmd {
+            get
+            {
                 if (nwcmd == null)
                 {
-                   nwcmd = new NewWorkspaceCommand(this);
+                    nwcmd = new NewWorkspaceCommand(this);
                 }
                 return nwcmd;
-            } 
+            }
         }
 
         private OpenWorkspaceCommand? opencmd = null;
@@ -379,7 +404,7 @@ namespace Editor.ViewModels
             }
         }
 
-       
+
 
 
         private NewBehaviorTreeCommand? nbtcmd = null;
@@ -410,7 +435,7 @@ namespace Editor.ViewModels
         }
 
         private OpenTreeCommand? optcmd = null;
-        public OpenTreeCommand OpenTreeCmd 
+        public OpenTreeCommand OpenTreeCmd
         {
             get
             {
@@ -421,6 +446,44 @@ namespace Editor.ViewModels
                 return optcmd;
             }
         }
+
+        private DebugPlayCommand? dpcmd = null;
+        public DebugPlayCommand DebugPlayCmd
+        {
+            get
+            {
+                if (dpcmd == null)
+                {
+                    dpcmd = new DebugPlayCommand(this);
+                }
+                return dpcmd;
+            }
+        }
+
+        private DebugStopCommand? dscmd = null;
+        public DebugStopCommand DebugStopCmd
+        {
+            get
+            {
+                if (dscmd == null)
+                {
+                    dscmd = new DebugStopCommand(this);
+                }
+                return dscmd;
+            }
+        }
+
+        private ExportWorkspaceCommand? ewcmd = null;
+        public ExportWorkspaceCommand ExportWorkspaceCmd{
+            get
+            {
+                if (ewcmd == null)
+                {
+                    ewcmd = new ExportWorkspaceCommand(this);
+                }
+                return ewcmd;
+            }
+            }
         #endregion
 
         #region 函数
@@ -480,15 +543,63 @@ namespace Editor.ViewModels
             }
         }
 
+        public void OnWorkspaceSelectedNode(object sender)
+        {
+            if (CurrWorkspace == null)
+            {
+                return;
+            }
+
+            if (sender is string)
+            {
+                string msg = sender as string;
+                string[] list = msg.Split(",");
+
+                for (int i = 0; i < CurrWorkspace.Trees.Count; i++)
+                {
+                    var tree = CurrWorkspace.Trees[i];
+
+
+                    for (int j = 0; j < tree.Nodes.Count; j++)
+                    {
+                        foreach (var item in tree.Nodes)
+                        {
+                            if (item.Value.ID == list[1])
+                            {
+                                var view = FindBehaviorTreeView(tree);
+                                if (ActiveDocument.Title != view.Title)
+                                {
+                                    ActiveDocument = view;
+                                    CurrWorkspaceSelectedTree = tree;
+                                }
+                                if (ActiveDocument.IsInit)
+                                {
+                                    var obj = ActiveDocument.FindNode(item.Value.ID);
+                                    if(PropertiesSelectedObject != obj)
+                                    {
+                                        PropertiesSelectedObject = obj;
+                                    }
+                                    
+                                    ActiveDocument.SelectionNode(item.Value.ID);
+                                }
+
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         private void DisplayProperties()
         {
             //TODO: 显示属性
-            PropertiesSelectedId = "";
-            PropertiesSelectedName = "";
-            PropertiesSelectedColor = "";
-            PropertiesSelectedDesc = "";
-            PropertiesSelectedVisibility = "";
-            PropertiesSelectedCategory = "";
+            PropertiesSelectedId = null;
+            PropertiesSelectedName = null;
+            PropertiesSelectedColor = null;
+            PropertiesSelectedDesc = null;
+            PropertiesSelectedVisibility = null;
+            PropertiesSelectedCategory = null;
+            PropertiesSelectedAttributeMap = null;
         }
         #endregion
     }

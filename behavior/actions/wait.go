@@ -39,6 +39,5 @@ func (wt *Wait) OnTick(tick *core.Tick) behavior.Status {
 	if currTime-startTime > wt.duration {
 		return behavior.SUCCESS
 	}
-
 	return behavior.RUNNING
 }

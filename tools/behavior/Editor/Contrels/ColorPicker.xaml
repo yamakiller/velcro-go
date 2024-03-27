@@ -78,7 +78,7 @@
         <Button x:Name="btn"  Background="{Binding SelectColor,Mode=TwoWay,ElementName=root}" Click="btn_Click" Style="{DynamicResource ButtonStyle1}">
         </Button>
         <Popup AllowsTransparency="True"  PlacementTarget="{Binding ElementName=btn}" Placement="Bottom" VerticalOffset="10" StaysOpen="False" Name="pop" >
-            <Border Padding="0,10,0,0">
+            <Border Padding="0,10,0,0" BorderThickness="0 0 0 0">
                 <Border Padding="5" CornerRadius="5" Background="#FF0A1197" Width="367" Height="201">
                     <Grid>
                         <Polygon Fill="#FF0A1197" StrokeThickness="5" Points="20,0 40,0 30,-10"/>

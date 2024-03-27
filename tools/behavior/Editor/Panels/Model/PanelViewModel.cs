@@ -5,6 +5,7 @@ using Editor.Framework;
 
 using Editor.Utils;
 using Editor.ViewModels;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,6 +31,7 @@ namespace Editor.Panels.Model
         private EditorFrameViewModel? m_parentViewModel = null;
         private DiagramView? m_editor = null;
         private BehaviorTree? m_btree = null;
+        public bool IsInit = false;
         #endregion
 
         #region 节点/线表
@@ -119,18 +121,18 @@ namespace Editor.Panels.Model
 
         private void onLoaded(object parameter)
         {
-            DiagramView editor = parameter as DiagramView;
+            DiagramView? editor = parameter as DiagramView;
             Debug.Assert(editor != null);
             Debug.Assert(m_btree != null);
             Debug.Assert(m_btree.Nodes != null);
-
+            m_nodes.Clear();
             m_editor = editor;
             if (m_btree.Nodes != null)
             {
                 Datas.BehaviorNode? rootNode = null;
                 foreach (var node in m_btree.Nodes)
                 {
-                    var kind = NodeKindConvert.ToKind(node.Value.Category);
+                    var kind = NodeKindConvert.ToKind(node.Key);
                     if (kind == NodeKinds.Root)
                     {
                         rootNode = node.Value;
@@ -140,12 +142,16 @@ namespace Editor.Panels.Model
 
                 if (rootNode != null)
                 {
-                    var rootBNode = new BNode(NodeKinds.Root);
+                    var rootBNode = new BNode(NodeKindConvert.ToKind(rootNode.Category));
                     rootBNode.Id = rootNode.ID;
                     rootBNode.Row = 30;
                     rootBNode.Column = 1;
                     rootBNode.Color = rootNode.Color;// "#FFB8860B";
-
+                    rootBNode.Title = rootNode.Title;
+                    rootBNode.Description = rootNode.Description;
+                    rootBNode.Name = rootNode.Name;
+                    rootBNode.Category = rootNode.Category;
+                    rootBNode.Width = 160;
                     Nodes.Add(rootBNode);
 
                     if (rootNode.Children != null)
@@ -165,8 +171,8 @@ namespace Editor.Panels.Model
 
             editor.Controller = new PanelController(editor, this);
             editor.DragDropTool = new PanelDragDropTool(editor, this);
-
             editor.Selection.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(onSelectionPropertyChanged);
+            this.IsInit = true;
         }
 
         /// <summary>
@@ -221,37 +227,10 @@ namespace Editor.Panels.Model
             newBNode.Description = node.Description;
             newBNode.Category = node.Category;
             newBNode.Title = node.Title;
-
+            newBNode.Width = 160;
             if (string.IsNullOrEmpty(newBNode.Color))
             {
-                switch (nodeKind)
-                {
-                    case NodeKinds.Condition:
-                        newBNode.Color = "#FFDEB887";
-                        break;
-                    case NodeKinds.Decorators:
-                        newBNode.Color = "#FFBDB76B";
-                        break;
-                    case NodeKinds.Composites:
-                        newBNode.Color = "#FF87CEEB";
-                        break;
-                    default:
-                        newBNode.Color = "#FF00FF7F";
-                        break;
-                }
-            }
-
-            newBNode.Column = parentBNode.Column + (parentBNode.Width / 20) + UnitColumnGap;
-
-            if (count == 1)
-            {
-                newBNode.Row = parentBNode.Row;
-            }
-            else
-            {
-                int h = (count * UnitRow) + ((count - 1) * UnitRowCap);
-                int startRow = (parentBNode.Row - (h / 2)) + 1;
-                newBNode.Row = startRow + ((index * UnitRow) + (index * UnitRowCap));
+                newBNode.Color = NodeKindConvert.ToColor(nodeKind);
             }
 
 
@@ -272,6 +251,8 @@ namespace Editor.Panels.Model
                 constructNode(newBNode, childNode, childCount, childIndex);
                 childIndex++;
             }
+
+
         }
         #endregion
 
@@ -310,23 +291,7 @@ namespace Editor.Panels.Model
                 Description = "",
             };
 
-
-            switch (nodeKind)
-            {
-                case NodeKinds.Condition:
-                    newNode.Color = "#FFDEB887";
-                    break;
-                case NodeKinds.Decorators:
-                    newNode.Color = "#FFBDB76B";
-                    break;
-                case NodeKinds.Composites:
-                    newNode.Color = "#FF87CEEB";
-                    break;
-                default:
-                    newNode.Color = "#FF00FF7F";
-                    break;
-            }
-
+            newNode.Color = NodeKindConvert.ToColor(nodeKind);
 
             if (m_btree.Nodes == null)
                 m_btree.Nodes = new Dictionary<string, BehaviorNode>();
@@ -365,7 +330,7 @@ namespace Editor.Panels.Model
             newBNode.Title = newNode.Title;
             newBNode.Color = newNode.Color;
             newBNode.Description = newNode.Description;
-            
+
             if (insertIndex >= Nodes.Count)
             {
                 Nodes.Add(newBNode);
@@ -374,37 +339,6 @@ namespace Editor.Panels.Model
             {
                 Nodes.Insert(insertIndex, newBNode);
             }
-
-
-
-
-
-            newBNode.Column = parent.Column + (parent.Width / 20) + UnitColumnGap;
-
-            if (parentNodeData.Children != null)
-            {
-                if (parentNodeData.Children.Count == 1)
-                {
-                    newBNode.Row = parent.Row;
-                }
-                else
-                {
-                    int h = (parentNodeData.Children.Count * UnitRow) + ((parentNodeData.Children.Count - 1) * UnitRowCap);
-                    int startRow = (parent.Row - (h / 2)) + 1;
-                    foreach (var curr in parentNodeData.Children)
-                    {
-                        var currNode = FindBNode(curr);
-                        if (currNode == null)
-                        {
-                            continue;
-                        }
-
-                        currNode.Row = startRow;
-                        startRow += UnitRow + UnitRowCap;
-                    }
-                }
-            }
-
 
 
             if (parent != null) // 增加连接线
@@ -431,40 +365,22 @@ namespace Editor.Panels.Model
             if (target != null)
             {
                 Datas.BehaviorNode? sourceNodeData = FindNode(target.Source.Id);
-                if (sourceNodeData != null)
+                var parentNode = FindBNode(sourceNodeData.ID);
+                if (parentNode != null)
                 {
-                    for (int j = 0; j < sourceNodeData.Children.Count; j++)
+                    if (sourceNodeData != null)
                     {
-                        if (sourceNodeData.Children[j] == parent.Id)
+                        for (int j = 0; j < sourceNodeData.Children.Count; j++)
                         {
-                            sourceNodeData.Children.RemoveAt(j);
-                            break;
-                        }
-                    }
-                    for (int j = 0; j < sourceNodeData.Children.Count; j++)
-                    {
-
-                    }
-                        if (sourceNodeData.Children.Count == 1)
-                    {
-                    }
-                    else
-                    {
-                        int h = (sourceNodeData.Children.Count * UnitRow) + ((sourceNodeData.Children.Count - 1) * UnitRowCap);
-                        int startRow = (parent.Row - (h / 2)) + 1;
-                        foreach (var curr in sourceNodeData.Children)
-                        {
-                            var currNode = FindBNode(curr);
-                            if (currNode == null)
+                            if (sourceNodeData.Children[j] == parent.Id)
                             {
-                                continue;
+                                sourceNodeData.Children.RemoveAt(j);
+                                break;
                             }
-
-                            currNode.Row = startRow;
-                            startRow += UnitRow + UnitRowCap;
                         }
                     }
                 }
+
                 Links.Remove(target);
             }
 
@@ -472,9 +388,82 @@ namespace Editor.Panels.Model
             m_btree.Nodes.Remove(parent.Id);
         }
 
-        public void ResetSize()
+        public void RemoveAllChildNode(BNode parent)
         {
+            Datas.BehaviorNode? sourceParentData = FindNode(parent.Id);
+            ObservableCollection<string> childs = new ObservableCollection<string>();
+            for (int i = 0; i < sourceParentData.Children?.Count; i++)
+            {
+                childs.Add(sourceParentData.Children[i]);
+            }
+            for (int i = 0; i < childs?.Count; i++)
+            {
+                BNode? child = FindBNode(childs[i]);
+                if (child == null)
+                {
+                    continue;
+                }
+                DelNode(child);
+            }
+        }
+        public void ResetNodeRow()
+        {
+            foreach (var node in m_btree.Nodes)
+            {
+                var kind = NodeKindConvert.ToKind(node.Key);
+                if (kind == NodeKinds.Root)
+                {
+                    BNode root = FindBNode(node.Value.ID);
+                    if (root != null)
+                    {
+                        NodeResetRow(root, 5);
+                    }
+                    break;
+                }
+            }
+        }
 
+        private void NodeResetRow(BNode parent, float startY)
+        {
+            Datas.BehaviorNode? sourceParentData = FindNode(parent.Id);
+            float count = (float)GetAllChildNodeCountNoParentNode(sourceParentData);
+            float startRow = startY + ((count / 2));
+
+            parent.Row = (startRow) * UnitRow;// + ((startRow -1))* UnitRowCap;
+
+            for (int i = 0; i < sourceParentData.Children?.Count; i++)
+            {
+                BNode? child = FindBNode(sourceParentData.Children[i]);
+                if (child == null)
+                {
+                    continue;
+                }
+
+                child.Column = parent.Column + (parent.Width / 20) + UnitColumnGap;
+                Datas.BehaviorNode? sourceChildData = FindNode(sourceParentData.Children[i]);
+                NodeResetRow(child, startY);
+                startY += GetAllChildNodeCountNoParentNode(sourceChildData);
+            }
+        }
+
+
+        //获取所有子节点数 父节点不算个数
+        private float GetAllChildNodeCountNoParentNode(Datas.BehaviorNode parentNodeData)
+        {
+            float count = 0;
+            if (parentNodeData.Children?.Count > 0)
+            {
+                for (int i = 0; i < parentNodeData.Children.Count; i++)
+                {
+                    Datas.BehaviorNode? sourceChildData = FindNode(parentNodeData.Children[i]);
+                    count += GetAllChildNodeCountNoParentNode(sourceChildData);
+                }
+            }
+            else
+            {
+                count = 1;
+            }
+            return count;
         }
 
         /// <summary>
@@ -546,6 +535,21 @@ namespace Editor.Panels.Model
                 }
             }
             return null;
+        }
+
+        public void SelectionNode(string id)
+        {
+            if (m_editor == null)
+            {
+                return;
+            }
+            
+            var item = m_editor.Children.OfType<Behavior.Diagrams.Controls.Node>().FirstOrDefault(p => ((BNode)p.ModelElement).Id == id);
+            if (item != null && !item.IsSelected)
+            {
+                m_editor.Selection.Set(item);
+            }
+
         }
         #endregion
 

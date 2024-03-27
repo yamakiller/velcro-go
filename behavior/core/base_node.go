@@ -71,10 +71,11 @@ func (this *BaseNode) GetBaseNodeWorker() IBaseWorker {
  * @construCtor
 **/
 func (this *BaseNode) Initialize(data *datas.Behavior3Node) {
-
-	this.description = ""
-	this.properties = make(map[string]interface{})
-
+	this.id = data.ID //|| node.id;
+	this.name = data.Name
+	this.title = data.Title             //|| node.title;
+	this.description = data.Description // || node.description;
+	this.properties = data.Properties   //|| node.properties;
 }
 
 func (this *BaseNode) GetCategory() string {
@@ -105,6 +106,8 @@ func (this *BaseNode) execute(tick *Tick) behavior.Status {
 	if !tick.Blackboard.GetBool("isOpen", tick.tree.id, this.id) {
 		this.open(tick)
 	}
+	
+	this.writelog(tick)
 
 	// TICK
 	var status = this.tick(tick)
@@ -117,6 +120,7 @@ func (this *BaseNode) execute(tick *Tick) behavior.Status {
 	// EXIT
 	this.exit(tick)
 
+	
 	return status
 }
 
@@ -160,4 +164,10 @@ func (this *BaseNode) close(tick *Tick) {
 func (this *BaseNode) exit(tick *Tick) {
 	tick.exitNode(this)
 	this.OnExit(tick)
+}
+
+// 当前运行到那个节点
+func (this *BaseNode) writelog(tick *Tick){
+
+	tick.Blackboard.SetTree("CurrStreeNode", this.id,tick.tree.id)
 }

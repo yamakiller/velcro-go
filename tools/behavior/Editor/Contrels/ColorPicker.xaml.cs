@@ -56,22 +56,16 @@ namespace Editor.Contrels
         }
         public static readonly DependencyProperty SelectColorProperty =
         DependencyProperty.Register("SelectColor", typeof(SolidColorBrush), typeof(ColorPicker));
-
         public SolidColorBrush SelectColor
         {
             get => (SolidColorBrush)GetValue(SelectColorProperty);
-            set
-            {
-                SetValue(SelectColorProperty, value);
-            }
+            set => SetValue(SelectColorProperty, value);
         }
 
         int R = 255;
         int G = 255;
         int _B = 255;
         int A = 255;
-
-        //public event PropertyChangedEventHandler PropertyChanged;
 
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {

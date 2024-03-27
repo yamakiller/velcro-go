@@ -23,7 +23,7 @@
                           IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" InputGestureText="Ctrl+N"  Icon="{materialDesign:PackIcon Kind=ShareVariantOutline}"/>
                 <MenuItem Header="创建文件夹" IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" />
                 <Separator />
-                <MenuItem Header="保存" Command="{Binding SaveWorkspaceCmd}" IsEnabled="{Binding IsModifyed}" Icon="{materialDesign:PackIcon Kind=ContentSave}" InputGestureText="Ctrl+S" />
+                <MenuItem Header="保存" Command="{Binding SaveWorkspaceCmd}" Icon="{materialDesign:PackIcon Kind=ContentSave}" InputGestureText="Ctrl+S" />
                 <MenuItem Header="另存为..." IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" />
                 <MenuItem Header="导出..." IsEnabled="{Binding CurrWorkspace, Converter={x:Static converters:ObjectToInverseBoolConverter.Instance}}" Icon="{materialDesign:PackIcon Kind=Export}" InputGestureText="Ctrl+T" />
                 <MenuItem Header="关闭" InputGestureText="Ctrl+F4" />
@@ -42,6 +42,8 @@
                 <MenuItem Header="属性" IsCheckable="True" IsChecked="True" />
             </MenuItem>
             <MenuItem Header="调试">
+                <MenuItem Header="启动" IsEnabled="{Binding IsWordspaceDebug, Converter={x:Static converters:DebugToEnabledConverter.Instance}}"  Command="{Binding DebugPlayCmd}" Icon="{materialDesign:PackIcon Kind=PlayOutline}" Foreground="Green"></MenuItem>
+                <MenuItem Header="停止" IsEnabled="{Binding IsWordspaceDebug, Converter={x:Static converters:DebugToDisEnabledConverter.Instance}}" Command="{Binding DebugStopCmd}" Icon="{materialDesign:PackIcon Kind=Stop}" Foreground="Red"></MenuItem>
             </MenuItem>
             <MenuItem Header="帮助">
                 <MenuItem Header="最新版本" Icon="{materialDesign:PackIcon Kind=Update}" />
