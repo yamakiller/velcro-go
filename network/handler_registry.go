@@ -84,14 +84,14 @@ func (hr *HandleRegistryValue) Push(handler Handler, id string) (*ClientID, bool
 
 	return &ClientID{
 		Address: hr.Address,
-		Id:      id,
+		ID:      id,
 	}, bucket.SetIfAbsent(id, handler)
 }
 
 func (hr *HandleRegistryValue) Remove(cid *ClientID) {
-	bucket := hr._localCIDs.getBucket(cid.Id)
+	bucket := hr._localCIDs.getBucket(cid.ID)
 
-	_, _ = bucket.Pop(cid.Id)
+	_, _ = bucket.Pop(cid.ID)
 }
 
 func (hr *HandleRegistryValue) Get(cid *ClientID) (Handler, bool) {
@@ -99,8 +99,8 @@ func (hr *HandleRegistryValue) Get(cid *ClientID) (Handler, bool) {
 		return nil, false
 	}
 
-	bucket := hr._localCIDs.getBucket(cid.Id)
-	ref, ok := bucket.Get(cid.Id)
+	bucket := hr._localCIDs.getBucket(cid.ID)
+	ref, ok := bucket.Get(cid.ID)
 
 	if !ok {
 		return nil, false

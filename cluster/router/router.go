@@ -2,8 +2,6 @@ package router
 
 import (
 	"github.com/yamakiller/velcro-go/cluster/proxy"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // Router 路由器
@@ -17,8 +15,8 @@ func (r *Router) IsRulePass(rule int32) bool {
 	return (r.rules & rule) != 0
 }
 
-func (r *Router) GetMessageTimeout(message proto.Message) int64 {
-	if timeout, ok := r.commands[string(protoreflect.FullName(proto.MessageName(message)))]; ok {
+func (r *Router) GetMessageTimeout(name string) int64 {
+	if timeout, ok := r.commands[name]; ok {
 		return timeout
 	}
 	return 0

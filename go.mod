@@ -1,10 +1,14 @@
 module github.com/yamakiller/velcro-go
 
-go 1.20
+go 1.21
+
+toolchain go1.21.5
 
 require (
-	github.com/apache/thrift v0.19.0
+	github.com/apache/thrift v0.20.0
 	github.com/choleraehyq/pid v0.0.18
+	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redsync/redsync/v4 v4.12.1
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38
 	github.com/json-iterator/go v1.1.12
 	github.com/kardianos/service v1.2.2
@@ -24,7 +28,9 @@ require (
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/eapache/go-resiliency v1.4.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
@@ -40,7 +46,6 @@ require (
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect

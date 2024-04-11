@@ -1,4 +1,4 @@
-target-addr: 127.0.0.1:9860
+target-addr: 127.0.0.1:10000
 client-connection-timeout: 2000
 client-number: 8
 interval-second: 5

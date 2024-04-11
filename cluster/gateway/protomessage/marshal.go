@@ -2,11 +2,8 @@ package protomessge
 
 import (
 	"encoding/binary"
-	"strings"
-
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/encryption"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -15,17 +12,11 @@ const (
 )
 
 // 2 总长度
-// 总长度 == 1 + MessageNameLength + MessageLength
+// 总长度 == 2 + MessageLength
 
-func Marshal(message proto.Message, secret []byte) ([]byte, error) {
-	msgBytes, err := proto.Marshal(message)
-	if err != nil {
-		return nil, err
-	}
+func Marshal(msgBytes []byte, secret []byte) ([]byte, error) {
 
-	msgName := proto.MessageName(message)
-	msgNameLen := strings.Count(string(msgName), "")
-	dataLen := msgNameLen + len(msgBytes) + 1
+	dataLen := len(msgBytes)
 
 	packetLen := HeaderSize + dataLen
 
@@ -39,11 +30,6 @@ func Marshal(message proto.Message, secret []byte) ([]byte, error) {
 	//
 
 	var offset int = HeaderSize
-	buffer[offset] = uint8(msgNameLen)
-	offset++
-
-	copy(buffer[offset:offset+msgNameLen], []byte(string(msgName)))
-	offset += msgNameLen
 	offset += copy(buffer[offset:], msgBytes)
 	if secret != nil {
 		ebys, err := encryption.AesEncryptByGCM(buffer[HeaderSize:dataLen+HeaderSize], secret)

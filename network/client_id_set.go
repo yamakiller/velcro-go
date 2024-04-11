@@ -11,7 +11,7 @@ type ClientIDSet struct {
 }
 
 func Key(cid *ClientID) CIDKEY {
-	return CIDKEY{_address: cid.Address, _id: cid.Id}
+	return CIDKEY{_address: cid.Address, _id: cid.ID}
 }
 
 func (cis *ClientIDSet) ensureInit() {

@@ -1,8 +1,12 @@
-namespace go ../
-struct ClientID{
-    1: string Address;  // 地址 
-    2: string Id;       // 唯一标记
+
+include "github.com/yamakiller/velcro-go/network/proto/client_id.thrift"
+
+namespace go protocols.prvs
+struct RequestGatewayAlterRule {
+    1:client_id.ClientID target ;  // 目标(可为空)  
+    2:i32            Rule  ;
 }
-service RpcService{
-    void RequestGatewayAlterRule(1: ClientID target,2: i32 Rule);
+
+service RequestGatewayAlterRuleService{
+    void OnRequestGatewayAlterRule(1: RequestGatewayAlterRule req);
 }

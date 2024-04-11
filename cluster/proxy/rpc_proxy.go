@@ -2,10 +2,14 @@ package proxy
 
 import (
 	"sync"
+	"time"
 
+	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/yamakiller/velcro-go/cluster/balancer"
+	"github.com/yamakiller/velcro-go/cluster/repeat"
+	"github.com/yamakiller/velcro-go/rpc/client"
+	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/vlog"
-	"google.golang.org/protobuf/proto"
 )
 
 // NewRpcProxy 创建Rpc代理
@@ -34,7 +38,7 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 	}
 
 	return &RpcProxy{
-		//poolConfig:  &option.PoolConfig,
+		poolConfig:  &option.PoolConfig,
 		hostMap:     hostMap,
 		hostAddrMap: hostAddrMap,
 		balancer:    lb,
@@ -46,7 +50,7 @@ func NewRpcProxyOption(option *RpcProxyOption) (*RpcProxy, error) {
 // RpcProxy rpc 代理
 type RpcProxy struct {
 	// 连接等待超时
-	//poolConfig *client.LongConnPoolConfig
+	poolConfig *client.LongConnPoolConfig
 	// 连接器
 	hostMap     map[string]*RpcProxyConn
 	hostAddrMap map[string]string
@@ -62,12 +66,12 @@ type RpcProxy struct {
 func (rpx *RpcProxy) Open() {
 	for host, conn := range rpx.hostMap {
 		conn.proxy = rpx
-		/*conn.LongConnPool = client.NewDefaultConnPool(rpx.hostAddrMap[host], client.LongConnPoolConfig{
+		conn.LongConnPool = client.NewDefaultConnPool(rpx.hostAddrMap[host], client.LongConnPoolConfig{
 			MaxConn:            rpx.poolConfig.MaxConn,
 			MaxIdleConn:        rpx.poolConfig.MaxIdleConn,
 			MaxIdleConnTimeout: rpx.poolConfig.MaxIdleConnTimeout,
-		})*/
-
+		})
+		thrift.NewTServerSocket("")
 		vlog.Infof("%s connecting", rpx.hostAddrMap[host])
 		vlog.Infof("%s connected", rpx.hostAddrMap[host])
 
@@ -77,11 +81,10 @@ func (rpx *RpcProxy) Open() {
 }
 
 // RequestMessage 集群请求消息
-func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
-	return nil, nil
-	/*var (
+func (rpx *RpcProxy) RequestMessage(message thrift.TStruct, timeout int64) ([]byte, error) {
+	var (
 			host      string
-			result    proto.Message = nil
+			result    []byte
 			resultErr error         = nil
 		)
 
@@ -146,16 +149,16 @@ func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto
 			repeat.StopOnSuccess(),
 			repeat.WithDelay(repeat.ExponentialBackoff(200*time.Millisecond).Set()))
 
-		return result, resultErr*/
+		return result, resultErr
 }
 
 // Shutdown 关闭代理
 func (rpx *RpcProxy) Shutdown() {
 	//释放资源
 	close(rpx.stopper)
-	/*for _, conn := range rpx.hostMap {
+	for _, conn := range rpx.hostMap {
 		conn.Close()
-	}*/
+	}
 	rpx.hostMap = make(map[string]*RpcProxyConn)
 	rpx.alive = make(map[string]bool)
 	rpx.balancer = nil

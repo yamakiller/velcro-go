@@ -1,8 +1,0 @@
-syntax = "proto3";
-package pubs;
-option go_package=".;pubs";
-
-// PubkeyMsg 公钥
-message PubkeyMsg {
-    string Key = 1;
-} 

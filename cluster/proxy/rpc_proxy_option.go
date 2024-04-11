@@ -1,5 +1,7 @@
 package proxy
 
+import "github.com/yamakiller/velcro-go/rpc/client"
+
 // ConnConfigOption 是一个配置rpc connector 的函数
 type RpcProxyConfigOption func(option *RpcProxyOption)
 
@@ -13,11 +15,11 @@ func Configure(options ...RpcProxyConfigOption) *RpcProxyOption {
 }
 
 // WithPoolConfig 连接池配置
-/*func WithPoolConfig(cfg client.LongConnPoolConfig) RpcProxyConfigOption {
+func WithPoolConfig(cfg client.LongConnPoolConfig) RpcProxyConfigOption {
 	return func(opt *RpcProxyOption) {
 		opt.PoolConfig = cfg
 	}
-}*/
+}
 
 // WithTargetHost 设置目标主机组
 func WithTargetHost(host []ResolveAddress) RpcProxyConfigOption {
@@ -36,7 +38,7 @@ func WithAlgorithm(algorithm string) RpcProxyConfigOption {
 
 // RpcProxyOption
 type RpcProxyOption struct {
-	//PoolConfig client.LongConnPoolConfig
+	PoolConfig client.LongConnPoolConfig
 	TargetHost []ResolveAddress
 	Algorithm  string
 }
@@ -48,7 +50,7 @@ type ResolveAddress struct {
 
 func defaultRpcProxyOption() *RpcProxyOption {
 	return &RpcProxyOption{
-		//PoolConfig: client.LongConnPoolConfig{},
+		PoolConfig: client.LongConnPoolConfig{},
 		Algorithm: "p2c",
 	}
 }

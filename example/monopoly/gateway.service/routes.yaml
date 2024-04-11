@@ -1,0 +1,36 @@
+routes:
+  - virtual-address: login.service
+    max-conn: 3000
+    max-idle-conn: 32
+    max-idle-timeout-minute: 30
+    rules:
+      - 1
+    endpoints:
+      - laddr: 0.0.0.0:10100
+        vaddr: Login@0.0.0.0:10100
+    commands:
+      - OnSignIn
+      - OnClientClosed,5000
+
+  - virtual-address: battle.serivce
+    max-conn: 3000
+    max-idle-conn: 32
+    max-idle-timeout-minute: 30
+    rules:
+      - 3
+    endpoints:
+      - laddr: 0.0.0.0:10200
+        vaddr: Battle@0.0.0.0:10200
+    commands:
+      - pubs.GetBattleSpaceList
+      - pubs.GetBattleSpaceListResp
+      - pubs.CreateBattleSpace
+      - pubs.CreateBattleSpaceResp
+      - pubs.EnterBattleSpace,5000
+      - pubs.EnterBattleSpaceResp
+      - pubs.ReadyBattleSpace,5000
+      - pubs.ReadyBattleSpaceResp
+      - pubs.RequsetStartBattleSpace,5000
+      - pubs.RequsetStartBattleSpaceResp
+      - prvs.RequestExitBattleSpace,5000
+
