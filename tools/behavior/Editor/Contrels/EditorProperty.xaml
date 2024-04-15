@@ -47,122 +47,67 @@
             <TextBlock Text="Empty" TextAlignment="Center" Foreground="Gray"/>
         </Grid>
 
-
         <Grid Visibility="{Binding PropertiesSelectedObject, Converter={x:Static converter:ObjectToVisibilityConverter.Instance}}" >
-        <!--<Grid Visibility="Visible" >-->
             <Grid.Resources>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="FontSize" Value="16"/>
-                        <Setter Property="FontFamily" Value="微软雅黑"/>
-                    </Style>
-                    <Style TargetType="Border" >
-                        <Setter Property="BorderBrush" Value="Black"/>
-                        <Setter Property="BorderThickness" Value="1"/>
-                    </Style>
-                </Grid.Resources>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.5*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="50"/>
-                </Grid.RowDefinitions>
-                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
-                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
-                <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
-                <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
-                <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
-                <Border Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
+                <Style TargetType="TextBlock">
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="16"/>
+                    <Setter Property="FontFamily" Value="微软雅黑"/>
+                </Style>
+                <Style TargetType="Border" >
+                    <Setter Property="BorderBrush" Value="Black"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </Grid.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
+            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
+            <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
+            <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
+            <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
+            <Border Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" BorderThickness="0 0 0 1"/>
 
             <TextBlock Grid.Row="0" Grid.Column="0" Text="ID" Margin="4"></TextBlock>
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PropertiesSelectedId}" Margin="4"></TextBlock>
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PropertiesSelectedId}" Margin="4"></TextBlock>
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="名称" Margin="4 10 4 4"></TextBlock>
-            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PropertiesSelectedName, UpdateSourceTrigger=PropertyChanged}" Margin="4"  ></TextBox>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="名称" Margin="4 10 4 4"></TextBlock>
+            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" HorizontalContentAlignment="Center" IsReadOnly="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeIsRootConverter.Instance}}" Text="{Binding PropertiesSelectedName, UpdateSourceTrigger=PropertyChanged}" Margin="4"  ></TextBox>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="类别" Margin="4 10 4 4"></TextBlock>
-                <ComboBox  Grid.Row="2" Grid.Column="1"
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="类别" Margin="4 10 4 4"></TextBlock>
+            <ComboBox  Grid.Row="2" Grid.Column="1"
                                  Margin="4"
                                  DisplayMemberPath="@Name"
                                  SelectedValuePath="@Value"
+                                HorizontalContentAlignment="Center"
+                                HorizontalAlignment="Center"
+                                 Visibility="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeNoRootToVisibilityConverter.Instance}}"
                                  SelectedValue="{Binding PropertiesSelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                 SelectedIndex="{Binding PropertiesSelectedIndex}"
+                                 SelectedIndex="{Binding PropertiesSelectedCategory, Converter={x:Static converter:NodeNoRootToSelectIndexConverter.Instance}}"
                                  ItemsSource="{Binding Source={StaticResource NoeTypeEnums},XPath=/Types/Type}"
                            />
-
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="Root" Visibility="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeIsRootToVisibilityConverter.Instance}}" Margin="4 6 4 4"></TextBlock>
             <TextBlock Grid.Row="3" Grid.Column="0" Text="颜色" Margin="4 6 4 4"></TextBlock>
 
-            <!--<ctrl:ColorPicker x:Name="ColorSelect" Grid.Row="3" Grid.Column="1" Height="24" SelectColor="{Binding PropertiesSelectedColor,Converter={x:Static converter:StringToSolidColorBrushConverter.Instance}  ,UpdateSourceTrigger=PropertyChanged}" Margin="4"></ctrl:ColorPicker>-->
-            <ctrl:ColorPicker Grid.Row="3" Grid.Column="1" Height="24" SelectColor="{Binding PropertiesSelectedColor,UpdateSourceTrigger=PropertyChanged ,Converter={x:Static converter:StringToSolidColorBrushConverter.Instance},Mode=TwoWay}" Margin="4"></ctrl:ColorPicker>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="属性表" Margin="4 10 4 4"></TextBlock>
-                <Button Grid.Row="4" Grid.Column="1" Content="{materialDesign:PackIcon DotsHorizontal}" Margin="4 2 4 2"></Button>
+            <ctrl:ColorPicker Grid.Row="3" Grid.Column="1" Height="24" IsEnabled="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeNoRootConverter.Instance}}" SelectColor="{Binding PropertiesSelectedColor,UpdateSourceTrigger=PropertyChanged ,Converter={x:Static converter:StringToSolidColorBrushConverter.Instance},Mode=TwoWay}" Margin="4"></ctrl:ColorPicker>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="属性表" Margin="4 10 4 4"></TextBlock>
+            <!--<Button Grid.Row="4" Grid.Column="1" Content="{materialDesign:PackIcon DotsHorizontal}" Margin="4 2 4 2"></Button>-->
+            <ctrl:AttributeList Grid.Row="4" Grid.Column="1" IsEnabled="{Binding PropertiesSelectedCategory ,Converter={x:Static converter:NodeNoRootConverter.Instance}}" AttributeMap="{Binding PropertiesSelectedAttributeMap,UpdateSourceTrigger=PropertyChanged,Converter={x:Static converter:MapToObservableConverter.Instance}, Mode=TwoWay}" ></ctrl:AttributeList>
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="说明" Margin="4"></TextBlock>
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding PropertiesSelectedDesc, UpdateSourceTrigger=PropertyChanged}" Margin="4" TextWrapping="Wrap"></TextBox>
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="说明" Margin="4"></TextBlock>
-                <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding PropertiesSelectedDesc, UpdateSourceTrigger=PropertyChanged}" Margin="4" TextWrapping="Wrap"></TextBox>
-            
-            </Grid>
-       
-        <!--<ScrollViewer Visibility="{Binding PropertiesSelectedObject, Converter={x:Static converter:ObjectToVisibilityConverter.Instance}}"
-                      VerticalScrollBarVisibility="Auto">
-                <Grid Cursor="">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="60"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="ID" Margin="4"></TextBlock>
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PropertiesSelectedId}" Margin="4"></TextBlock>
-                <Line Grid.Row="0" Grid.Column="0" Grid.RowSpan="1000" Style="{StaticResource gridVerticalLineStyle}"/>
-                <GridSplitter Grid.RowSpan="1000"  
-                                Margin="0,0,-2,0" Width="2" 
-                                Background="White" 
-                                Opacity="0.01" 
-                                Grid.ZIndex="10000"/>
-                <Line Grid.Row="1" Style="{StaticResource gridHorizontalLineStyle}"></Line>
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="名称" Margin="4 10 4 4"></TextBlock>
-                <TextBox Grid.Row="2" Grid.Column="1" Text="121212121" Margin="4"></TextBox>
-                <Line Grid.Row="3" Style="{StaticResource gridHorizontalLineStyle}"></Line>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="类别" Margin="4 10 4 4"></TextBlock>
-                <ComboBox  Grid.Row="4" Grid.Column="1"
-                                        Margin="4"
-                                        DisplayMemberPath="@Name"
-                                        SelectedValuePath="@Value"
-                                        ItemsSource="{Binding Source={StaticResource NoeTypeEnums},XPath=/Types/Type}"/>
-                <Line Grid.Row="5" Style="{StaticResource gridHorizontalLineStyle}"></Line>
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="颜色" Margin="4 6 4 4"></TextBlock>
-                <ctrl:ColorPicker  Grid.Row="6" Grid.Column="1" Height="24" SelectColor="Black" Margin="4"></ctrl:ColorPicker>
-
-                <Line Grid.Row="7" Style="{StaticResource gridHorizontalLineStyle}"></Line>
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="属性表" Margin="4 10 4 4"></TextBlock>
-                <Button Grid.Row="8" Grid.Column="1" Content="{materialDesign:PackIcon DotsHorizontal}" Margin="4 2 4 2"></Button>
-                <Line Grid.Row="9" Style="{StaticResource gridHorizontalLineStyle}"></Line>
-                <TextBlock Grid.Row="10" Grid.Column="0" Text="说明" Margin="4"></TextBlock>
-                <TextBox Grid.Row="10" Grid.Column="1" Text="" Margin="4"></TextBox>
-                <Line Grid.Row="11" Style="{StaticResource gridHorizontalLineStyle}"></Line>
-            </Grid>
-            </ScrollViewer>-->
-        
+        </Grid>
     </DockPanel>
-    <!--</Border>-->
 </UserControl>

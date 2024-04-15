@@ -16,8 +16,8 @@ namespace Editor.Panels.Model
 
         private int m_column;
         public int Column { get { return m_column; } set { m_column = value; OnPropertyChanged("Column"); } }
-        private int m_row;
-        public int Row { get { return m_row; } set { m_row = value; OnPropertyChanged("Row"); } }
+        private float m_row;
+        public float Row { get { return m_row; } set { m_row = value; OnPropertyChanged("Row"); } }
 
         private int m_width;
         public int Width { get { return m_width; } set { m_width = value; OnPropertyChanged("Width"); } }
@@ -54,6 +54,10 @@ namespace Editor.Panels.Model
             set
             {
                 m_category = value;
+                if (value != null && value != "")
+                {
+                    Kind = NodeKindConvert.ToKind(value);
+                }
                 OnPropertyChanged("Category");
             }
         }
@@ -135,12 +139,15 @@ namespace Editor.Panels.Model
                     yield return PortKinds.Left;
                     yield return PortKinds.Right;
                     break;
+                case NodeKinds.Tree:
+                      yield return PortKinds.Left;
+                    break;
 
             }
         }
     }
 
-    enum NodeKinds { Root, Action, Condition, Composites, Decorators }
+    enum NodeKinds { Root, Action, Condition, Composites, Decorators ,Tree}
 
     static class NodeKindConvert
     {
@@ -158,10 +165,51 @@ namespace Editor.Panels.Model
                     return NodeKinds.Composites;
                 case "decorators":
                     return NodeKinds.Decorators;
+                case "tree":
+                    return NodeKinds.Tree;
                 default:
                     throw new ArgumentException("unknown parameters");
             }
 
+        }
+
+        public static string ToCategory(NodeKinds kind)
+        {
+            switch (kind)
+            {
+                case NodeKinds.Root:
+                    return "root";
+                case NodeKinds.Action:
+                    return "action";
+                case NodeKinds.Condition:
+                    return "condition";
+                case NodeKinds.Composites:
+                    return "composites";
+                case NodeKinds.Decorators:
+                    return "decorators";
+                case NodeKinds.Tree:
+                    return "tree";
+                default:
+                    throw new ArgumentException("unknown parameters");
+            }
+        }
+        public static string ToColor(NodeKinds kind)
+        {
+            switch (kind)
+            {
+                case NodeKinds.Root:
+                    return "#FFB8860B";
+                case NodeKinds.Condition:
+                    return "#FFDEB887";
+                case NodeKinds.Decorators:
+                    return "#FFBDB76B";
+                case NodeKinds.Composites:
+                    return "#FF87CEEB";
+                case NodeKinds.Tree:
+                    return "#FF9A4545";
+                default:
+                    return "#FF00FF7F";
+            }
         }
     }
 }

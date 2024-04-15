@@ -10,7 +10,13 @@
     <Compile Update="Contrels\AddButton.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Contrels\AttributeList.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Contrels\ColorPicker.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Contrels\Debug.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Contrels\DelButton.xaml.cs">
@@ -34,6 +40,9 @@
     <Compile Update="Dialogs\SaveProccessFrame.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Dialogs\SelectedRootTreeDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Dialogs\WhatDialog.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -48,7 +57,13 @@
     <Page Update="Contrels\AddButton.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Contrels\AttributeList.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Contrels\ColorPicker.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Contrels\Debug.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Contrels\DelButton.xaml">
@@ -73,6 +88,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Dialogs\SaveProccessFrame.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Dialogs\SelectedRootTreeDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Dialogs\WhatDialog.xaml">

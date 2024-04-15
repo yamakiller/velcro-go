@@ -41,7 +41,7 @@ type MessageEnvelope struct {
 func (me *MessageEnvelope) zero() {
 	me.sequenceId = -1
 	me.sender.Address = ""
-	me.sender.Id = ""
+	me.sender.ID = ""
 	me.message = nil
 }
 
@@ -63,7 +63,7 @@ func NewMessageEnvelopePool(seqId int32, clientId *network.ClientID, message int
 	m.sequenceId = seqId
 	if clientId != nil {
 		m.sender.Address = clientId.Address
-		m.sender.Id = clientId.Id
+		m.sender.ID = clientId.ID
 	}
 	m.message = message
 
@@ -83,7 +83,7 @@ func UnwrapEnvelopeSequenceId(message interface{}) (int32, bool) {
 
 func UnwrapEnvelopeSender(message interface{}) (*network.ClientID, bool) {
 	if env, ok := message.(*MessageEnvelope); ok {
-		if env.sender.Id == "" {
+		if env.sender.ID == "" {
 			return nil, false
 		}
 		return &env.sender, true

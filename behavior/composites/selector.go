@@ -16,17 +16,17 @@ func (stor *Selector) OnOpen(tick *core.Tick) {
 }
 
 func (stor *Selector) OnTick(tick *core.Tick) behavior.Status {
+
 	var child = tick.Blackboard.GetInt("runningChild", tick.GetTree().GetID(), stor.GetID())
 	for i := child; i < stor.GetChildCount(); i++ {
 		var status = stor.GetChild(i).Execute(tick)
-
-		if status != behavior.FAILURE {
+		if status != behavior.SUCCESS {
 			if status == behavior.RUNNING {
 				tick.Blackboard.Set("runningChild", i, tick.GetTree().GetID(), stor.GetID())
 			}
-
 			return status
 		}
 	}
-	return behavior.FAILURE
+	return behavior.SUCCESS
+
 }

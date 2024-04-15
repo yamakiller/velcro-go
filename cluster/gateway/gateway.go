@@ -4,11 +4,11 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/vlog"
-	"google.golang.org/protobuf/proto"
 )
 
 func New(options ...GatewayConfigOption) *Gateway {
@@ -155,8 +155,8 @@ func (g *Gateway) ReleaseClient(c Client) {
 }
 
 // FindRouter 查询路由
-func (g *Gateway) FindRouter(message proto.Message) *router.Router {
-	return g.servant.FindRouter(message)
+func (g *Gateway) FindRouter(name string) *router.Router {
+	return g.servant.FindRouter(name)
 }
 
 // NewClientID 创建客户端连接者ID
@@ -166,10 +166,10 @@ func (g *Gateway) NewClientID(id string) *network.ClientID {
 
 func (g *Gateway) newServantActor(conn *serve.ServantClientConn) serve.ServantClientActor {
 	actor := &GatewayServantActor{gateway: g}
-
-	//conn.Register(&prvs.RequestGatewayPush{}, actor.onRequestGatewayPush)
-	//conn.Register(&prvs.RequestGatewayAlterRule{}, actor.onRequestGatewayAlterRule)
-	//conn.Register(&prvs.RequestGatewayCloseClient{}, actor.onRequestGatewayCloseClient)
+	conn.Register(prvs.NewGatewayServiceProcessor(actor))
+	// conn.Register(&prvs.RequestGatewayPush{}, actor.onRequestGatewayPush)
+	// conn.Register(&prvs.RequestGatewayAlterRule{}, actor.onRequestGatewayAlterRule)
+	// conn.Register(&prvs.RequestGatewayCloseClient{}, actor.onRequestGatewayCloseClient)
 
 	return actor
 }

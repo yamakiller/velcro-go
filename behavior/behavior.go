@@ -1,6 +1,7 @@
 package behavior
 
 const (
+	Root = "root"
 	COMPOSITE = "composite"
 	DECORATOR = "decorator"
 	ACTION    = "action"

@@ -10,7 +10,7 @@ type NetworkSystem struct {
 }
 
 func (ns *NetworkSystem) NewClientID(id string) *ClientID {
-	return &ClientID{Address: ns.handlers.Address, Id: id}
+	return &ClientID{Address: ns.handlers.Address, ID: id}
 }
 
 func (ns *NetworkSystem) Address() string {

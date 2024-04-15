@@ -5,11 +5,10 @@ import (
 
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/files"
 	"github.com/yamakiller/velcro-go/vlog"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func New(options ...ServantConfigOption) *Servant {
@@ -48,7 +47,6 @@ func (s *Servant) Start() error {
 		s.routeGroup.Shutdown()
 		return err
 	}
-
 	return nil
 }
 
@@ -76,11 +74,11 @@ func (s *Servant) Stop() error {
 }
 
 // FindRouter 查询路由
-func (s *Servant) FindRouter(message proto.Message) *router.Router {
+func (s *Servant) FindRouter(name string) *router.Router {
 	if s.routeGroup == nil {
 		return nil
 	}
-	return s.routeGroup.Get(string(protoreflect.FullName(proto.MessageName(message))))
+	return s.routeGroup.Get(name)
 }
 
 func (s *Servant) FindAddrRouter(addr string) *router.Router {
@@ -94,7 +92,9 @@ func (s *Servant) FindAddrRouter(addr string) *router.Router {
 func (s *Servant) spawConn(system *network.NetworkSystem) network.Client {
 	return &ServantClientConn{
 		Servant: s,
+		iprot: NewServantClientProtocol(),
+		oprot:protocol.NewBinaryProtocol(),
 		recvice: circbuf.NewLinkBuffer(4096),
-		events: make(map[interface{}]interface{}),
+		// events: make(map[interface{}]interface{}),
 	}
 }

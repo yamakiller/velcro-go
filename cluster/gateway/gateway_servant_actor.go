@@ -2,14 +2,24 @@ package gateway
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/yamakiller/velcro-go/network"
 	"google.golang.org/protobuf/proto"
 )
 
 type GatewayServantActor struct {
 	gateway *Gateway
 }
-
+func (actor *GatewayServantActor) RequestGatewayAlterRule(ctx context.Context, target *network.ClientID, Rule int32) (_err error){
+	c := actor.gateway.GetClient(target)
+	if c == nil {
+		return fmt.Errorf("RequestGatewayAlterRule unfound client %s", target.String())
+	}
+	defer actor.gateway.ReleaseClient(c)
+	c.alterRule(Rule)
+	return nil
+}
 // onBackwardBundle 回退转发包
 func (actor *GatewayServantActor) onRequestGatewayPush(ctx context.Context) (proto.Message, error) {
 	/*backward := serve.GetServantClientInfo(ctx).Message().(*prvs.RequestGatewayPush)
