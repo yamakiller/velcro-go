@@ -2,12 +2,9 @@ package tcpclient
 
 import (
 	"context"
-	// "crypto"
 	"fmt"
-	"reflect"
 	"strconv"
 
-	// "encoding/base64"
 	"errors"
 	"net"
 	"sync"
@@ -22,10 +19,11 @@ import (
 	"github.com/yamakiller/velcro-go/gofunc"
 	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/errs"
+	"github.com/yamakiller/velcro-go/rpc/messages"
+	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/collection/intrusive"
-	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
@@ -53,7 +51,7 @@ func NewConn() *Conn {
 		mailbox: make(chan interface{}, 1),
 		reqsbox: cmap.New(),
 		state:   LCS_Disconnected,
-		methods: make(map[interface{}]*method),
+		methods: make(map[interface{}]thrift.TStruct),
 	}
 }
 
@@ -70,10 +68,7 @@ type IntervalLinkNode struct {
 	intrusive.LinkedNode
 	Value interface{}
 }
-type method struct{
-	value func(ctx context.Context, message thrift.TStruct) error
-	key thrift.TStruct
-}
+
 type Conn struct {
 	conn         net.Conn
 	done         sync.WaitGroup
@@ -86,7 +81,7 @@ type Conn struct {
 	secret             []byte
 	sequenceID         int32
 
-	methods map[interface{}]*method
+	methods map[interface{}]thrift.TStruct
 }
 
 func (c *Conn) Dial(addr string, timeout time.Duration) error {
@@ -120,11 +115,8 @@ func (c *Conn) EscalateFailure(reason interface{}, message interface{}) {
 	vlog.Errorf("%s \nstack%s", reason.(error).Error(), message.(string))
 }
 
-func (c *Conn) Register(key thrift.TStruct, f func(ctx context.Context, message thrift.TStruct) error) {
-	c.methods[protocol.MessageName(key)] = &method{
-		value:f,
-		key: key,
-	}
+func (c *Conn) Register(key string, value thrift.TStruct) {
+	c.methods[key] = value
 }
 
 func (c *Conn) IsConnected() bool {
@@ -270,9 +262,11 @@ func (c *Conn) reader() {
 				res.Read(context.Background(),c.proto)
 				c.proto.Release()
 				res.VerificationKey = res.VerificationKey+1
-				c.proto.WriteMessageBegin(context.Background(),protocol.MessageName(res),thrift.EXCEPTION,seqId)
-				res.Write(context.Background(),c.proto)
-				byteKleepAlive, err = protomessge.Marshal(c.proto.GetBytes(), c.secret)
+				b,err := messages.MarshalTStruct(context.Background(),c.proto,res,protocol.MessageName(res),seqId)
+				if err != nil{
+					goto exit_reader_lable
+				}
+				byteKleepAlive, err = protomessge.Marshal(b, c.secret)
 				if err != nil {
 					goto exit_reader_lable
 				}
@@ -283,9 +277,9 @@ func (c *Conn) reader() {
 				}
 			default:
 				if m,ok :=c.methods[name];ok{
-					m.key.Read(context.Background(),c.proto)
+					m.Read(context.Background(),c.proto)
 					c.proto.Release()
-					c.mailbox <- m.key
+					c.mailbox <- m
 				}
 			}
 
@@ -376,10 +370,10 @@ func (c *Conn) onResponse(msg thrift.TStruct) {
 		return
 	}
 
-	if m,ok := c.methods[reflect.TypeOf(msg)]; ok {
-		go m.value(context.Background(),msg)
-		return
-	}
+	// if m,ok := c.methods[reflect.TypeOf(msg)]; ok {
+	// 	go m.value(context.Background(),msg)
+	// 	return
+	// }
 
 	future.cond.L.Lock()
 	if future.done {

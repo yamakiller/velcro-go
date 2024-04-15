@@ -28,9 +28,9 @@ func Marshal(msgBytes []byte) ([]byte, error) {
 	return buffer[:packetLen], nil
 }
 
-func MarshalTStruct(ctx context.Context,iprot protocol.IProtocol, msg thrift.TStruct,seqid int32) ([]byte,error){
+func MarshalTStruct(ctx context.Context,iprot protocol.IProtocol, msg thrift.TStruct, name string,seqid int32) ([]byte,error){
 	iprot.Release()
-	if err := iprot.WriteMessageBegin(ctx,protocol.MessageName(msg),thrift.EXCEPTION,seqid);err != nil{
+	if err := iprot.WriteMessageBegin(ctx,name,thrift.EXCEPTION,seqid);err != nil{
 		return nil,err
 	}
 	if err:= msg.Write(ctx,iprot);err!=nil{

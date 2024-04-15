@@ -25,7 +25,7 @@ func (r *RpcContextProtocol) Flush(ctx context.Context) error{
 	response := messages.NewRpcResponseMessage()
 	response.Result_ = r.GetBytes()
 	response.SequenceID = ctxx.SequenceID()
-	b, err := messages.MarshalTStruct(ctx,r,response,ctxx.SequenceID())
+	b, err := messages.MarshalTStruct(ctx,r,response,protocol.MessageName(response), ctxx.SequenceID())
 	if err != nil{
 		return err
 	}

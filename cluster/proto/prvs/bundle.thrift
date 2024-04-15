@@ -1,4 +1,4 @@
-include "github.com/yamakiller/velcro-go/network/proto/client_id.thrift"
+include "../../../network/proto/client_id.thrift"
 namespace go protocols.prvs
 // 服务->网关->客户端
 struct ForwardBundle{

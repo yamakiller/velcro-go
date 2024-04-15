@@ -15,6 +15,7 @@ import (
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
 
+	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
@@ -79,9 +80,9 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 
 	dl.ping = fastrand.Uint64n(math.MaxUint64)
 	msg := &pubs.PingMsg{VerificationKey: int64(dl.ping)}
-	buf,err :=  messages.MarshalTStruct(context.Background(),dl.proto,msg,0)
-	if err != nil{
-		return 
+	buf, err := messages.MarshalTStruct(context.Background(), dl.proto, msg, protocol.MessageName(msg), msn.Instance().NextId())
+	if err != nil {
+		return
 	}
 	msgb, err := protomessge.Marshal(buf, dl.secret)
 	if err != nil {
@@ -92,8 +93,8 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 }
 
 func (dl *ClientConn) Post(message thrift.TStruct) error {
-	buf,err :=  messages.MarshalTStruct(context.Background(),dl.proto,message,0)
-	if err != nil{
+	buf, err := messages.MarshalTStruct(context.Background(), dl.proto, message, protocol.MessageName(message), msn.Instance().NextId())
+	if err != nil {
 		return err
 	}
 	b, err := protomessge.Marshal(buf, dl.secret)
@@ -142,20 +143,20 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 		}
 		dl.proto.Release()
 		dl.proto.Write(msg)
-		name,_,seqId,err:=dl.proto.ReadMessageBegin(context.Background())
-		if err != nil{
+		name, _, seqId, err := dl.proto.ReadMessageBegin(context.Background())
+		if err != nil {
 			vlog.Errorf("unmarshal message error:%v", err.Error())
 			ctx.Close(ctx.Self())
 			return
 		}
-		
+
 		switch name {
 		case "pubs.PingMsg":
 			dl.onPingReply(ctx, dl.proto)
 		case "pubs.PubkeyMsg":
-			dl.onPubkeyReply(ctx, dl.proto,seqId)
+			dl.onPubkeyReply(ctx, dl.proto, seqId)
 		default:
-			dl.onRequestMessage(ctx,name, msg,seqId)
+			dl.onRequestMessage(ctx, name, msg, seqId)
 		}
 	}
 }
@@ -164,12 +165,15 @@ func (dl *ClientConn) Closed(ctx network.Context) {
 	request := &prvs.ClientClosed{
 		ClientID: ctx.Self(),
 	}
-
-	r := dl.gateway.FindRouter(protocol.MessageName(request))
+	r := dl.gateway.FindRouter("OnClientClosed")
 	if r != nil {
-		if _, err := r.Proxy.RequestMessage(request, r.GetMessageTimeout(protocol.MessageName(request))); err != nil {
+		clent := prvs.NewClientClosedServiceClient(r)
+		if err := clent.OnClientClosed(context.Background(), request); err != nil {
 			vlog.Errorf("request client %s closed to %s", request.ClientID.ToString(), "")
 		}
+		// if _, err := r.Proxy.RequestMessage(request, "OnClientClosed", r.GetMessageTimeout("OnClientClosed")); err != nil {
+		// 	vlog.Errorf("request client %s closed to %s", request.ClientID.ToString(), "")
+		// }
 	}
 
 	dl.gateway.UnRegister(ctx.Self()) //关闭释放对象
@@ -186,7 +190,7 @@ func (dl *ClientConn) Destory() {
 func (dl *ClientConn) onPingReply(ctx network.Context, iprot protocol.IProtocol) {
 
 	message := pubs.NewPingMsg()
-	message.Read(context.Background(),iprot)
+	message.Read(context.Background(), iprot)
 
 	if dl.ping == 0 {
 		vlog.Debug("unrequest ping")
@@ -204,7 +208,7 @@ func (dl *ClientConn) onPingReply(ctx network.Context, iprot protocol.IProtocol)
 	vlog.Debug("ping reply success")
 }
 
-func (dl *ClientConn) onPubkeyReply(ctx network.Context, iprot protocol.IProtocol,seqId int32) {
+func (dl *ClientConn) onPubkeyReply(ctx network.Context, iprot protocol.IProtocol, seqId int32) {
 	if dl.gateway.encryption == nil {
 		vlog.Debug("encrypted communication not enabled")
 		ctx.Close(ctx.Self())
@@ -217,7 +221,7 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, iprot protocol.IProtoco
 		return
 	}
 	message := pubs.NewPubkeyMsg()
-	if err := message.Read(context.Background(),iprot); err != nil{
+	if err := message.Read(context.Background(), iprot); err != nil {
 		vlog.Debug("encrypted communication not enabled")
 		ctx.Close(ctx.Self())
 		return
@@ -259,8 +263,8 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, iprot protocol.IProtoco
 	dl.ruleID = router.KEYED_RULE_ID
 
 	// 回复消息
-	 
-	ret :=pubs.NewPubkeyMsg()
+
+	ret := pubs.NewPubkeyMsg()
 	ret.Key = base64.StdEncoding.EncodeToString(dl.gateway.encryption.Ecdh.Marshal(pubKey))
 	// pubkeyMessage := &pubs.PubkeyMsg{Key: base64.StdEncoding.EncodeToString(dl.gateway.encryption.Ecdh.Marshal(pubKey))}
 	// b, err := protomessge.Marshal(pubkeyMessage, nil)
@@ -270,23 +274,23 @@ func (dl *ClientConn) onPubkeyReply(ctx network.Context, iprot protocol.IProtoco
 		return
 	}
 	iprot.Release()
-	iprot.WriteMessageBegin(context.Background(),protocol.MessageName(ret),thrift.EXCEPTION,seqId)
-	ret.Write(context.Background(),iprot)
+	iprot.WriteMessageBegin(context.Background(), protocol.MessageName(ret), thrift.EXCEPTION, seqId)
+	ret.Write(context.Background(), iprot)
 	ctx.PostMessage(ctx.Self(), iprot.GetBytes())
 }
 
-func (dl *ClientConn) onRequestMessage(ctx network.Context,name string, body []byte,seqId int32) {
+func (dl *ClientConn) onRequestMessage(ctx network.Context, name string, body []byte, seqId int32) {
 	r := dl.gateway.FindRouter(name)
 	if r == nil {
 		vlog.Warnf("%s message unfound router",
-		name)
+			name)
 		ctx.Close(ctx.Self())
 		return
 	}
 
 	if !r.IsRulePass(dl.ruleID) {
 		vlog.Warnf("%s message Insufficient permissions",
-		name)
+			name)
 		ctx.Close(ctx.Self())
 		return
 	}
@@ -298,14 +302,14 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context,name string, body []b
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	// 采用平均时间
-	result, err := r.Proxy.RequestMessage(forwardBundle, r.GetMessageTimeout(name))
+	result, err := r.Proxy.RequestMessage(forwardBundle, protocol.MessageName(forwardBundle), r.GetMessageTimeout(name))
 	if err != nil {
-		er:= &pubs.Error{
+		er := &pubs.Error{
 			Name: name,
 			Err:  err.Error(),
 		}
-		iprot.WriteMessageBegin(context.Background() , protocol.MessageName(er), thrift.EXCEPTION, seqId)
-		er.Write(context.Background(),iprot)
+		iprot.WriteMessageBegin(context.Background(), protocol.MessageName(er), thrift.EXCEPTION, seqId)
+		er.Write(context.Background(), iprot)
 		b, msge := protomessge.Marshal(iprot.GetBytes(), dl.secret)
 		if msge != nil {
 			panic(msge)
@@ -314,18 +318,18 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context,name string, body []b
 		ctx.PostMessage(ctx.Self(), b)
 		return
 	}
-	if result == nil{
+	if result == nil {
 		ctx.Close(ctx.Self())
 		return
 	}
 	iprot.Release()
 	iprot.Write(result)
-	name,_,_,err = iprot.ReadMessageBegin(context.Background())
-	if err !=nil{
+	name, _, _, err = iprot.ReadMessageBegin(context.Background())
+	if err != nil {
 		ctx.Close(ctx.Self())
 		return
 	}
-	
+
 	b, msge := protomessge.Marshal(result, dl.secret)
 	if msge != nil {
 		vlog.Errorf("requesting pubs.Error marshal %s message fail[error:%s]", name, msge.Error())

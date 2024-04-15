@@ -1,4 +1,4 @@
-include "github.com/yamakiller/velcro-go/network/proto/client_id.thrift"
+include "../../../network/proto/client_id.thrift"
 namespace go protocols.prvs
 // 请求网关关闭客户端
 struct RequestGatewayCloseClient{

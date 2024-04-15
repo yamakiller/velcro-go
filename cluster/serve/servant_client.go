@@ -8,6 +8,7 @@ import (
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
@@ -185,14 +186,14 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 	FreeCtxWithServantClientInfo(ctxBack)
 	c.iprot.Close()
 	c.oprot.Close()
-	// c.recvice.Close()
+	c.recvice.Close()
 }
 
 // Ping 客户端主动请求, 这里不处理
 func (c *ServantClientConn) Ping(ctx network.Context) {
 	ping := messages.NewRpcPingMessage()
 	ping.VerifyKey =int64(fastrand.Uint64n(math.MaxUint64))
-	b,err :=  messages.MarshalTStruct(context.Background(), c.oprot,ping,1)
+	b,err :=  messages.MarshalTStruct(context.Background(), c.oprot,ping,protocol.MessageName(ping), msn.Instance().NextId())
 	if err != nil{
 		return
 	}
@@ -246,6 +247,8 @@ func (c *ServantClientConn) onRpcRequest(ctx network.Context, iprot protocol.IPr
 		rprot.Write(rs.Body)
 		messageEnvelope = NewMessageEnvelopePool(request.SequenceID, rs.Sender, nil)
 	default:
+		rprot.Release()
+		rprot.Write(request.Message)
 		messageEnvelope = NewMessageEnvelopePool(request.SequenceID, nil, nil)
 	}
 

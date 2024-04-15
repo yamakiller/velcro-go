@@ -71,7 +71,8 @@ func  (r *Response)Call(ctx context.Context, method string, args, result thrift.
 	seqId := r.seqId
 	oprot:= protocol.NewBinaryProtocol()
 	defer oprot.Close()
-
+	var err error
+	r.cp.Register(method, result)
 	if err := oprot.WriteMessageBegin(ctx, method,thrift.CALL, seqId); err != nil {
 		return thrift.ResponseMeta{},nil
 	}
@@ -81,21 +82,18 @@ func  (r *Response)Call(ctx context.Context, method string, args, result thrift.
 	if err := oprot.WriteMessageEnd(ctx); err != nil {
 		return thrift.ResponseMeta{},nil
 	}
-	res, err := r.cp.RequestMessage(oprot.GetBytes(), 5000)
+	result, err = r.cp.RequestMessage(oprot.GetBytes(), 5000)
 	if err != nil {
 		vlog.Info("[PROGRAM]", "singin failed  ", err.Error())
 		return thrift.ResponseMeta{},nil
 	}
-	if res != nil {
-		vlog.Info("[PROGRAM]", "  singin : ", res.(*mpubs.SignInResp).UID)
-		return thrift.ResponseMeta{},nil
-	}
+
 	return thrift.ResponseMeta{},nil
 }
 func singin(cp *tcpclient.Conn, token string) string {
 	c:= mpubs.NewLoginServiceClient(&Response{cp: cp})
-	c.OnSignIn(context.Background(),&mpubs.SignIn{Token: token})
-	return ""
+	res ,_ := c.OnSignIn(context.Background(),&mpubs.SignIn{Token: token})
+	return res.UID
 }
 
 // func createbattlespace(cp *tcpclient.Conn) string {

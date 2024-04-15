@@ -45,7 +45,7 @@ func NewDefaultConnPool(address string, idlConfig LongConnPoolConfig) *DefaultCo
 }
 
 type LongConnPool interface {
-	RequestMessage(thrift.TStruct, int64) ([]byte, error)
+	RequestMessage(message thrift.TStruct, name string,timeout  int64) ([]byte, error)
 
 	Get(ctx context.Context, address string) (*LongConn, error)
 
@@ -85,7 +85,7 @@ func (dc *DefaultConnPool) Open() {
 	}
 }
 
-func (dc *DefaultConnPool) RequestMessage(msg thrift.TStruct, timeout int64) ([]byte, error) {
+func (dc *DefaultConnPool) RequestMessage(msg thrift.TStruct, name string, timeout int64) ([]byte, error) {
 	var (
 		conn *LongConn
 		res  []byte
@@ -103,7 +103,7 @@ func (dc *DefaultConnPool) RequestMessage(msg thrift.TStruct, timeout int64) ([]
 		return nil, err
 	}
 	defer dc.Put(conn)
-	res, err = conn.RequestMessage(msg, timeout)
+	res, err = conn.RequestMessage(msg,name, timeout)
 	return res, err
 }
 

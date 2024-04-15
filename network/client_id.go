@@ -32,7 +32,7 @@ type ClientID struct {
   ID string `thrift:"Id,2" db:"Id" json:"Id"`
 
   vaild int32
-  h Handler
+  h *Handler
 }
 
 func NewClientID() *ClientID {

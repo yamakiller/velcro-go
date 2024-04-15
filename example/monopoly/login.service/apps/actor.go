@@ -14,8 +14,8 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 
-	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
-	// mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
+	// mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
+	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
 	// "github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils"
@@ -47,7 +47,7 @@ func (actor *LoginActor) OnSignIn(ctx context.Context, req *pubs.SignIn) (_r *pu
 
 	if err := rds.RegisterPlayer(ctx, sender,
 		player.UID, player.DisplayName, player); err != nil {
-		// actor.submitRequestCloseClient(ctx, sender)
+		actor.submitRequestCloseClient(ctx, sender)
 		return nil, err
 	}
 	actor.submitRequestGatewayAlterRule(ctx, sender,3)
@@ -68,12 +68,12 @@ func (actor *LoginActor) OnSignOut(ctx context.Context, req *pubs.SignOut) (_r *
 	// utils.AssertEmpty(request, "onSignOut message not pubs.SignOut")
 	utils.AssertEmpty(sender, "onSignOut sender is null")
 
-	// accounts.SignOut(request.Token)
+	accounts.SignOut(req.Token)
 
 	var (
 		// uid     string
-		// err     error
-		// results map[string]string
+		err     error
+		results map[string]string
 	)
 
 	// uid, err = rds.GetPlayerUID(ctx, sender)
@@ -81,71 +81,69 @@ func (actor *LoginActor) OnSignOut(ctx context.Context, req *pubs.SignOut) (_r *
 	// 	return nil, err
 	// }
 
-	// results, err = rds.FindPlayerData(ctx, sender)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if results != nil {
-	// 	// TODO:退出Battle
-	// 	if battleSpaceId, ok := results[rdsconst.PlayerMapClientBattleSpaceId]; ok && battleSpaceId != "" {
-	// 		actor.submitRequest(ctx, &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid})
-	// 		// TODO: 是否需要判断执行失败
-	// 	}
-	// }
+	results, err = rds.FindPlayerData(ctx, sender)
+	if err != nil {
+		return nil, err
+	}
+	if results != nil {
+		// TODO:退出Battle
+		if battleSpaceId, ok := results[rdsconst.PlayerMapClientBattleSpaceId]; ok && battleSpaceId != "" {
+			// actor.submitRequest(ctx, &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid})
+			// TODO: 是否需要判断执行失败
+		}
+	}
 
-	// if err = rds.UnRegisterPlayer(ctx, sender); err != nil {
-	// 	// actor.submitRequestCloseClient(ctx, sender)
-	// 	return nil, err
-	// }
-	return nil,nil
-	// return &mpubs.SignOutResp{
-	// 	Result: 0,
-	// }, nil
+	if err = rds.UnRegisterPlayer(ctx, sender); err != nil {
+		actor.submitRequestCloseClient(ctx, sender)
+		return nil, err
+	}
+	return &mpubs.SignOutResp{
+		Result_: 0,
+	}, nil
 }
 
 func (actor *LoginActor)  OnClientClosed(ctx context.Context, req *prvs.ClientClosed) (_err error){
-	request := serve.GetServantClientInfo(ctx).Message().(*prvs.ClientClosed)
-	_, err := rds.GetPlayerUID(ctx, request.ClientID)
+	_, err := rds.GetPlayerUID(ctx, req.ClientID)
 	if err != nil {
 		return err
 	}
 
-	results, err := rds.FindPlayerData(ctx, request.ClientID)
+	results, err := rds.FindPlayerData(ctx, req.ClientID)
 	if err != nil {
 		return  err
 	}
 	if results != nil {
 		// TODO:退出Battle
 		if battleSpaceId, ok := results[rdsconst.PlayerMapClientBattleSpaceId]; ok && battleSpaceId != "" {
-			// actor.submitForwardBundleRequest(ctx,request.ClientID, &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid})
+			// actor.submitForwardBundleRequest(ctx,req.ClientID, &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid})
 			// TODO: 是否需要判断执行失败
 		}
 	}
-	if err := rds.UnRegisterPlayer(ctx, request.ClientID); err != nil {
+	if err := rds.UnRegisterPlayer(ctx, req.ClientID); err != nil {
 		return  err
 	}
 	return nil
 }
 
 func (actor *LoginActor) submitRequestCloseClient(ctx context.Context, clientId *network.ClientID) {
-	actor.submitRequest(ctx, &prvs.RequestGatewayCloseClient{Target: clientId})
+	actor.submitRequest(ctx, &prvs.RequestGatewayCloseClient{Target: clientId},protocol.MessageName(&prvs.RequestGatewayCloseClient{}))
 }
 
 func (actor *LoginActor) submitRequestGatewayAlterRule(ctx context.Context, clientId *network.ClientID,rule int32){
-	actor.submitRequest(ctx, &prvs.RequestGatewayAlterRule{Target: clientId,Rule: rule})
+	actor.submitRequest(ctx, &prvs.RequestGatewayAlterRule{Target: clientId,Rule: rule},protocol.MessageName(&prvs.RequestGatewayAlterRule{}))
 }
 
-func (actor *LoginActor) submitForwardBundleRequest(ctx context.Context,clientId *network.ClientID, request thrift.TStruct)([]byte, error) {
-	r := actor.ancestor.FindRouter(protocol.MessageName(request))
+func (actor *LoginActor) submitForwardBundleRequest(ctx context.Context,clientId *network.ClientID, request thrift.TStruct, name string)([]byte, error) {
+	r := actor.ancestor.FindRouter(name)
 	if r == nil {
-		vlog.Errorf("%s unfound router", protocol.MessageName(request))
+		vlog.Errorf("%s unfound router", name)
 		return nil, errors.New("unfound router")
 	}
 	oprot := protocol.NewBinaryProtocol()
-	bodyAny ,err := messages.MarshalTStruct(ctx, oprot, request,serve.GetServantClientInfo(ctx).SeqId())
+	bodyAny ,err := messages.MarshalTStruct(ctx, oprot, request, name, serve.GetServantClientInfo(ctx).SeqId())
 	if err != nil {
 		vlog.Warnf("%s message encoding failed error %s",
-		protocol.MessageName(request), err.Error())
+		name, err.Error())
 		return nil, err
 	}
 
@@ -155,7 +153,7 @@ func (actor *LoginActor) submitForwardBundleRequest(ctx context.Context,clientId
 	}
 
 	// 采用平均时间
-	result, err := r.Proxy.RequestMessage(forwardBundle, defaultRequestTimeout)
+	result, err := r.Proxy.RequestMessage(forwardBundle, protocol.MessageName(forwardBundle), defaultRequestTimeout)
 	if err != nil {
 		vlog.Errorf("%s fail error %s", protocol.MessageName(request), err.Error())
 	}
@@ -163,17 +161,17 @@ func (actor *LoginActor) submitForwardBundleRequest(ctx context.Context,clientId
 	return result, err
 }
 
-func (actor *LoginActor) submitRequest(ctx context.Context, request thrift.TStruct) ([]byte, error) {
-	r := actor.ancestor.FindRouter(protocol.MessageName(request))
+func (actor *LoginActor) submitRequest(ctx context.Context, request thrift.TStruct,name string) ([]byte, error) {
+	r := actor.ancestor.FindRouter(name)
 	if r == nil {
-		vlog.Errorf("%s unfound router",protocol.MessageName(request))
+		vlog.Errorf("%s unfound router",name)
 		return nil, errors.New("unfound router")
 	}
 
 	// 采用平均时间
-	result, err := r.Proxy.RequestMessage(request, defaultRequestTimeout)
+	result, err := r.Proxy.RequestMessage(request, name, defaultRequestTimeout)
 	if err != nil {
-		vlog.Errorf("%s fail error %s", protocol.MessageName(request), err.Error())
+		vlog.Errorf("%s fail error %s", name, err.Error())
 	}
 
 	return result, err

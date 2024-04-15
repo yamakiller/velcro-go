@@ -81,7 +81,7 @@ func (rpx *RpcProxy) Open() {
 }
 
 // RequestMessage 集群请求消息
-func (rpx *RpcProxy) RequestMessage(message thrift.TStruct, timeout int64) ([]byte, error) {
+func (rpx *RpcProxy) RequestMessage(message thrift.TStruct, name string, timeout int64) ([]byte, error) {
 	var (
 			host      string
 			result    []byte
@@ -98,7 +98,7 @@ func (rpx *RpcProxy) RequestMessage(message thrift.TStruct, timeout int64) ([]by
 		rpx.balancer.Inc(host)
 		defer rpx.balancer.Done(host)
 
-		result, resultErr = rpx.hostMap[host].RequestMessage(message, timeout)
+		result, resultErr = rpx.hostMap[host].RequestMessage(message,name, timeout)
 
 		if resultErr != nil {
 			if resultErr == errs.ErrorRequestTimeout {
@@ -134,7 +134,7 @@ func (rpx *RpcProxy) RequestMessage(message thrift.TStruct, timeout int64) ([]by
 			rpx.balancer.Inc(host)
 			defer rpx.balancer.Done(host)
 
-			result, resultErr = rpx.hostMap[host].RequestMessage(message, timeout)
+			result, resultErr = rpx.hostMap[host].RequestMessage(message,name, timeout)
 
 			if resultErr != nil {
 				if resultErr == errs.ErrorRequestTimeout {

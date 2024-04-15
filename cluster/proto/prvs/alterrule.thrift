@@ -1,5 +1,5 @@
 
-include "github.com/yamakiller/velcro-go/network/proto/client_id.thrift"
+include "../../../network/proto/client_id.thrift"
 
 namespace go protocols.prvs
 struct RequestGatewayAlterRule {

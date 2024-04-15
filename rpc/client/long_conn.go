@@ -111,7 +111,7 @@ func (c *LongConn) IsConnected() bool {
 	return false
 }
 
-func (c *LongConn) RequestMessage(message thrift.TStruct, timeout int64) ([]byte, error) {
+func (c *LongConn) RequestMessage(message thrift.TStruct, name string, timeout int64) ([]byte, error) {
 	if c.currentGoroutineId == utils.GetCurrentGoroutineID() {
 		panic("RequestMessage cannot block calls in its own thread")
 	}
@@ -120,7 +120,7 @@ func (c *LongConn) RequestMessage(message thrift.TStruct, timeout int64) ([]byte
 		return nil, errors.New("connect closed")
 	}
 	seq := msn.Instance().NextId()
-	msg,err :=  messages.MarshalTStruct(context.Background(),c.request,message,seq)
+	msg,err :=  messages.MarshalTStruct(context.Background(),c.request,message,name,seq)
 	if err != nil{
 		return nil,err
 	}
@@ -132,7 +132,7 @@ func (c *LongConn) RequestMessage(message thrift.TStruct, timeout int64) ([]byte
 		Message:     msg,
 	}
 
-	msg,err =  messages.MarshalTStruct(context.Background(),c.request,req,seq)
+	msg,err =  messages.MarshalTStruct(context.Background(),c.request,req,protocol.MessageName(req),seq)
 	if err != nil{
 		return nil,err
 	}
@@ -257,7 +257,7 @@ func (c *LongConn) reader() {
 				ping := messages.NewRpcPingMessage()
 				ping.Read(context.Background(), readbuffer)
 				ping.VerifyKey += 1
-				m ,err := messages.MarshalTStruct(context.Background(),readbuffer, ping,seq)
+				m ,err := messages.MarshalTStruct(context.Background(),readbuffer, ping,protocol.MessageName(ping), seq)
 				if err !=nil{
 					goto exit_reader_lable
 				}

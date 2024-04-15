@@ -11,7 +11,7 @@ import (
 	thrift "github.com/apache/thrift/lib/go/thrift"
 	"strings"
 	"regexp"
-	"protocols/prvs"
+	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 
 )
 
@@ -26,7 +26,6 @@ var _ = bytes.Equal
 var _ = strings.Contains
 var _ = regexp.MatchString
 
-var _ = prvs.GoUnusedProtection__
 type LoginService interface {
   // Parameters:
   //  - Req
