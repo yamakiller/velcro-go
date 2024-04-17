@@ -11,6 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
 	"github.com/yamakiller/velcro-go/gofunc"
 	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/errs"
@@ -53,6 +54,11 @@ func NewLongConn(ascription LongConnPool, usedLastTime int64) *LongConn {
 		response:     protocol.NewBinaryProtocol(),
 	}
 	conn.processor = messages.NewRpcServiceProcessor(conn)
+	conn.message_proxy = messageproxy.NewRepeatMessageProxy()
+	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcResponseMessage{}),NewRpcResponseMessageProxy(conn))
+	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcPingMessage{}),NewRpcPingMessageProxy(conn))
+	conn.guardian_message_proxy = messageproxy.NewRepeatMessageProxy()
+	conn.guardian_message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcGuardianResponseMessage{}),NewRpcGuardianResponseMessageProxy(conn))
 	return conn
 }
 
@@ -76,6 +82,8 @@ type LongConn struct {
 	request            *protocol.BinaryProtocol
 	response           *protocol.BinaryProtocol
 	processor          thrift.TProcessor
+	message_proxy      messageproxy.IMessageProxy
+	guardian_message_proxy messageproxy.IMessageProxy
 }
 
 func (c *LongConn) Dial(addr string, timeout time.Duration) error {
@@ -210,9 +218,8 @@ func (c *LongConn) RequestMessage(message thrift.TStruct, name string, timeout i
 
 func (c *LongConn) reader() {
 	recvice := circbuf.NewLinkBuffer(4096)
-	readbuffer := protocol.NewBinaryProtocol()
 	defer func() {
-		defer readbuffer.Close()
+		defer recvice.Close()
 		c.done.Done()
 	}()
 
@@ -245,38 +252,8 @@ func (c *LongConn) reader() {
 			if msg == nil || err != nil{
 				goto exit_reader_lable
 			}
-			readbuffer.Release()
-			readbuffer.Write(msg)
-			name, _, seq, err := readbuffer.ReadMessageBegin(context.Background())
-			if err != nil {
-				vlog.Debugf("rpc-long-conn UnMarshal Proto fail error:%s", err.Error())
+			if err := c.message_proxy.Message(nil,msg,0);err!= nil{
 				goto exit_reader_lable
-			}
-			switch name {
-			case "messages.RpcPingMessage":
-				ping := messages.NewRpcPingMessage()
-				ping.Read(context.Background(), readbuffer)
-				ping.VerifyKey += 1
-				m ,err := messages.MarshalTStruct(context.Background(),readbuffer, ping,protocol.MessageName(ping), seq)
-				if err !=nil{
-					goto exit_reader_lable
-				}
-				b,err := messages.Marshal(m)
-				if err != nil{
-					goto exit_reader_lable
-				}
-				_, err = c.conn.Write(b)
-				if err != nil {
-					vlog.Debugf("rpc-long-conn Response KleepAlive Message fail error:%s", err)
-					goto exit_reader_lable
-				}
-				
-			case "messages.RpcResponseMessage":
-				response := messages.NewRpcResponseMessage()
-				if err := response.Read(context.Background(), readbuffer); err == nil {
-					c.mailbox <- response
-				}
-			default:
 			}
 			if offsetWrite == nRead {
 				break
@@ -304,11 +281,8 @@ func (c *LongConn) guardian() {
 			break
 		}
 
-		switch message := msg.(type) {
-		case *messages.RpcResponseMessage:
-			c.onResponse(message)
-		default:
-		}
+		c.guardian_message_proxy.Message(nil,msg.([]byte),0)
+		
 	}
 exit_guardian_lable:
 	if c.ascription != nil {

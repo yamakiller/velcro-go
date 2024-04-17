@@ -12,7 +12,3 @@ struct ClientClosed{
 service ClientClosedService{
     void OnClientClosed(1:ClientClosed req);
 }
-
-service RequestGatewayCloseClientService{
-   RequestGatewayCloseClient OnRequestGatewayCloseClient(1:RequestGatewayCloseClient req);
-}

@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	"context"
 	"fmt"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -60,6 +61,9 @@ func clientRun(i int32) {
 			}
 		}
 	}
+	for {
+
+	}
 }
 type Response struct{
 	cp *tcpclient.Conn
@@ -93,6 +97,10 @@ func  (r *Response)Call(ctx context.Context, method string, args, result thrift.
 func singin(cp *tcpclient.Conn, token string) string {
 	c:= mpubs.NewLoginServiceClient(&Response{cp: cp})
 	res ,_ := c.OnSignIn(context.Background(),&mpubs.SignIn{Token: token})
+	if res == nil{
+		return ""
+	}
+	fmt.Fprintf(os.Stderr,"uid %s\n",res.UID)
 	return res.UID
 }
 

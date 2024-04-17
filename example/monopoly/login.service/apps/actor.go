@@ -103,7 +103,7 @@ func (actor *LoginActor) OnSignOut(ctx context.Context, req *pubs.SignOut) (_r *
 }
 
 func (actor *LoginActor)  OnClientClosed(ctx context.Context, req *prvs.ClientClosed) (_err error){
-	_, err := rds.GetPlayerUID(ctx, req.ClientID)
+	_, err := rds.GetPlayerUID(ctx,req.ClientID)
 	if err != nil {
 		return err
 	}
@@ -126,11 +126,12 @@ func (actor *LoginActor)  OnClientClosed(ctx context.Context, req *prvs.ClientCl
 }
 
 func (actor *LoginActor) submitRequestCloseClient(ctx context.Context, clientId *network.ClientID) {
-	actor.submitRequest(ctx, &prvs.RequestGatewayCloseClient{Target: clientId},protocol.MessageName(&prvs.RequestGatewayCloseClient{}))
+	
+	actor.submitRequest(ctx,&prvs.RequestGatewayCloseClientServiceOnRequestGatewayCloseClientArgs{Req:  &prvs.RequestGatewayCloseClient{Target: clientId}},"OnRequestGatewayCloseClient")
 }
 
 func (actor *LoginActor) submitRequestGatewayAlterRule(ctx context.Context, clientId *network.ClientID,rule int32){
-	actor.submitRequest(ctx, &prvs.RequestGatewayAlterRule{Target: clientId,Rule: rule},protocol.MessageName(&prvs.RequestGatewayAlterRule{}))
+	actor.submitRequest(ctx, &prvs.RequestGatewayAlterRuleServiceOnRequestGatewayAlterRuleArgs{Req:  &prvs.RequestGatewayAlterRule{Target: clientId,Rule: rule}},"OnRequestGatewayAlterRule")
 }
 
 func (actor *LoginActor) submitForwardBundleRequest(ctx context.Context,clientId *network.ClientID, request thrift.TStruct, name string)([]byte, error) {

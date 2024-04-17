@@ -135,6 +135,7 @@ func (c *Conn) RequestMessage(message []byte, timeout int64) (thrift.TStruct, er
 
 	seq := msn.Instance().NextId()
 
+
 	c.sequenceID = seq
 	future := &Future{
 		sequenceID: seq,
@@ -145,6 +146,12 @@ func (c *Conn) RequestMessage(message []byte, timeout int64) (thrift.TStruct, er
 		err:        nil,
 		t:          time.NewTimer(time.Duration(timeout) * time.Millisecond),
 	}
+
+
+	req := pubs.NewRequestMessage()
+	req.Msg = message
+	iprot := protocol.NewBinaryProtocol()
+	message, _ = messages.MarshalTStruct(context.Background(),iprot,req,protocol.MessageName(req),seq)
 
 	b, err := protomessge.Marshal(message, c.secret)
 	if err != nil {

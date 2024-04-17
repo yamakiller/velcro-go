@@ -9,8 +9,8 @@ routes:
       - laddr: 0.0.0.0:10001
         vaddr: Gateway@0.0.0.0:10000
     commands:
-      - prvs.RequestGatewayCloseClient
-      - prvs.RequestGatewayAlterRule
+      - OnRequestGatewayCloseClient
+      - OnRequestGatewayAlterRule
       
   - virtual-address: battle.service
     max-conn: 3000
@@ -22,4 +22,4 @@ routes:
       - laddr: 0.0.0.0:10200
         vaddr: Battle@0.0.0.0:10200
     commands:
-      - prvs.RequestExitBattleSpace,2000
+      - OnRequestExitBattleSpace,2000

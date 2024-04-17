@@ -11,7 +11,7 @@ import (
 	thrift "github.com/apache/thrift/lib/go/thrift"
 	"strings"
 	"regexp"
-	"github.com/yamakiller/velcro-go/network"
+  "github.com/yamakiller/velcro-go/network"
 
 )
 
@@ -25,7 +25,6 @@ var _ = bytes.Equal
 // (needed by validator.)
 var _ = strings.Contains
 var _ = regexp.MatchString
-
 
 // Attributes:
 //  - Target
