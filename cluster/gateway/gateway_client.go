@@ -5,7 +5,7 @@ import (
 	"math"
 	"sync/atomic"
 
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
@@ -46,7 +46,7 @@ type ClientConn struct {
 	ruleID   int32  //角色ID
 	secret   []byte //密钥
 	recvice  *circbuf.LinkBuffer
-	message_proxy  messageproxy.IMessageProxy
+	message_agent  messageagent.IMessageAgent
 
 	ping     uint64
 	// requestTimeout int64 //最大超时时间 毫秒级
@@ -133,7 +133,7 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 			continue
 		}
 
-		if err := dl.message_proxy.Message(ctx,msg,0); err != nil{
+		if err := dl.message_agent.Message(ctx,msg,0); err != nil{
 			vlog.Error(err.Error())
 			ctx.Close(ctx.Self())
 			return

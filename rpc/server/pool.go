@@ -3,6 +3,7 @@ package server
 import (
 	"sync"
 
+	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
 type RpcPool interface {
@@ -14,8 +15,7 @@ func NewDefaultRpcPool(s *RpcServer) RpcPool {
 	return &defaultRpcPool{pls: sync.Pool{
 		New: func() interface{} {
 			return &RpcClientConn{
-				// recvice:    circbuf.NewLinkBuffer(4096),
-				// methods:    make(map[interface{}]func(*RpcClientContext) (protoreflect.ProtoMessage, error)),
+				recvice:    circbuf.NewLinkBuffer(32),
 				register:   s.Register,
 				unregister: s.UnRegister,
 			}

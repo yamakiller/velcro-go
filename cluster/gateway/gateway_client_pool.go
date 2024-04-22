@@ -2,13 +2,8 @@ package gateway
 
 import (
 	"sync"
-
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
-	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
-	// "github.com/yamakiller/velcro-go/utils/circbuf"
 )
 
 type GatewayClientPool interface {
@@ -23,18 +18,13 @@ func NewDefaultGatewayClientPool(g *Gateway) GatewayClientPool {
 				return nil
 			}
 			conn := &ClientConn{gateway: g,
-				// requestTimeout: request_timeout,
-				recvice: circbuf.NewLinkBuffer(4096),
+				recvice: circbuf.NewLinkBuffer(32),
 			}
-			repeat := messageproxy.NewRepeatMessageProxy()
-			repeat.Register(protocol.MessageName(&pubs.RequestMessage{}),NewRequestMessageProxy(conn))
-			repeat.Register(protocol.MessageName(&pubs.PingMsg{}),NewPingMessageProxy(conn))
-
+			
 			if conn.gateway.encryption == nil {
-				conn.message_proxy = messageproxy.NewMessageProxy(repeat)
+				conn.message_agent = NewGatewayMessageAgent(conn)
 			}else{
-				pubkey :=NewPubkeyMessageProxy(conn)
-				conn.message_proxy = messageproxy.NewMessageProxy(pubkey,repeat)
+				conn.message_agent = NewPubkeyMessageAgent(conn)
 			}
 			return conn
 		},

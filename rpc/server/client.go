@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
@@ -16,16 +16,14 @@ import (
 
 func NewRpcClientConn(s *RpcServer) RpcClient {
 	conn := &RpcClientConn{
-		recvice:    circbuf.NewLinkBuffer(4096),
+		recvice:    circbuf.NewLinkBuffer(32),
 		register:   s.Register,
 		unregister: s.UnRegister,
 	}
 	conn.processor = messages.NewRpcServiceProcessor(conn)
 	conn.oprot = NewRpcContextProtocol()
-	conn.message_proxy = messageproxy.NewRepeatMessageProxy()
-	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcPingMessage{}),NewRpcPingMessageProxy())
-	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcRequestMessage{}),NewRpcRequestMessageProxy(conn))
-	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcResponseMessage{}),NewRpcResponseMessageProxy(conn))
+	conn.message_agent = NewRpcClientMessageAgent(conn)
+
 	return conn
 }
 
@@ -49,7 +47,7 @@ type RpcClientConn struct {
 	recvice   *circbuf.LinkBuffer // 接收缓冲区
 	processor thrift.TProcessor
 	oprot protocol.IProtocol
-	message_proxy messageproxy.IMessageProxy
+	message_agent messageagent.IMessageAgent
 	reference int32 // 引用计数器
 
 	register   func(*network.ClientID, RpcClient)
@@ -94,7 +92,7 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 			ctx.Close(ctx.Self())
 			return
 		}
-		if err := rcc.message_proxy.Message(ctx,msg,0);err!= nil{
+		if err := rcc.message_agent.Message(ctx,msg,0);err!= nil{
 			vlog.Debugf(err.Error())
 			ctx.Close(ctx.Self())
 			return

@@ -31,7 +31,7 @@ func NewTLinkBufferTransportFactory(size int) *TTLinkBufferTransportFactory {
 }
 
 func NewTLinkBuffer() *TLinkBuffer {
-	return &TLinkBuffer{LinkBuffer: circbuf.NewLinkBuffer(4096), size: 0}
+	return &TLinkBuffer{LinkBuffer: circbuf.NewLinkBuffer(32), size: 0}
 }
 
 func NewTLinkBufferLen(size int) *TLinkBuffer {

@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
@@ -16,22 +17,19 @@ import (
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
 )
 
-func NewPubkeyMessageProxy(dl *ClientConn)*PubkeyMessageProxy{
-	return &PubkeyMessageProxy{
-		IMessageProxyNode: messageproxy.NewMessageProxyNode(),
+func NewPubkeyMessageAgent(dl *ClientConn)messageagent.IMessageAgent{
+	return &PubkeyMessageAgent{
 		dl: dl,
 	}
 }
 
-type PubkeyMessageProxy struct {
-	messageproxy.IMessageProxyNode
+type PubkeyMessageAgent struct {
 	dl *ClientConn
 }
 
-func (p *PubkeyMessageProxy) Message(ctx network.Context, msg []byte,timeout int64) error {
+func (p *PubkeyMessageAgent) Message(ctx network.Context, msg []byte,timeout int64) error {
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(msg)
@@ -47,11 +45,16 @@ func (p *PubkeyMessageProxy) Message(ctx network.Context, msg []byte,timeout int
 		return err
 	}
 	err = p.onPubkeyReply(ctx, message, iprot, seqid)
-	p.Next()
-	return nil
+	if err == nil{
+		repeat := messageagent.NewRepeatMessageAgent()
+		repeat.Register(protocol.MessageName(&pubs.RequestMessage{}),NewRequestMessageAgent(p.dl))
+		repeat.Register(protocol.MessageName(&pubs.PingMsg{}),NewPingMessageAgent(p.dl))
+		p.dl.message_agent = repeat
+	}
+	return err
 }
 
-func (p *PubkeyMessageProxy) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg, iprot protocol.IProtocol, seqId int32) error {
+func (p *PubkeyMessageAgent) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg, iprot protocol.IProtocol, seqId int32) error {
 	if p.dl.gateway.encryption == nil {
 		return errors.New("encrypted communication not enabled")
 	}
@@ -103,20 +106,26 @@ func (p *PubkeyMessageProxy) onPubkeyReply(ctx network.Context, message *pubs.Pu
 	return nil
 }
 
-func NewPingMessageProxy(dl *ClientConn) *PingMessageProxy{
-	return &PingMessageProxy{
-		IMessageProxyNode: messageproxy.NewMessageProxyNode(),
+func NewGatewayMessageAgent(dl *ClientConn)messageagent.IMessageAgent{
+	repeat := messageagent.NewRepeatMessageAgent()
+	repeat.Register(protocol.MessageName(&pubs.RequestMessage{}),NewRequestMessageAgent(dl))
+	repeat.Register(protocol.MessageName(&pubs.PingMsg{}),NewPingMessageAgent(dl))
+	return repeat
+}
+
+func NewPingMessageAgent(dl *ClientConn) *PingMessageAgent{
+	return &PingMessageAgent{
 		dl: dl,
 		message: pubs.NewPingMsg(),
 	}
 }
 
-type PingMessageProxy struct{
-	messageproxy.IMessageProxyNode
+type PingMessageAgent struct{
 	dl *ClientConn
 	message *pubs.PingMsg
 }
-func (pp *PingMessageProxy) UnMarshal(msg []byte)error{
+
+func (pp *PingMessageAgent) UnMarshal(msg []byte)error{
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(msg)
@@ -132,7 +141,7 @@ func (pp *PingMessageProxy) UnMarshal(msg []byte)error{
 	return nil
 }
 
-func (pp *PingMessageProxy) Method(ctx network.Context, seqId int32,timeout int64) error{
+func (pp *PingMessageAgent) Method(ctx network.Context, seqId int32,timeout int64) error{
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	if pp.dl.ping == 0 {
@@ -147,21 +156,19 @@ func (pp *PingMessageProxy) Method(ctx network.Context, seqId int32,timeout int6
 }
 
 
-func NewRequestMessageProxy(dl *ClientConn) *RequestMessageProxy {
-	return &RequestMessageProxy{
-		IMessageProxyNode: messageproxy.NewMessageProxyNode(),
+func NewRequestMessageAgent(dl *ClientConn) *RequestMessageAgent {
+	return &RequestMessageAgent{
 		dl:                dl,
 		message: pubs.NewRequestMessage(),
 	}
 }
 
-type RequestMessageProxy struct {
-	messageproxy.IMessageProxyNode
+type RequestMessageAgent struct {
 	dl *ClientConn
 	message *pubs.RequestMessage
 }
 
-func (rp *RequestMessageProxy) UnMarshal(msg []byte)error{
+func (rp *RequestMessageAgent) UnMarshal(msg []byte)error{
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(msg)
@@ -177,7 +184,7 @@ func (rp *RequestMessageProxy) UnMarshal(msg []byte)error{
 	return nil
 }
 
-func (rp *RequestMessageProxy) Method(ctx network.Context, seqId int32,timeout int64)error {
+func (rp *RequestMessageAgent) Method(ctx network.Context, seqId int32,timeout int64)error {
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(rp.message.Msg)

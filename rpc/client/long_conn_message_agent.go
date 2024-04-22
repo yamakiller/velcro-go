@@ -7,25 +7,37 @@ import (
 	"time"
 	"unsafe"
 
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 )
 
-func NewRpcPingMessageProxy(c *LongConn)*RpcPingMessageProxy{
-	return &RpcPingMessageProxy{
+func NewMessageAgent(conn *LongConn)messageagent.IMessageAgent{
+	repeat := messageagent.NewRepeatMessageAgent()
+	repeat.Register(protocol.MessageName(&messages.RpcResponseMessage{}),NewRpcResponseMessageAgent(conn))
+	repeat.Register(protocol.MessageName(&messages.RpcPingMessage{}),NewRpcPingMessageAgent(conn))
+	return repeat
+}
+func NewGuardianMessageAgent(conn *LongConn)messageagent.IMessageAgent{
+	repeat := messageagent.NewRepeatMessageAgent()
+	repeat.Register(protocol.MessageName(&messages.RpcGuardianResponseMessage{}),NewRpcGuardianResponseMessageAgent(conn))
+	return repeat
+}
+func NewRpcPingMessageAgent(c *LongConn)*RpcPingMessageAgent{
+	return &RpcPingMessageAgent{
 		message: messages.NewRpcPingMessage(),
 		iprot: protocol.NewBinaryProtocol(),
 		c:c,
 	}
 }
-type RpcPingMessageProxy struct {
+type RpcPingMessageAgent struct {
 	message *messages.RpcPingMessage
 	iprot   protocol.IProtocol
 	c *LongConn
 }
 
-func (slf *RpcPingMessageProxy) UnMarshal(msg []byte) error {
+func (slf *RpcPingMessageAgent) UnMarshal(msg []byte) error {
 	slf.iprot.Release()
 	slf.iprot.Write(msg)
 	_, _, err := messages.UnMarshalTStruct(context.Background(), slf.iprot, slf.message)
@@ -35,7 +47,7 @@ func (slf *RpcPingMessageProxy) UnMarshal(msg []byte) error {
 	return nil
 }
 
-func (slf *RpcPingMessageProxy) Method(ctx network.Context, seqId int32, timeout int64) error {
+func (slf *RpcPingMessageAgent) Method(ctx network.Context, seqId int32, timeout int64) error {
 
 	slf.message.VerifyKey += 1
 	b, err := messages.MarshalTStruct(context.Background(), slf.iprot, slf.message, protocol.MessageName(slf.message), seqId)
@@ -51,19 +63,19 @@ func (slf *RpcPingMessageProxy) Method(ctx network.Context, seqId int32, timeout
 	return err
 }
 
-func NewRpcResponseMessageProxy(c *LongConn) *RpcResponseMessageProxy{
-	return &RpcResponseMessageProxy{
+func NewRpcResponseMessageAgent(c *LongConn) *RpcResponseMessageAgent{
+	return &RpcResponseMessageAgent{
 		message: messages.NewRpcResponseMessage(),
 		iprot: protocol.NewBinaryProtocol(),
 		c:c,
 	}
 }
-type RpcResponseMessageProxy struct{
+type RpcResponseMessageAgent struct{
 	message *messages.RpcResponseMessage
 	iprot   protocol.IProtocol
 	c *LongConn
 }
-func (slf *RpcResponseMessageProxy) UnMarshal(msg []byte) error {
+func (slf *RpcResponseMessageAgent) UnMarshal(msg []byte) error {
 	slf.iprot.Release()
 	slf.iprot.Write(msg)
 	_, _, err := messages.UnMarshalTStruct(context.Background(), slf.iprot, slf.message)
@@ -74,29 +86,29 @@ func (slf *RpcResponseMessageProxy) UnMarshal(msg []byte) error {
 }
 
 
-func (slf *RpcResponseMessageProxy) Method(ctx network.Context, seqId int32, timeout int64) error {
+func (slf *RpcResponseMessageAgent) Method(ctx network.Context, seqId int32, timeout int64) error {
 	response := &messages.RpcGuardianResponseMessage{SequenceID:  slf.message.SequenceID,Result_:  slf.message.Result_} 
 	msg,_:= messages.MarshalTStruct(context.Background(),slf.iprot,response,protocol.MessageName(response),response.SequenceID)
 	slf.c.mailbox <- msg
 	return nil
 }
 
-func NewRpcGuardianResponseMessageProxy(c *LongConn) *RpcGuardianResponseMessageProxy{
-	return &RpcGuardianResponseMessageProxy{
+func NewRpcGuardianResponseMessageAgent(c *LongConn) *RpcGuardianResponseMessageAgent{
+	return &RpcGuardianResponseMessageAgent{
 		message: messages.NewRpcGuardianResponseMessage(),
 		err: messages.NewRpcError(),
 		iprot: protocol.NewBinaryProtocol(),
 		c:c,
 	}
 }
-type RpcGuardianResponseMessageProxy struct{
+type RpcGuardianResponseMessageAgent struct{
 	message *messages.RpcGuardianResponseMessage
 	err 	*messages.RpcError
 	iprot   protocol.IProtocol
 	c *LongConn
 }
 
-func (slf *RpcGuardianResponseMessageProxy) UnMarshal(msg []byte) error {
+func (slf *RpcGuardianResponseMessageAgent) UnMarshal(msg []byte) error {
 	slf.iprot.Release()
 	slf.iprot.Write(msg)
 	_, _, err := messages.UnMarshalTStruct(context.Background(), slf.iprot, slf.message)
@@ -113,7 +125,7 @@ func (slf *RpcGuardianResponseMessageProxy) UnMarshal(msg []byte) error {
 	}
 	return nil
 }
-func (slf *RpcGuardianResponseMessageProxy) Method(ctx network.Context, seqId int32, timeout int64) error {
+func (slf *RpcGuardianResponseMessageAgent) Method(ctx network.Context, seqId int32, timeout int64) error {
 	future := slf.c.getFuture(slf.message.SequenceID)
 	if future == nil {
 		return nil

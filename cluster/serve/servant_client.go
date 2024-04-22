@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/messages"
@@ -26,8 +26,7 @@ type ServantClientConn struct {
 	iprot     protocol.IProtocol
 	oprot     protocol.IProtocol
 	processor thrift.TProcessor
-	message_proxy  messageproxy.IMessageProxy
-	// events  map[interface{}]interface{}
+	message_agent  messageagent.IMessageAgent
 }
 
 func (c *ServantClientConn) Accept(ctx network.Context) {
@@ -61,7 +60,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			ctx.Close(ctx.Self())
 			return
 		}
-		if err := c.message_proxy.Message(ctx,msg,0); err != nil{
+		if err := c.message_agent.Message(ctx,msg,0); err != nil{
 			vlog.Errorf(err.Error())
 			ctx.Close(ctx.Self())
 			return

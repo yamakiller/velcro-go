@@ -11,7 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/gofunc"
 	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/errs"
@@ -54,11 +54,9 @@ func NewLongConn(ascription LongConnPool, usedLastTime int64) *LongConn {
 		response:     protocol.NewBinaryProtocol(),
 	}
 	conn.processor = messages.NewRpcServiceProcessor(conn)
-	conn.message_proxy = messageproxy.NewRepeatMessageProxy()
-	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcResponseMessage{}),NewRpcResponseMessageProxy(conn))
-	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcPingMessage{}),NewRpcPingMessageProxy(conn))
-	conn.guardian_message_proxy = messageproxy.NewRepeatMessageProxy()
-	conn.guardian_message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcGuardianResponseMessage{}),NewRpcGuardianResponseMessageProxy(conn))
+	conn.message_agent = NewMessageAgent(conn)
+	conn.guardian_message_agent = NewGuardianMessageAgent(conn)
+
 	return conn
 }
 
@@ -82,8 +80,8 @@ type LongConn struct {
 	request            *protocol.BinaryProtocol
 	response           *protocol.BinaryProtocol
 	processor          thrift.TProcessor
-	message_proxy      messageproxy.IMessageProxy
-	guardian_message_proxy messageproxy.IMessageProxy
+	message_agent      messageagent.IMessageAgent
+	guardian_message_agent messageagent.IMessageAgent
 }
 
 func (c *LongConn) Dial(addr string, timeout time.Duration) error {
@@ -217,7 +215,7 @@ func (c *LongConn) RequestMessage(message thrift.TStruct, name string, timeout i
 }
 
 func (c *LongConn) reader() {
-	recvice := circbuf.NewLinkBuffer(4096)
+	recvice := circbuf.NewLinkBuffer(32)
 	defer func() {
 		defer recvice.Close()
 		c.done.Done()
@@ -252,7 +250,7 @@ func (c *LongConn) reader() {
 			if msg == nil || err != nil{
 				goto exit_reader_lable
 			}
-			if err := c.message_proxy.Message(nil,msg,0);err!= nil{
+			if err := c.message_agent.Message(nil,msg,0);err!= nil{
 				goto exit_reader_lable
 			}
 			if offsetWrite == nRead {
@@ -281,7 +279,7 @@ func (c *LongConn) guardian() {
 			break
 		}
 
-		c.guardian_message_proxy.Message(nil,msg.([]byte),0)
+		c.guardian_message_agent.Message(nil,msg.([]byte),0)
 		
 	}
 exit_guardian_lable:

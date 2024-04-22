@@ -4,28 +4,38 @@ import (
 	"context"
 	"time"
 
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 )
 
-func NewRpcPingMessageProxy() *RpcPingMessageProxy {
-	return &RpcPingMessageProxy{
-		IMessageProxyNode: messageproxy.NewMessageProxyNode(),
+
+func NewServantMessageAgent(conn *ServantClientConn)messageagent.IMessageAgent{
+	requset := NewRpcRequestMessageAgent()
+	requset.Register(protocol.MessageName(&prvs.ForwardBundle{}),NewForwardBundleMessageAgent(conn))
+	requset.WithDefaultMethod(NewDefaultRpcRequestMessageAgent(conn))
+
+	repeat := messageagent.NewRepeatMessageAgent()
+	repeat.Register(protocol.MessageName(&messages.RpcRequestMessage{}),requset)
+	repeat.Register(protocol.MessageName(&messages.RpcPingMessage{}),NewRpcPingMessageAgent())
+	return repeat
+}
+
+func NewRpcPingMessageAgent() *RpcPingMessageAgent {
+	return &RpcPingMessageAgent{
 		message:           messages.NewRpcPingMessage(),
 		iprot:             protocol.NewBinaryProtocol(),
 	}
 }
 
-type RpcPingMessageProxy struct {
-	messageproxy.IMessageProxyNode
+type RpcPingMessageAgent struct {
 	message *messages.RpcPingMessage
 	iprot   protocol.IProtocol
 }
 
-func (rpmp *RpcPingMessageProxy) UnMarshal(msg []byte) error {
+func (rpmp *RpcPingMessageAgent) UnMarshal(msg []byte) error {
 	rpmp.iprot.Release()
 	rpmp.iprot.Write(msg)
 	_,_, err := messages.UnMarshalTStruct(context.Background(),rpmp.iprot,rpmp.message)
@@ -35,34 +45,32 @@ func (rpmp *RpcPingMessageProxy) UnMarshal(msg []byte) error {
 	return nil
 }
 
-func (rpmp *RpcPingMessageProxy) Method(ctx network.Context, seqId int32, timeout int64) error {
+func (rpmp *RpcPingMessageAgent) Method(ctx network.Context, seqId int32, timeout int64) error {
 	return nil
 }
 
-func NewRpcRequestMessageProxy() *RpcRequestMessageProxy {
-	return &RpcRequestMessageProxy{
-		IMessageProxyNode: messageproxy.NewMessageProxyNode(),
+func NewRpcRequestMessageAgent() *RpcRequestMessageAgent {
+	return &RpcRequestMessageAgent{
 		message:           messages.NewRpcRequestMessage(),
-		repeat:            messageproxy.NewRepeatMessageProxy(),
+		repeat:            messageagent.NewRepeatMessageAgent(),
 		iprot:             protocol.NewBinaryProtocol(),
 	}
 }
 
-type RpcRequestMessageProxy struct {
-	messageproxy.IMessageProxyNode
+type RpcRequestMessageAgent struct {
 	message *messages.RpcRequestMessage
-	repeat  *messageproxy.RepeatMessageProxy
+	repeat  *messageagent.RepeatMessageAgent
 	iprot   protocol.IProtocol
 }
 
-func (rrmp *RpcRequestMessageProxy) Register(key string, proxy messageproxy.IMessageProxyStruct){
-	rrmp.repeat.Register(key,proxy)
+func (rrmp *RpcRequestMessageAgent) Register(key string, agent messageagent.IMessageAgentStruct){
+	rrmp.repeat.Register(key,agent)
 }
-func (rrmp *RpcRequestMessageProxy) WithDefaultMethod(proxy messageproxy.IMessageProxyStruct){
-	rrmp.repeat.WithDefaultMethod(proxy)
+func (rrmp *RpcRequestMessageAgent) WithDefaultMethod(agent messageagent.IMessageAgentStruct){
+	rrmp.repeat.WithDefaultMethod(agent)
 }
 
-func (rrmp *RpcRequestMessageProxy) UnMarshal(msg []byte) error {
+func (rrmp *RpcRequestMessageAgent) UnMarshal(msg []byte) error {
 	rrmp.iprot.Release()
 	rrmp.iprot.Write(msg)
 	_,_, err := messages.UnMarshalTStruct(context.Background(),rrmp.iprot,rrmp.message)
@@ -72,7 +80,7 @@ func (rrmp *RpcRequestMessageProxy) UnMarshal(msg []byte) error {
 	return nil
 }
 
-func (rrmp *RpcRequestMessageProxy) Method(ctx network.Context, seqId int32, _ int64) error {
+func (rrmp *RpcRequestMessageAgent) Method(ctx network.Context, seqId int32, _ int64) error {
 
 	// 	//TODO: 这里需要抛给并行器
 	timeout := int64(rrmp.message.Timeout) - (time.Now().UnixMilli() - int64(rrmp.message.ForwardTime))
@@ -85,20 +93,20 @@ func (rrmp *RpcRequestMessageProxy) Method(ctx network.Context, seqId int32, _ i
 }
 
 
-func NewForwardBundleMessageProxy(conn  *ServantClientConn)*ForwardBundleMessageProxy{
-	return &ForwardBundleMessageProxy{
+func NewForwardBundleMessageAgent(conn  *ServantClientConn)*ForwardBundleMessageAgent{
+	return &ForwardBundleMessageAgent{
 		message: prvs.NewForwardBundle(),
 		iprot: protocol.NewBinaryProtocol(),
 		conn: conn,
 	}
 }
-type ForwardBundleMessageProxy struct{
+type ForwardBundleMessageAgent struct{
 	message *prvs.ForwardBundle
 	iprot protocol.IProtocol
 	conn  *ServantClientConn
 }
 
-func (fbmp *ForwardBundleMessageProxy) UnMarshal(msg []byte) error{
+func (fbmp *ForwardBundleMessageAgent) UnMarshal(msg []byte) error{
 	fbmp.iprot.Release()
 	fbmp.iprot.Write(msg)
 	_,_, err := messages.UnMarshalTStruct(context.Background(),fbmp.iprot,fbmp.message)
@@ -110,7 +118,7 @@ func (fbmp *ForwardBundleMessageProxy) UnMarshal(msg []byte) error{
 	return nil
 }
 
-func (fbmp *ForwardBundleMessageProxy) Method(ctx network.Context, seqId int32,timeout int64) error{
+func (fbmp *ForwardBundleMessageAgent) Method(ctx network.Context, seqId int32,timeout int64) error{
 
 	messageEnvelope := NewMessageEnvelopePool(seqId, fbmp.message.Sender, nil)
 	background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
@@ -140,24 +148,24 @@ func (fbmp *ForwardBundleMessageProxy) Method(ctx network.Context, seqId int32,t
 	return nil
 }
 
-func NewDefaultRpcRequestMessageProxy(conn  *ServantClientConn)*DefaultRpcRequestMessageProxy{
-	return &DefaultRpcRequestMessageProxy{
+func NewDefaultRpcRequestMessageAgent(conn  *ServantClientConn)*DefaultRpcRequestMessageAgent{
+	return &DefaultRpcRequestMessageAgent{
 		iprot: protocol.NewBinaryProtocol(),
 		conn:conn,
 	}
 }
-type DefaultRpcRequestMessageProxy struct{
+type DefaultRpcRequestMessageAgent struct{
 	iprot protocol.IProtocol
 	conn  *ServantClientConn
 
 }
 
-func (drrmp *DefaultRpcRequestMessageProxy) UnMarshal(msg []byte) error{
+func (drrmp *DefaultRpcRequestMessageAgent) UnMarshal(msg []byte) error{
 	drrmp.iprot.Release()
 	drrmp.iprot.Write(msg)
 	return nil
 }
-func (drrmp *DefaultRpcRequestMessageProxy) Method(ctx network.Context, seqId int32,timeout int64) error{
+func (drrmp *DefaultRpcRequestMessageAgent) Method(ctx network.Context, seqId int32,timeout int64) error{
 	messageEnvelope := NewMessageEnvelopePool(seqId, nil, nil)
 	background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
 	background = NewCtxWithServantClientInfo(background, NewClientInfo(ctx, messageEnvelope))

@@ -3,11 +3,8 @@ package serve
 import (
 	"sync"
 
-	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
-	"github.com/yamakiller/velcro-go/cluster/proxy/messageproxy"
 	"github.com/yamakiller/velcro-go/cluster/router"
 	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/files"
@@ -97,14 +94,9 @@ func (s *Servant) spawConn(system *network.NetworkSystem) network.Client {
 		Servant: s,
 		oprot:NewServantClientProtocol(),
 		iprot:protocol.NewBinaryProtocol(),
-		recvice: circbuf.NewLinkBuffer(4096),
+		recvice: circbuf.NewLinkBuffer(32),
 		// events: make(map[interface{}]interface{}),
-		message_proxy: messageproxy.NewRepeatMessageProxy(),
 	}
-	requset := NewRpcRequestMessageProxy()
-	requset.Register(protocol.MessageName(&prvs.ForwardBundle{}),NewForwardBundleMessageProxy(conn))
-	requset.WithDefaultMethod(NewDefaultRpcRequestMessageProxy(conn))
-	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcRequestMessage{}),requset)
-	conn.message_proxy.(*messageproxy.RepeatMessageProxy).Register(protocol.MessageName(&messages.RpcPingMessage{}),NewRpcPingMessageProxy())
+	conn.message_agent = NewServantMessageAgent(conn)
 	return conn
 }
