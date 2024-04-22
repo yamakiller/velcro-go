@@ -1,7 +1,7 @@
 package apps
 
 import (
-	// "github.com/yamakiller/velcro-go/cluster/protocols/prvs"
+	 mprvs"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
@@ -57,7 +57,11 @@ func (ls *loginService) Stop() error {
 
 func (ls *loginService) newLoginActor(conn *serve.ServantClientConn) serve.ServantClientActor {
 	actor := &LoginActor{ancestor: ls.login}
+	prv := mprvs.NewClientClosedServiceProcessor(actor)
 	per := pubs.NewLoginServiceProcessor(actor)
+	for key,val := range prv.ProcessorMap(){
+		per.AddToProcessorMap(key,val)
+	}
 	conn.Register(per)
 	// conn.Register(&pubs.SignIn{}, actor.onSignIn)
 	// conn.Register(&pubs.SignOut{}, actor.onSignOut)

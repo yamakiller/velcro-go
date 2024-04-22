@@ -1,5 +1,5 @@
 namespace go  protocols.pubs
-
+namespace netstd  protocols.pubs
 struct SignIn{
     1:string token;
 }

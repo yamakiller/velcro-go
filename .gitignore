@@ -27,3 +27,5 @@ log.*
 .vs/
 bin/
 obj/
+example/monopoly/network_client/
+example/monopoly/client.broker/
