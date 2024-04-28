@@ -115,7 +115,7 @@ func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
 	ctx := clientContext{system: t.system, state: stateAccept}
 	handler := &tcpClientHandler{
 		conn:      conn,
-		sendbox:   circbuf.NewLinkBuffer(4096),
+		sendbox:   circbuf.NewLinkBuffer(32),
 		sendcond:  sync.NewCond(&sync.Mutex{}),
 		keepalive: uint32(t.system.Config.Kleepalive),
 		invoker:   &ctx,

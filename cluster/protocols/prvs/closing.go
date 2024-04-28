@@ -11,7 +11,7 @@ import (
 	thrift "github.com/apache/thrift/lib/go/thrift"
 	"strings"
 	"regexp"
-  "github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/network"
 
 )
 

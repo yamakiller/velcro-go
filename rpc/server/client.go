@@ -6,21 +6,24 @@ import (
 	"time"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
-
+	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
 func NewRpcClientConn(s *RpcServer) RpcClient {
 	conn := &RpcClientConn{
-		// recvice:    circbuf.NewLinkBuffer(4096),
+		recvice:    circbuf.NewLinkBuffer(32),
 		register:   s.Register,
 		unregister: s.UnRegister,
 	}
 	conn.processor = messages.NewRpcServiceProcessor(conn)
-	conn.proto = NewRpcContextProtocol()
+	conn.oprot = NewRpcContextProtocol()
+	conn.message_agent = NewRpcClientMessageAgent(conn)
+
 	return conn
 }
 
@@ -41,9 +44,10 @@ type RpcClient interface {
 
 type RpcClientConn struct {
 	clientID *network.ClientID // 客户端ID
-	// recvice   *circbuf.LinkBuffer // 接收缓冲区
+	recvice   *circbuf.LinkBuffer // 接收缓冲区
 	processor thrift.TProcessor
-	proto     protocol.IProtocol
+	oprot protocol.IProtocol
+	message_agent messageagent.IMessageAgent
 	reference int32 // 引用计数器
 
 	register   func(*network.ClientID, RpcClient)
@@ -72,28 +76,43 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 	// 通用化需要修改
 	offset := 0
 	for {
-		n, err := rcc.proto.Write(ctx.Message()[offset:])
+		n, err := rcc.recvice.WriteBinary(ctx.Message()[offset:])
 		if err != nil {
 			ctx.Close(ctx.Self())
 			return
 		}
 		offset += n
-		name, _, _, err := rcc.proto.ReadMessageBegin(context.Background())
-		if err != nil {
+		if err = rcc.recvice.Flush(); err !=nil{
 			ctx.Close(ctx.Self())
 			return
 		}
-		switch name {
-		case "messages.RpcPingMessage":
-			rcc.onRpcPing(ctx, rcc.proto)
-		case "messages.RpcRequestMessage":
-			rcc.onRpcRequest(ctx, rcc.proto)
-		case "messages.RpcResponseMessage":
-			rcc.onRpcResponse(ctx, rcc.proto)
-		default:
-			vlog.Debug("unknown RPC message")
+	
+		msg,err := messages.UnMarshal(rcc.recvice)
+		if err !=nil{
+			ctx.Close(ctx.Self())
+			return
 		}
-		rcc.proto.Release()
+		if err := rcc.message_agent.Message(ctx,msg,0);err!= nil{
+			vlog.Debugf(err.Error())
+			ctx.Close(ctx.Self())
+			return
+		}
+		// name, _, _, err := rcc.proto.ReadMessageBegin(context.Background())
+		// if err != nil {
+		// 	ctx.Close(ctx.Self())
+		// 	return
+		// }
+		// switch name {
+		// case "messages.RpcPingMessage":
+		// 	rcc.onRpcPing(ctx, rcc.proto)
+		// case "messages.RpcRequestMessage":
+		// 	rcc.onRpcRequest(ctx, rcc.proto)
+		// case "messages.RpcResponseMessage":
+		// 	rcc.onRpcResponse(ctx, rcc.proto)
+		// default:
+		// 	vlog.Debug("unknown RPC message")
+		// }
+		// rcc.proto.Release()
 		if offset == len(ctx.Message()) {
 			break
 		}

@@ -1,0 +1,14 @@
+server:
+  laddr: 0.0.0.0:10200
+  vaddr: 0.0.0.0:10200
+redis:
+  address: 0.0.0.0:6379
+  password: yqXaWje245RPbsn*
+  timeout:
+    dial: 5000
+    read: 2000
+    write: 2000
+router:
+  uri: routes.yaml
+  algorithm: p2c
+log_remote_addr: 0.0.0.0:9092

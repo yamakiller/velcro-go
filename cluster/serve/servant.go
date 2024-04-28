@@ -90,11 +90,13 @@ func (s *Servant) FindAddrRouter(addr string) *router.Router {
 }
 
 func (s *Servant) spawConn(system *network.NetworkSystem) network.Client {
-	return &ServantClientConn{
+	conn :=&ServantClientConn{
 		Servant: s,
-		iprot: NewServantClientProtocol(),
-		oprot:protocol.NewBinaryProtocol(),
-		recvice: circbuf.NewLinkBuffer(4096),
+		oprot:NewServantClientProtocol(),
+		iprot:protocol.NewBinaryProtocol(),
+		recvice: circbuf.NewLinkBuffer(32),
 		// events: make(map[interface{}]interface{}),
 	}
+	conn.message_agent = NewServantMessageAgent(conn)
+	return conn
 }

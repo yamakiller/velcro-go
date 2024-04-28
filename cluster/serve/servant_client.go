@@ -3,10 +3,9 @@ package serve
 import (
 	"context"
 	"math"
-	"time"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
+	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/messages"
@@ -14,7 +13,6 @@ import (
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
 	"github.com/yamakiller/velcro-go/vlog"
-	// "google.golang.org/protobuf/proto"
 )
 
 // Background context.Context
@@ -28,7 +26,7 @@ type ServantClientConn struct {
 	iprot     protocol.IProtocol
 	oprot     protocol.IProtocol
 	processor thrift.TProcessor
-	// events  map[interface{}]interface{}
+	message_agent  messageagent.IMessageAgent
 }
 
 func (c *ServantClientConn) Accept(ctx network.Context) {
@@ -62,19 +60,24 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			ctx.Close(ctx.Self())
 			return
 		}
-		c.iprot.Release()
-		c.iprot.Write(msg)
-		name, _, _, _ := c.iprot.ReadMessageBegin(context.Background())
-		switch name {
-		case "messages.RpcPingMessage":
-			c.onRpcPing(ctx, c.iprot)
-		case "messages.RpcRequestMessage":
-			c.onRpcRequest(ctx, c.iprot)
-		default:
-			vlog.Errorf("Unknown service:%v", name)
+		if err := c.message_agent.Message(ctx,msg,0); err != nil{
+			vlog.Errorf(err.Error())
 			ctx.Close(ctx.Self())
 			return
 		}
+		// c.iprot.Release()
+		// c.iprot.Write(msg)
+		// name, _, _, _ := c.iprot.ReadMessageBegin(context.Background())
+		// switch name {
+		// case "messages.RpcPingMessage":
+		// 	c.onRpcPing(ctx, c.iprot)
+		// case "messages.RpcRequestMessage":
+		// 	c.onRpcRequest(ctx, c.iprot)
+		// default:
+		// 	vlog.Errorf("Unknown service:%v", name)
+		// 	ctx.Close(ctx.Self())
+		// 	return
+		// }
 
 		// _, msg, msgErr := messages.UnMarshalProtobuf(c.recvice)
 		// if msgErr != nil {
@@ -191,9 +194,10 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 
 // Ping 客户端主动请求, 这里不处理
 func (c *ServantClientConn) Ping(ctx network.Context) {
+
 	ping := messages.NewRpcPingMessage()
 	ping.VerifyKey =int64(fastrand.Uint64n(math.MaxUint64))
-	b,err :=  messages.MarshalTStruct(context.Background(), c.oprot,ping,protocol.MessageName(ping), msn.Instance().NextId())
+	b,err :=  messages.MarshalTStruct(context.Background(), c.iprot,ping,protocol.MessageName(ping), msn.Instance().NextId())
 	if err != nil{
 		return
 	}
@@ -204,86 +208,86 @@ func (c *ServantClientConn) Ping(ctx network.Context) {
 	ctx.PostMessage(ctx.Self(), b)
 }
 
-func (c *ServantClientConn) onRpcPing(ctx network.Context, iprot protocol.IProtocol) {
-	// ping := messages.NewRpcPingMessage()
-	// ping.Read(context.Background(), iprot)
-	// ping.VerifyKey += 1
+// func (c *ServantClientConn) onRpcPing(ctx network.Context, iprot protocol.IProtocol) {
+// 	// ping := messages.NewRpcPingMessage()
+// 	// ping.Read(context.Background(), iprot)
+// 	// ping.VerifyKey += 1
 
-	// b,err :=  messages.MarshalTStruct(context.Background(), c.oprot,ping,1)
-	// if err != nil{
-	// 	return
-	// }
-	// b,err = messages.Marshal(b)
-	// if err != nil{
-	// 	return
-	// }
+// 	// b,err :=  messages.MarshalTStruct(context.Background(), c.oprot,ping,1)
+// 	// if err != nil{
+// 	// 	return
+// 	// }
+// 	// b,err = messages.Marshal(b)
+// 	// if err != nil{
+// 	// 	return
+// 	// }
 
-	// ctx.PostMessage(ctx.Self(), b)
-}
+// 	// ctx.PostMessage(ctx.Self(), b)
+// }
 
-func (c *ServantClientConn) onRpcRequest(ctx network.Context, iprot protocol.IProtocol) {
-	request := messages.NewRpcRequestMessage()
-	request.Read(context.Background(), iprot)
+// func (c *ServantClientConn) onRpcRequest(ctx network.Context, iprot protocol.IProtocol) {
+// 	request := messages.NewRpcRequestMessage()
+// 	request.Read(context.Background(), iprot)
 
-	// 	//TODO: 这里需要抛给并行器
-	timeout := int64(request.Timeout) - (time.Now().UnixMilli() - int64(request.ForwardTime))
-	// 如果已超时
-	if timeout <= 0 {
-		return
-	}
-	rprot := protocol.NewBinaryProtocol()
-	defer rprot.Close()
-	rprot.Write(request.Message)
-	reqMsgName, _, _, err := rprot.ReadMessageBegin(context.Background())
-	if err != nil{
-		return
-	}
-	var messageEnvelope *MessageEnvelope
-	switch reqMsgName {
-	case "prvs.ForwardBundle":
-		rs := prvs.NewForwardBundle()
-		rs.Read(context.Background(),rprot)
-		rprot.Release()
-		rprot.Write(rs.Body)
-		messageEnvelope = NewMessageEnvelopePool(request.SequenceID, rs.Sender, nil)
-	default:
-		rprot.Release()
-		rprot.Write(request.Message)
-		messageEnvelope = NewMessageEnvelopePool(request.SequenceID, nil, nil)
-	}
+// 	// 	//TODO: 这里需要抛给并行器
+// 	timeout := int64(request.Timeout) - (time.Now().UnixMilli() - int64(request.ForwardTime))
+// 	// 如果已超时
+// 	if timeout <= 0 {
+// 		return
+// 	}
+// 	rprot := protocol.NewBinaryProtocol()
+// 	defer rprot.Close()
+// 	rprot.Write(request.Message)
+// 	reqMsgName, _, _, err := rprot.ReadMessageBegin(context.Background())
+// 	if err != nil{
+// 		return
+// 	}
+// 	var messageEnvelope *MessageEnvelope
+// 	switch reqMsgName {
+// 	case "prvs.ForwardBundle":
+// 		rs := prvs.NewForwardBundle()
+// 		rs.Read(context.Background(),rprot)
+// 		rprot.Release()
+// 		rprot.Write(rs.Body)
+// 		messageEnvelope = NewMessageEnvelopePool(request.SequenceID, rs.Sender, nil)
+// 	default:
+// 		rprot.Release()
+// 		rprot.Write(request.Message)
+// 		messageEnvelope = NewMessageEnvelopePool(request.SequenceID, nil, nil)
+// 	}
 
-	background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
-	background = NewCtxWithServantClientInfo(background, NewClientInfo(ctx, messageEnvelope))
-	_, err = c.processor.Process(background, rprot, iprot)
-	background = FreeCtxWithServantClientInfo(background)
-	if err != nil{
-		rprot.Release()
-		er := &messages.RpcError{Err: err.Error()}
-		rprot.WriteMessageBegin(context.Background(), protocol.MessageName(er), thrift.EXCEPTION, request.SequenceID)
-		er.Write(context.Background(), rprot)
-		rprot.WriteMessageEnd(context.Background())
+// 	background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
+// 	background = NewCtxWithServantClientInfo(background, NewClientInfo(ctx, messageEnvelope))
+// 	_, err = c.processor.Process(background, rprot, iprot)
+// 	background = FreeCtxWithServantClientInfo(background)
+// 	if err != nil{
+// 		rprot.Release()
+// 		er := &messages.RpcError{Err: err.Error()}
+// 		rprot.WriteMessageBegin(context.Background(), protocol.MessageName(er), thrift.EXCEPTION, request.SequenceID)
+// 		er.Write(context.Background(), rprot)
+// 		rprot.WriteMessageEnd(context.Background())
 		
-	 	response := messages.NewRpcResponseMessage()
-		response.Result_ = rprot.GetBytes()
-		response.SequenceID = request.SequenceID
-		rprot.Release()
-		rprot.WriteMessageBegin(context.Background(), protocol.MessageName(response), thrift.EXCEPTION, request.SequenceID)
-		response.Write(context.Background(),rprot)
-		rprot.WriteMessageEnd(context.Background())
-		b, err := messages.Marshal(rprot.GetBytes())
-		if err != nil{
-			return
-		}
-		ctx.PostMessage(ctx.Self(),b)
-	}
+// 	 	response := messages.NewRpcResponseMessage()
+// 		response.Result_ = rprot.GetBytes()
+// 		response.SequenceID = request.SequenceID
+// 		rprot.Release()
+// 		rprot.WriteMessageBegin(context.Background(), protocol.MessageName(response), thrift.EXCEPTION, request.SequenceID)
+// 		response.Write(context.Background(),rprot)
+// 		rprot.WriteMessageEnd(context.Background())
+// 		b, err := messages.Marshal(rprot.GetBytes())
+// 		if err != nil{
+// 			return
+// 		}
+// 		ctx.PostMessage(ctx.Self(),b)
+// 	}
 
-	select {
-	case <-background.Done():
-		// 已超时，不再需要回复
-	default:
-	}
-	cancel()
-}
+// 	select {
+// 	case <-background.Done():
+// 		// 已超时，不再需要回复
+// 	default:
+// 	}
+// 	cancel()
+// }
 
 func (c *ServantClientConn) incarnateActor() {
 	c.actor = c.Servant.Config.Producer(c)

@@ -12,15 +12,14 @@ import (
 
 func NewBinaryProtocol()*BinaryProtocol{
 	return &BinaryProtocol{
-		trans: NewTransLink(),
+		trans: NewTLinkBuffer(),
 	}
 }
 
 type BinaryProtocol struct {
-	trans  *TransLink
+	trans  *TLinkBuffer
 	cfg    *thrift.TConfiguration
 	buffer [64]byte
-	transport Transport
 }
 
 func (p BinaryProtocol) GetBytes()[]byte{
@@ -37,8 +36,7 @@ func (p *BinaryProtocol) Reader() circbuf.Reader{
 	return p.trans
 }
 func (p *BinaryProtocol)Release(){
-	p.trans.Close()
-	p.trans = NewTransLink()
+	p.trans = NewTLinkBuffer()
 }
 func (p *BinaryProtocol) Close(){
 	p.trans.Close()
@@ -54,7 +52,7 @@ func (p *BinaryProtocol) Skip(ctx context.Context, fieldType thrift.TType) (err 
 }
 
 func (p *BinaryProtocol) Transport() thrift.TTransport{
-	return &p.transport
+	return p.trans
 }
 /**
  * Writing Methods
@@ -88,7 +86,7 @@ func (p *BinaryProtocol) WriteMessageBegin(ctx context.Context, name string, typ
 }
 
 func (p *BinaryProtocol) WriteMessageEnd(ctx context.Context) error {
-	return p.trans.Flush()
+	return p.trans.LinkBuffer.Flush()
 }
 
 func (p *BinaryProtocol) WriteStructBegin(ctx context.Context, name string) error {

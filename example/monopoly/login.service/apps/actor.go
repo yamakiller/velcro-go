@@ -14,7 +14,7 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 
-	// mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
+	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
 	// "github.com/yamakiller/velcro-go/network"
@@ -71,15 +71,15 @@ func (actor *LoginActor) OnSignOut(ctx context.Context, req *pubs.SignOut) (_r *
 	accounts.SignOut(req.Token)
 
 	var (
-		// uid     string
+		uid     string
 		err     error
 		results map[string]string
 	)
 
-	// uid, err = rds.GetPlayerUID(ctx, sender)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	uid, err = rds.GetPlayerUID(ctx, sender)
+	if err != nil {
+		return nil, err
+	}
 
 	results, err = rds.FindPlayerData(ctx, sender)
 	if err != nil {
@@ -88,7 +88,7 @@ func (actor *LoginActor) OnSignOut(ctx context.Context, req *pubs.SignOut) (_r *
 	if results != nil {
 		// TODO:退出Battle
 		if battleSpaceId, ok := results[rdsconst.PlayerMapClientBattleSpaceId]; ok && battleSpaceId != "" {
-			// actor.submitRequest(ctx, &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid})
+			actor.submitRequestExitBattleSpace(ctx, battleSpaceId,uid)
 			// TODO: 是否需要判断执行失败
 		}
 	}
@@ -103,7 +103,7 @@ func (actor *LoginActor) OnSignOut(ctx context.Context, req *pubs.SignOut) (_r *
 }
 
 func (actor *LoginActor)  OnClientClosed(ctx context.Context, req *prvs.ClientClosed) (_err error){
-	_, err := rds.GetPlayerUID(ctx, req.ClientID)
+	uid, err := rds.GetPlayerUID(ctx,req.ClientID)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (actor *LoginActor)  OnClientClosed(ctx context.Context, req *prvs.ClientCl
 	if results != nil {
 		// TODO:退出Battle
 		if battleSpaceId, ok := results[rdsconst.PlayerMapClientBattleSpaceId]; ok && battleSpaceId != "" {
-			// actor.submitForwardBundleRequest(ctx,req.ClientID, &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid})
+			actor.submitForwardBundleRequestExitBattleSpace(ctx,req.ClientID, battleSpaceId,uid)
 			// TODO: 是否需要判断执行失败
 		}
 	}
@@ -124,13 +124,20 @@ func (actor *LoginActor)  OnClientClosed(ctx context.Context, req *prvs.ClientCl
 	}
 	return nil
 }
+func (actor *LoginActor)submitForwardBundleRequestExitBattleSpace(ctx context.Context, clientId *network.ClientID, battleSpaceId,uid string){
+	actor.submitForwardBundleRequest(ctx,clientId,&mprvs.RequestExitBattleSpaceServiceOnRequestExitBattleSpaceArgs{Req: &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid}},"OnRequestExitBattleSpace")
+}
+func (actor *LoginActor) submitRequestExitBattleSpace(ctx context.Context, battleSpaceId,uid string){
+	actor.submitRequest(ctx,&mprvs.RequestExitBattleSpaceServiceOnRequestExitBattleSpaceArgs{Req: &mprvs.RequestExitBattleSpace{BattleSpaceID: battleSpaceId, UID: uid}},"OnRequestExitBattleSpace")
+}
 
 func (actor *LoginActor) submitRequestCloseClient(ctx context.Context, clientId *network.ClientID) {
-	actor.submitRequest(ctx, &prvs.RequestGatewayCloseClient{Target: clientId},protocol.MessageName(&prvs.RequestGatewayCloseClient{}))
+	
+	actor.submitRequest(ctx,&prvs.RequestGatewayCloseClientServiceOnRequestGatewayCloseClientArgs{Req:  &prvs.RequestGatewayCloseClient{Target: clientId}},"OnRequestGatewayCloseClient")
 }
 
 func (actor *LoginActor) submitRequestGatewayAlterRule(ctx context.Context, clientId *network.ClientID,rule int32){
-	actor.submitRequest(ctx, &prvs.RequestGatewayAlterRule{Target: clientId,Rule: rule},protocol.MessageName(&prvs.RequestGatewayAlterRule{}))
+	actor.submitRequest(ctx, &prvs.RequestGatewayAlterRuleServiceOnRequestGatewayAlterRuleArgs{Req:  &prvs.RequestGatewayAlterRule{Target: clientId,Rule: rule}},"OnRequestGatewayAlterRule")
 }
 
 func (actor *LoginActor) submitForwardBundleRequest(ctx context.Context,clientId *network.ClientID, request thrift.TStruct, name string)([]byte, error) {
