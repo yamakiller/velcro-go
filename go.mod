@@ -66,3 +66,10 @@ require (
 	github.com/olivere/elastic v6.2.37+incompatible
 	github.com/onsi/gomega v1.30.0 // indirect
 )
+
+
+replace (
+	golang.org/x/crypto v0.18.0 => github.com/google/crypto v0.18.0
+	golang.org/x/net v0.20.0 =>  github.com/google/net v0.20.0
+	google.golang.org/grpc v1.60.1 => github.com/grpc/grpc-go v1.60.1
+)
