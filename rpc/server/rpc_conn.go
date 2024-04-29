@@ -5,16 +5,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apache/thrift/lib/go/thrift"
-	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/network"
+	"github.com/yamakiller/velcro-go/rpc/errs"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/utils/stringx"
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
-func NewRpcClientConn(s *RpcServer) RpcClient {
+/*func NewRpcClientConn(s *RpcServer) RpcClient {
 	conn := &RpcClientConn{
 		recvice:    circbuf.NewLinkBuffer(32),
 		register:   s.Register,
@@ -25,9 +25,156 @@ func NewRpcClientConn(s *RpcServer) RpcClient {
 	conn.message_agent = NewRpcClientMessageAgent(conn)
 
 	return conn
+}*/
+
+type IRpcConnector interface {
+	GetID() *network.ClientID
+	Destory() error
+
+	Accept(network.Context)
+	Ping(network.Context)
+	Recvice(network.Context)
+	Closed(network.Context)
+
+	referenceIncrement() int32
+	referenceDecrement() int32
 }
 
-type RpcClient interface {
+type RpcConnector struct {
+	id      *network.ClientID
+	recvice *circbuf.LinkBuffer // 接收缓冲区
+	//thrift        thrift.TProcessor   // thrift 处理器
+	thriftHandler protocol.IProtocol
+	managerAgent  IRpcManagerConnector
+
+	reference int32 // 引用计数器
+}
+
+func (rc *RpcConnector) GetID() *network.ClientID {
+	return rc.id
+}
+
+func (rc *RpcConnector) Destory() error {
+	var err error
+	if rc.id != nil {
+		err = rc.id.UserClose()
+		rc.id = nil
+	}
+
+	return err
+}
+
+func (rc *RpcConnector) Accept(ctx network.Context) {
+	rc.id = ctx.Self()
+	rc.reference = 1
+
+	rc.managerAgent.Register(ctx.Self(), rc)
+}
+
+func (rc *RpcConnector) Ping(ctx network.Context) {
+
+}
+
+func (rc *RpcConnector) Recvice(ctx network.Context) {
+	offset := 0
+	for {
+		n, err := rc.recvice.WriteBinary(ctx.Message()[offset:])
+		if err != nil {
+			ctx.Close(ctx.Self())
+			return
+		}
+		offset += n
+		if err = rc.recvice.Flush(); err != nil {
+			ctx.Close(ctx.Self())
+			return
+		}
+
+		msg, err := messages.UnMarshal(rc.recvice)
+		if err != nil {
+			ctx.Close(ctx.Self())
+			return
+		}
+
+		if err := rc.protocolHandler(ctx, msg, 0); err != nil {
+			vlog.Debugf(err.Error())
+			ctx.Close(ctx.Self())
+			return
+		}
+
+		if offset == len(ctx.Message()) {
+			break
+		}
+	}
+}
+
+func (rc *RpcConnector) Closed(ctx network.Context) {
+	rc.managerAgent.Unregister(ctx.Self())
+}
+
+func (rc *RpcConnector) protocolHandler(ctx network.Context, msg []byte, timeout int64) error {
+	rc.thriftHandler.Release()
+	rc.thriftHandler.Write(msg)
+
+	name, _, _, err := rc.thriftHandler.ReadMessageBegin(context.Background())
+	if err != nil {
+		return err
+	}
+
+	hashVal := stringx.StrToHash(name)
+	//TODO: 加入超时计算
+
+	switch hashVal {
+	case requestMessageID:
+
+		//var outMsg thrift.TStruct
+		req := &messages.RpcRequestMessage{}
+		if err := req.Read(context.Background(), rc.thriftHandler); err != nil {
+			return err
+		}
+
+		if err := rc.thriftHandler.ReadMessageEnd(context.Background()); err != nil {
+			return err
+		}
+
+		timeout := int64(req.Timeout) - (time.Now().UnixMilli() - int64(req.ForwardTime))
+		if timeout <= 0 {
+			// TODO: 超时什么都不做
+			return nil
+		}
+
+		rc.thriftHandler.Release()
+		rc.thriftHandler.Write(req.Message)
+
+		// 解码 req.Message
+		//reqName, _, _, err := rc.thriftHandler.ReadMessageBegin(context.Background())
+		if err != nil {
+			return err
+		}
+		//
+
+		// 执行请求
+		//rc.thrift.Process(context.Background(), outMsg)
+		break
+	case pingMessageID:
+		break
+	default:
+		return errs.ErrorRpcUnknownMessage
+	}
+
+	return nil
+}
+
+// RefInc 引用计数器+1
+func (rc *RpcConnector) referenceIncrement() int32 {
+	return atomic.AddInt32(&rc.reference, 1)
+}
+
+// RefDec 引用计数器-1
+func (rc *RpcConnector) referenceDecrement() int32 {
+	return atomic.AddInt32(&rc.reference, -1)
+}
+
+/*type RpcClient interface {
 	ClientID() *network.ClientID
 	Register(key thrift.TStruct, f thrift.TProcessorFunction)
 	Accept(ctx network.Context)
@@ -43,11 +190,11 @@ type RpcClient interface {
 }
 
 type RpcClientConn struct {
-	clientID *network.ClientID // 客户端ID
+	clientID  *network.ClientID   // 客户端ID
 	recvice   *circbuf.LinkBuffer // 接收缓冲区
 	processor thrift.TProcessor
-	oprot protocol.IProtocol
-	message_agent messageagent.IMessageAgent
+	oprot     protocol.IProtocol
+	//message_agent message.IMessageAgent
 	reference int32 // 引用计数器
 
 	register   func(*network.ClientID, RpcClient)
@@ -82,17 +229,17 @@ func (rcc *RpcClientConn) Recvice(ctx network.Context) {
 			return
 		}
 		offset += n
-		if err = rcc.recvice.Flush(); err !=nil{
+		if err = rcc.recvice.Flush(); err != nil {
 			ctx.Close(ctx.Self())
 			return
 		}
-	
-		msg,err := messages.UnMarshal(rcc.recvice)
-		if err !=nil{
+
+		msg, err := messages.UnMarshal(rcc.recvice)
+		if err != nil {
 			ctx.Close(ctx.Self())
 			return
 		}
-		if err := rcc.message_agent.Message(ctx,msg,0);err!= nil{
+		if err := rcc.message_agent.Message(ctx, msg, 0); err != nil {
 			vlog.Debugf(err.Error())
 			ctx.Close(ctx.Self())
 			return
@@ -140,7 +287,7 @@ func (rcc *RpcClientConn) onRpcRequest(ctx network.Context, iprot protocol.IProt
 	}
 	// 设置超时器
 	background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
-	ctxx :=NewCtxWithRpcClientContext(background, &RpcClientContext{sequenceID: request.SequenceID,
+	ctxx := NewCtxWithRpcClientContext(background, &RpcClientContext{sequenceID: request.SequenceID,
 		background: background,
 		context:    ctx})
 
@@ -160,7 +307,7 @@ func (rcc *RpcClientConn) onRpcResponse(ctx network.Context, iprot protocol.IPro
 	iprot.Release()
 	iprot.Write(response.Result_)
 	background := context.Background()
-	ctxx :=NewCtxWithRpcClientContext(background, &RpcClientContext{sequenceID: response.SequenceID,
+	ctxx := NewCtxWithRpcClientContext(background, &RpcClientContext{sequenceID: response.SequenceID,
 		background: background,
 		context:    ctx})
 	rcc.processor.Process(ctxx, iprot, iprot)
@@ -186,3 +333,4 @@ func (rcc *RpcClientConn) referenceIncrement() int32 {
 func (rcc *RpcClientConn) referenceDecrement() int32 {
 	return atomic.AddInt32(&rcc.reference, -1)
 }
+*/

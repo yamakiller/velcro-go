@@ -89,17 +89,18 @@ func UnmarshalThriftException(tProt thrift.TProtocol) error {
 // 1. `method` is only used for generic calls
 // 2. if the buf contains an exception, you should call UnmarshalThriftException instead.
 func UnmarshalThriftData(ctx context.Context, codec remote.PayloadCodec, method string, buf []byte, data interface{}) error {
-	c, ok := codec.(*thriftCodec)
+	/*c, ok := codec.(*thriftCodec)
 	if !ok {
 		c = defaultCodec
 	}
-	//TODO: 
+	//TODO:
 	tProt := NewBinaryProtocol(remote.NewReaderBuffer(buf))
 	err := c.unmarshalThriftData(ctx, tProt, method, data, len(buf))
 	if err == nil {
 		tProt.Recycle()
 	}
-	return err
+	return err*/
+	return nil
 }
 
 // unmarshalThriftData only decodes the data (after methodName, msgType and seqId)

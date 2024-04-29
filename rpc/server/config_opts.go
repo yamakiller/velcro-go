@@ -20,8 +20,8 @@ func WithKleepalive(kleepalive int32) ConnConfigOption {
 	}
 }
 
-func WithPool(f RpcPool) ConnConfigOption {
+func WithPool(allocator IRpcAllocator) ConnConfigOption {
 	return func(config *ConnConfig) {
-		config.Pool = f
+		config.Allocator = allocator
 	}
 }

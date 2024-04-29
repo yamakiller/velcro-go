@@ -2,8 +2,7 @@ package rpcinfo
 
 import (
 	"context"
-
-	"github.com/yamakiller/velcro-go/rpc/internal"
+	//"github.com/yamakiller/velcro-go/rpc/internal"
 )
 
 type ctxRPCInfoKeyType struct{}
@@ -29,9 +28,9 @@ func GetRPCInfo(ctx context.Context) RPCInfo {
 
 // PutRPCInfo recycles the RPCInfo. This function is for internal use only.
 func PutRPCInfo(ri RPCInfo) {
-	if v, ok := ri.(internal.Reusable); ok {
-		v.Recycle()
-	}
+	//if v, ok := ri.(internal.Reusable); ok {
+	//	v.Recycle()
+	//}
 }
 
 // FreezeRPCInfo returns a new context containing an RPCInfo that is safe

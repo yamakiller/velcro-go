@@ -11,7 +11,6 @@ import (
 	"unsafe"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/gofunc"
 	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/errs"
@@ -54,8 +53,8 @@ func NewLongConn(ascription LongConnPool, usedLastTime int64) *LongConn {
 		response:     protocol.NewBinaryProtocol(),
 	}
 	conn.processor = messages.NewRpcServiceProcessor(conn)
-	conn.message_agent = NewMessageAgent(conn)
-	conn.guardian_message_agent = NewGuardianMessageAgent(conn)
+	//conn.message_agent = NewMessageAgent(conn)
+	//conn.guardian_message_agent = NewGuardianMessageAgent(conn)
 
 	return conn
 }
@@ -80,8 +79,8 @@ type LongConn struct {
 	request            *protocol.BinaryProtocol
 	response           *protocol.BinaryProtocol
 	processor          thrift.TProcessor
-	message_agent      messageagent.IMessageAgent
-	guardian_message_agent messageagent.IMessageAgent
+	//message_agent          messageagent.IMessageAgent
+	//guardian_message_agent messageagent.IMessageAgent
 }
 
 func (c *LongConn) Dial(addr string, timeout time.Duration) error {
@@ -126,9 +125,9 @@ func (c *LongConn) RequestMessage(message thrift.TStruct, name string, timeout i
 		return nil, errors.New("connect closed")
 	}
 	seq := msn.Instance().NextId()
-	msg,err :=  messages.MarshalTStruct(context.Background(),c.request,message,name,seq)
-	if err != nil{
-		return nil,err
+	msg, err := messages.MarshalTStruct(context.Background(), c.request, message, name, seq)
+	if err != nil {
+		return nil, err
 	}
 
 	req := &messages.RpcRequestMessage{
@@ -138,9 +137,9 @@ func (c *LongConn) RequestMessage(message thrift.TStruct, name string, timeout i
 		Message:     msg,
 	}
 
-	msg,err =  messages.MarshalTStruct(context.Background(),c.request,req,protocol.MessageName(req),seq)
-	if err != nil{
-		return nil,err
+	msg, err = messages.MarshalTStruct(context.Background(), c.request, req, protocol.MessageName(req), seq)
+	if err != nil {
+		return nil, err
 	}
 
 	future := &Future{
@@ -152,7 +151,7 @@ func (c *LongConn) RequestMessage(message thrift.TStruct, name string, timeout i
 		err:        nil,
 		t:          time.NewTimer(time.Duration(timeout) * time.Millisecond),
 	}
-	
+
 	b, err := messages.Marshal(msg)
 	if err != nil {
 		future.cond = nil
@@ -239,20 +238,20 @@ func (c *LongConn) reader() {
 		offsetWrite = 0
 		for {
 			nWrite, err = recvice.WriteBinary(readTempBuffer[offsetWrite:])
-			if err != nil{
+			if err != nil {
 				goto exit_reader_lable
 			}
 			offsetWrite += nWrite
 			if err := recvice.Flush(); err != nil {
 				goto exit_reader_lable
 			}
-			msg,err :=  messages.UnMarshal(recvice)
-			if msg == nil || err != nil{
+			msg, err := messages.UnMarshal(recvice)
+			if msg == nil || err != nil {
 				goto exit_reader_lable
 			}
-			if err := c.message_agent.Message(nil,msg,0);err!= nil{
-				goto exit_reader_lable
-			}
+			//if err := c.message_agent.Message(nil, msg, 0); err != nil {
+			//	goto exit_reader_lable
+			//}
 			if offsetWrite == nRead {
 				break
 			}
@@ -279,8 +278,8 @@ func (c *LongConn) guardian() {
 			break
 		}
 
-		c.guardian_message_agent.Message(nil,msg.([]byte),0)
-		
+		//c.guardian_message_agent.Message(nil, msg.([]byte), 0)
+
 	}
 exit_guardian_lable:
 	if c.ascription != nil {

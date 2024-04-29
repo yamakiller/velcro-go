@@ -10,4 +10,5 @@ var (
 	ErrorRpcConnectMaxmize          = errors.New("rpc connect is maximize")
 	ErrorInvalidRpcConnect          = errors.New("invalid rpc connect")
 	ErrorRpcConnPoolClosed          = errors.New("rpc connector pool: closed")
+	ErrorRpcUnknownMessage          = errors.New("rpc unknown message")
 )

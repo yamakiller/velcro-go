@@ -43,7 +43,8 @@ func (binaryProtocol) WriteStructEnd(ctx context.Context, buf []byte) int {
 
 func (binaryProtocol) WriteFieldBegin(ctx context.Context, buf []byte, name string, typeID thrift.TType, id int16) int {
 	//TODO: 没懂
-	return Binary.WriteByte(ctx, buf, int8(typeID)) + Binary.WriteI16(buf[1:], uint8(id))
+	//return Binary.WriteByte(ctx, buf, int8(typeID)) + Binary.WriteI16(buf[1:], uint8(id))
+	return 1
 }
 
 func (binaryProtocol) WriteFieldEnd(ctx context.Context, buf []byte) int {

@@ -5,7 +5,6 @@ import (
 	"math"
 	"sync/atomic"
 
-	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
@@ -46,9 +45,9 @@ type ClientConn struct {
 	ruleID   int32  //角色ID
 	secret   []byte //密钥
 	recvice  *circbuf.LinkBuffer
-	message_agent  messageagent.IMessageAgent
+	//message_agent messageagent.IMessageAgent
 
-	ping     uint64
+	ping uint64
 	// requestTimeout int64 //最大超时时间 毫秒级
 	reference int32 //引用计数器
 }
@@ -79,7 +78,7 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 	defer iprot.Close()
 	dl.ping = fastrand.Uint64n(math.MaxUint64)
 	msg := &pubs.PingMsg{VerificationKey: int64(dl.ping)}
-	buf, err := messages.MarshalTStruct(context.Background(),iprot, msg, protocol.MessageName(msg), msn.Instance().NextId())
+	buf, err := messages.MarshalTStruct(context.Background(), iprot, msg, protocol.MessageName(msg), msn.Instance().NextId())
 	if err != nil {
 		return
 	}
@@ -133,11 +132,11 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 			continue
 		}
 
-		if err := dl.message_agent.Message(ctx,msg,0); err != nil{
+		/*if err := dl.message_agent.Message(ctx, msg, 0); err != nil {
 			vlog.Error(err.Error())
 			ctx.Close(ctx.Self())
 			return
-		}
+		}*/
 	}
 }
 

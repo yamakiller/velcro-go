@@ -4,8 +4,6 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
-
-	"github.com/yamakiller/velcro-go/rpc/internal"
 )
 
 var (
@@ -76,7 +74,7 @@ func (r *rpcInfo) Recycle() {
 	if !PoolEnabled() {
 		return
 	}
-	if v, ok := r.from.(internal.Reusable); ok {
+	/*if v, ok := r.from.(internal.Reusable); ok {
 		v.Recycle()
 	}
 	if v, ok := r.to.(internal.Reusable); ok {
@@ -90,7 +88,7 @@ func (r *rpcInfo) Recycle() {
 	}
 	if v, ok := r.stats.(internal.Reusable); ok {
 		v.Recycle()
-	}
+	}*/
 	r.zero()
 	rpcInfoPool.Put(r)
 }

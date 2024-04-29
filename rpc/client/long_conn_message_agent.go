@@ -1,19 +1,6 @@
 package client
 
-import (
-	"context"
-	"errors"
-	"sync/atomic"
-	"time"
-	"unsafe"
-
-	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
-	"github.com/yamakiller/velcro-go/network"
-	"github.com/yamakiller/velcro-go/rpc/messages"
-	"github.com/yamakiller/velcro-go/rpc/protocol"
-)
-
-func NewMessageAgent(conn *LongConn)messageagent.IMessageAgent{
+/*func NewMessageAgent(conn *LongConn)messageagent.IMessageAgent{
 	repeat := messageagent.NewRepeatMessageAgent()
 	repeat.Register(protocol.MessageName(&messages.RpcResponseMessage{}),NewRpcResponseMessageAgent(conn))
 	repeat.Register(protocol.MessageName(&messages.RpcPingMessage{}),NewRpcPingMessageAgent(conn))
@@ -54,7 +41,7 @@ func (slf *RpcPingMessageAgent) Method(ctx network.Context, seqId int32, timeout
 	if err != nil {
 		return err
 	}
-	
+
 	b,err = messages.Marshal(b)
 	if err != nil{
 		return err
@@ -87,7 +74,7 @@ func (slf *RpcResponseMessageAgent) UnMarshal(msg []byte) error {
 
 
 func (slf *RpcResponseMessageAgent) Method(ctx network.Context, seqId int32, timeout int64) error {
-	response := &messages.RpcGuardianResponseMessage{SequenceID:  slf.message.SequenceID,Result_:  slf.message.Result_} 
+	response := &messages.RpcGuardianResponseMessage{SequenceID:  slf.message.SequenceID,Result_:  slf.message.Result_}
 	msg,_:= messages.MarshalTStruct(context.Background(),slf.iprot,response,protocol.MessageName(response),response.SequenceID)
 	slf.c.mailbox <- msg
 	return nil
@@ -118,7 +105,7 @@ func (slf *RpcGuardianResponseMessageAgent) UnMarshal(msg []byte) error {
 	if slf.message.Result_ != nil{
 		slf.iprot.Release()
 		slf.iprot.Write(slf.message.Result_)
-		
+
 		if name,_,_ := messages.UnMarshalTStruct(context.Background(), slf.iprot, slf.err); name != protocol.MessageName(slf.err){
 			slf.err.Err = ""
 		}
@@ -151,4 +138,4 @@ func (slf *RpcGuardianResponseMessageAgent) Method(ctx network.Context, seqId in
 	future.cond.Signal()
 	future.cond.L.Unlock()
 	return nil
-}
+}*/

@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	protomessge "github.com/yamakiller/velcro-go/cluster/gateway/protomessage"
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/protocols/pubs"
@@ -19,17 +18,17 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 )
 
-func NewPubkeyMessageAgent(dl *ClientConn)messageagent.IMessageAgent{
+/*func NewPubkeyMessageAgent(dl *ClientConn) messageagent.IMessageAgent {
 	return &PubkeyMessageAgent{
 		dl: dl,
 	}
-}
+}*/
 
 type PubkeyMessageAgent struct {
 	dl *ClientConn
 }
 
-func (p *PubkeyMessageAgent) Message(ctx network.Context, msg []byte,timeout int64) error {
+func (p *PubkeyMessageAgent) Message(ctx network.Context, msg []byte, timeout int64) error {
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(msg)
@@ -45,11 +44,11 @@ func (p *PubkeyMessageAgent) Message(ctx network.Context, msg []byte,timeout int
 		return err
 	}
 	err = p.onPubkeyReply(ctx, message, iprot, seqid)
-	if err == nil{
-		repeat := messageagent.NewRepeatMessageAgent()
-		repeat.Register(protocol.MessageName(&pubs.RequestMessage{}),NewRequestMessageAgent(p.dl))
-		repeat.Register(protocol.MessageName(&pubs.PingMsg{}),NewPingMessageAgent(p.dl))
-		p.dl.message_agent = repeat
+	if err == nil {
+		//repeat := messageagent.NewRepeatMessageAgent()
+		//repeat.Register(protocol.MessageName(&pubs.RequestMessage{}), NewRequestMessageAgent(p.dl))
+		//repeat.Register(protocol.MessageName(&pubs.PingMsg{}), NewPingMessageAgent(p.dl))
+		//p.dl.message_agent = repeat
 	}
 	return err
 }
@@ -106,42 +105,42 @@ func (p *PubkeyMessageAgent) onPubkeyReply(ctx network.Context, message *pubs.Pu
 	return nil
 }
 
-func NewGatewayMessageAgent(dl *ClientConn)messageagent.IMessageAgent{
+/*func NewGatewayMessageAgent(dl *ClientConn) messageagent.IMessageAgent {
 	repeat := messageagent.NewRepeatMessageAgent()
-	repeat.Register(protocol.MessageName(&pubs.RequestMessage{}),NewRequestMessageAgent(dl))
-	repeat.Register(protocol.MessageName(&pubs.PingMsg{}),NewPingMessageAgent(dl))
+	repeat.Register(protocol.MessageName(&pubs.RequestMessage{}), NewRequestMessageAgent(dl))
+	repeat.Register(protocol.MessageName(&pubs.PingMsg{}), NewPingMessageAgent(dl))
 	return repeat
-}
+}*/
 
-func NewPingMessageAgent(dl *ClientConn) *PingMessageAgent{
+func NewPingMessageAgent(dl *ClientConn) *PingMessageAgent {
 	return &PingMessageAgent{
-		dl: dl,
+		dl:      dl,
 		message: pubs.NewPingMsg(),
 	}
 }
 
-type PingMessageAgent struct{
-	dl *ClientConn
+type PingMessageAgent struct {
+	dl      *ClientConn
 	message *pubs.PingMsg
 }
 
-func (pp *PingMessageAgent) UnMarshal(msg []byte)error{
+func (pp *PingMessageAgent) UnMarshal(msg []byte) error {
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(msg)
-	if _,_,_,err := iprot.ReadMessageBegin(context.Background());err != nil{
+	if _, _, _, err := iprot.ReadMessageBegin(context.Background()); err != nil {
 		return err
 	}
-	if err := pp.message.Read(context.Background(),iprot); err != nil{
+	if err := pp.message.Read(context.Background(), iprot); err != nil {
 		return err
 	}
-	if err := iprot.ReadMessageEnd(context.Background()); err != nil{
+	if err := iprot.ReadMessageEnd(context.Background()); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (pp *PingMessageAgent) Method(ctx network.Context, seqId int32,timeout int64) error{
+func (pp *PingMessageAgent) Method(ctx network.Context, seqId int32, timeout int64) error {
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	if pp.dl.ping == 0 {
@@ -149,57 +148,56 @@ func (pp *PingMessageAgent) Method(ctx network.Context, seqId int32,timeout int6
 	}
 
 	if pp.dl.ping+1 != uint64(pp.message.VerificationKey) {
-		return fmt.Errorf("ping reply error %d/%d",pp. dl.ping+1, uint64(pp.message.VerificationKey) )
+		return fmt.Errorf("ping reply error %d/%d", pp.dl.ping+1, uint64(pp.message.VerificationKey))
 	}
 	pp.dl.ping = 0
 	return nil
 }
 
-
 func NewRequestMessageAgent(dl *ClientConn) *RequestMessageAgent {
 	return &RequestMessageAgent{
-		dl:                dl,
+		dl:      dl,
 		message: pubs.NewRequestMessage(),
 	}
 }
 
 type RequestMessageAgent struct {
-	dl *ClientConn
+	dl      *ClientConn
 	message *pubs.RequestMessage
 }
 
-func (rp *RequestMessageAgent) UnMarshal(msg []byte)error{
+func (rp *RequestMessageAgent) UnMarshal(msg []byte) error {
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(msg)
-	if _,_,_,err := iprot.ReadMessageBegin(context.Background());err != nil{
+	if _, _, _, err := iprot.ReadMessageBegin(context.Background()); err != nil {
 		return err
 	}
-	if err := rp.message.Read(context.Background(),iprot); err != nil{
+	if err := rp.message.Read(context.Background(), iprot); err != nil {
 		return err
 	}
-	if err := iprot.ReadMessageEnd(context.Background()); err != nil{
+	if err := iprot.ReadMessageEnd(context.Background()); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rp *RequestMessageAgent) Method(ctx network.Context, seqId int32,timeout int64)error {
+func (rp *RequestMessageAgent) Method(ctx network.Context, seqId int32, timeout int64) error {
 	iprot := protocol.NewBinaryProtocol()
 	defer iprot.Close()
 	iprot.Write(rp.message.Msg)
-	name ,_,seq,err :=  iprot.ReadMessageBegin(context.Background())
-	if err != nil{
+	name, _, seq, err := iprot.ReadMessageBegin(context.Background())
+	if err != nil {
 		return err
 	}
 	r := rp.dl.gateway.FindRouter(name)
 	if r == nil {
 		return fmt.Errorf("%s message unfound router",
-		name)
+			name)
 	}
 	if !r.IsRulePass(rp.dl.ruleID) {
 		return fmt.Errorf("%s message Insufficient permissions",
-		name)
+			name)
 	}
 	forwardBundle := &prvs.ForwardBundle{
 		Sender: rp.dl.clientID,
@@ -224,10 +222,10 @@ func (rp *RequestMessageAgent) Method(ctx network.Context, seqId int32,timeout i
 		return nil
 	}
 	if result == nil {
-		return fmt.Errorf("message %s result is nil",name)
+		return fmt.Errorf("message %s result is nil", name)
 	}
 
-	b, msge := protomessge.Marshal(result,rp.dl.secret)
+	b, msge := protomessge.Marshal(result, rp.dl.secret)
 	if msge != nil {
 		return fmt.Errorf("requesting pubs.Error marshal %s message fail[error:%s]", name, msge.Error())
 	}

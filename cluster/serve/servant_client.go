@@ -5,14 +5,12 @@ import (
 	"math"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	messageagent "github.com/yamakiller/velcro-go/cluster/agent/message"
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/rpc/client/msn"
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/rpc/protocol"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
-	"github.com/yamakiller/velcro-go/vlog"
 )
 
 // Background context.Context
@@ -20,13 +18,13 @@ import (
 // ServantClientContext
 
 type ServantClientConn struct {
-	Servant *Servant
-	actor   ServantClientActor
-	recvice  *circbuf.LinkBuffer
+	Servant   *Servant
+	actor     ServantClientActor
+	recvice   *circbuf.LinkBuffer
 	iprot     protocol.IProtocol
 	oprot     protocol.IProtocol
 	processor thrift.TProcessor
-	message_agent  messageagent.IMessageAgent
+	//message_agent  messageagent.IMessageAgent
 }
 
 func (c *ServantClientConn) Accept(ctx network.Context) {
@@ -43,7 +41,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 	for {
 		if offset < len(ctx.Message()) {
 			n, werr := c.recvice.WriteBinary(ctx.Message()[offset:])
-			if werr != nil{
+			if werr != nil {
 				ctx.Close(ctx.Self())
 				return
 			}
@@ -54,17 +52,17 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			}
 		}
 
-		msg, err := messages.UnMarshal(c.recvice)
-		if err != nil {
-			vlog.Errorf("unmarshal message error:%v", err.Error())
-			ctx.Close(ctx.Self())
-			return
-		}
-		if err := c.message_agent.Message(ctx,msg,0); err != nil{
-			vlog.Errorf(err.Error())
-			ctx.Close(ctx.Self())
-			return
-		}
+		//msg, err := messages.UnMarshal(c.recvice)
+		//if err != nil {
+		//	vlog.Errorf("unmarshal message error:%v", err.Error())
+		///		ctx.Close(ctx.Self())
+		//			return
+		//		}
+		//if err := c.message_agent.Message(ctx, msg, 0); err != nil {
+		//	vlog.Errorf(err.Error())
+		//	ctx.Close(ctx.Self())
+		//	return
+		//}
 		// c.iprot.Release()
 		// c.iprot.Write(msg)
 		// name, _, _, _ := c.iprot.ReadMessageBegin(context.Background())
@@ -196,13 +194,13 @@ func (c *ServantClientConn) Closed(ctx network.Context) {
 func (c *ServantClientConn) Ping(ctx network.Context) {
 
 	ping := messages.NewRpcPingMessage()
-	ping.VerifyKey =int64(fastrand.Uint64n(math.MaxUint64))
-	b,err :=  messages.MarshalTStruct(context.Background(), c.iprot,ping,protocol.MessageName(ping), msn.Instance().NextId())
-	if err != nil{
+	ping.VerifyKey = int64(fastrand.Uint64n(math.MaxUint64))
+	b, err := messages.MarshalTStruct(context.Background(), c.iprot, ping, protocol.MessageName(ping), msn.Instance().NextId())
+	if err != nil {
 		return
 	}
-	b,err = messages.Marshal(b)
-	if err != nil{
+	b, err = messages.Marshal(b)
+	if err != nil {
 		return
 	}
 	ctx.PostMessage(ctx.Self(), b)
@@ -266,7 +264,7 @@ func (c *ServantClientConn) Ping(ctx network.Context) {
 // 		rprot.WriteMessageBegin(context.Background(), protocol.MessageName(er), thrift.EXCEPTION, request.SequenceID)
 // 		er.Write(context.Background(), rprot)
 // 		rprot.WriteMessageEnd(context.Background())
-		
+
 // 	 	response := messages.NewRpcResponseMessage()
 // 		response.Result_ = rprot.GetBytes()
 // 		response.SequenceID = request.SequenceID

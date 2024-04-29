@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/yamakiller/velcro-go/internal/configutil"
+	"github.com/yamakiller/velcro-go/utils/internal/configutil"
 	"gopkg.in/yaml.v2"
 )
 

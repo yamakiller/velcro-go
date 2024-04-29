@@ -5,7 +5,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/yamakiller/velcro-go/rpc/internal"
+	//"github.com/yamakiller/velcro-go/rpc/internal"
 	"github.com/yamakiller/velcro-go/rpc/utils/discovery"
 	"github.com/yamakiller/velcro-go/rpc/utils/rpcinfo"
 	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
@@ -180,11 +180,11 @@ func (ri *remoteInfo) zero() {
 
 // Recycle is used to recycle the remoteInfo.
 func (ri *remoteInfo) Recycle() {
-	if r, ok := ri.instance.(internal.Reusable); ok {
+	/*if r, ok := ri.instance.(internal.Reusable); ok {
 		r.Recycle()
 	}
 	ri.zero()
-	remoteInfoPool.Put(ri)
+	remoteInfoPool.Put(ri)*/
 }
 
 // NewRemoteInfo creates a remoteInfo wrapping the given endpointInfo.

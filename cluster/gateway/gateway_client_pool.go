@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"sync"
+
 	"github.com/yamakiller/velcro-go/network"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 )
@@ -20,12 +21,12 @@ func NewDefaultGatewayClientPool(g *Gateway) GatewayClientPool {
 			conn := &ClientConn{gateway: g,
 				recvice: circbuf.NewLinkBuffer(32),
 			}
-			
-			if conn.gateway.encryption == nil {
-				conn.message_agent = NewGatewayMessageAgent(conn)
-			}else{
-				conn.message_agent = NewPubkeyMessageAgent(conn)
-			}
+
+			//if conn.gateway.encryption == nil {
+			//	conn.message_agent = NewGatewayMessageAgent(conn)
+			//}else{
+			//	conn.message_agent = NewPubkeyMessageAgent(conn)
+			//}
 			return conn
 		},
 	}}

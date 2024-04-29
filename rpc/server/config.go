@@ -8,12 +8,12 @@ type ConnConfig struct {
 	network.Config
 
 	Kleepalive int32
-	Pool       RpcPool
+	Allocator  IRpcAllocator
 }
 
 func defaultConfig() *ConnConfig {
 	return &ConnConfig{
 		Kleepalive: 10 * 1000,
-		Pool:       nil,
+		Allocator:  nil,
 	}
 }
