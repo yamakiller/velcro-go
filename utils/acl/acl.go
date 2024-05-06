@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
 	"github.com/yamakiller/velcro-go/utils/endpoint"
+	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 type RejectFunc func(ctx context.Context, request interface{}) (reason error)

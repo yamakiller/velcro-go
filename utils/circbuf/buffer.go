@@ -1,163 +1,145 @@
 package circbuf
 
-// Reader 是 nocopy 读取操作的集合.
-//
-// 为了方便使用, 建议将Reader实现为阻塞接口,
-// 而不是简单地获取缓冲区.
-// 例如, 如果少于n个字节, 调用Next(n)的返回应该被阻塞, 除非超时. 保证返回值符合要求, 否则返回错误.
+// Reader 是非复制读取操作的集合
+// 为了方便使用,建议将Reader实现为阻塞接口,而不是简单地获取缓冲区.
+// 例如, 如果少于 n 个字节，则调用 Next(n) 的返回应该被阻塞,除非超时.
+// 保证返回值符合要求, 否则返回错误.
 type Reader interface {
-	// Next 返回一个包含缓冲区中接下来的 n 个字节的切片, 推进缓冲区, 就好像这些字节已由 Read 返回一样.
+	// Next 返回包含缓冲区中接下来的 n 个字节的切片,
+	// 推进缓冲区，就好像字节已由 Read 返回一样.
 	//
-	// 如果缓冲区中的字节数少于n, 则Next返回将被阻塞，直到数据足够或发生错误(例如等待超时).
+	// 如果缓冲区中的字节数少于 n,下次返回将被阻止,直到数据足够或发生错误
+	// (比如等待超时)
 	//
-	// 切片 p 仅在下次调用 Release 方法之前有效. Next 并不是全局最优的, 具体场景推荐使
-	// 用 Skip、ReadString、ReadBinary 方法.
+	// 切片 p 仅在下次调用 Release 方法之前有效.
+	// Next不是全局最优的,还有Skip、ReadString,对于特定场景,建议使用 ReadBinary 方法.
 	//
-	// Return: len(p) 必须为 n 或 0, 并且 p 和 error 不能同时为 nil
+	// Return: 在err为空时,buf不为空.
 	Next(n int) (p []byte, err error)
 
-	// Peek 返回接下来的n个字节而不推进读取器, 其它行为与Next相同.
+	// Peek 返回接下来的 n 个字节而不推进读取器.
+	// 其他行为与Next相同.
 	Peek(n int) (buf []byte, err error)
 
-	// Skip 接下来的 n 个字节并推进读取器, 这是在不使用下一个数据时更快的 Next 实现.
+	// 跳过接下来的 n 个字节并推进Reader,当不使用下一个数据时,这是 Next 的更快实现.
 	Skip(n int) (err error)
 
-	// Until 读取直到输入中第一次出现 delim，返回一个切片在输入缓冲区中以 delim 停止.
-	// 如果 Until 在找到分隔符之前遇到错误,它将返回缓冲区中的所有数据以及错误本身(通常为 ErrEOF 或 ErrConnClosed).
-	// 仅当行不以 delim 结尾时, 才会返回 err != nil.
+	// Until 读取直到输入中第一次出现 delim,返回切片在输入缓冲区中以 delim 停止.
+	// 如果 Until 在查找分隔符之前遇到错误, 它返回缓冲区中的所有数据以及错误本身(经常出现 ErrEOF 或 ErrConnClosed),
+	// 直到仅当行不以 delim 结尾时才返回 err != nil.
 	Until(delim byte) (line []byte, err error)
 
-	// ReadString 当需要返回字符串时, Next 是更快的实现.
-	// It replaces:
-	//
-	//  var p, err = Next(n)
-	//  return string(p), err
-	//
+	// ReadString 当需要返回字符串时，Next 是更快的实现
+	// 类似于:
+	// 	var p, err = Next(n)
+	// 	return string(p), err
 	ReadString(n int) (s string, err error)
-
-	// ReadBinary 当需要返回不与底层共享的切片副本时，是 Next 的更快实现.
-	// It replaces:
-	//
-	//  var p, err = Next(n)
-	//  var b = make([]byte, n)
-	//  copy(b, p)
-	//  return b, err
-	//
+	// ReadBinary 当需要返回不与底层共享的切片副本时,是 比Next 的更快实现.
+	// 类似于:
+	// 	var p, err = Next(n)
+	// 	var b = make([]byte, n)
+	// 	copy(b, p)
+	// 	return b, err
 	ReadBinary(n int) (p []byte, err error)
-
-	// ReadByte 当需要返回字节时，Next 是更快的实现.
-	// It replaces:
-	//
+	// Readbyte 当需要返回字节时,是比Next 的更快实现.
+	// 类似于:
 	//  var p, err = Next(1)
 	//  return p[0], err
-	//
 	ReadByte() (b byte, err error)
-
-	// Slice 返回一个新的 Reader, 其中包含该 Reader 的接下来 n 个字节.
-	//
-	// 如果你想使用 Next 返回的 []byte 来创建一个新的 Reader，Slice 已经做到了, 并且该操作是零拷贝的.
-	// 另外, Slice也将发布这款Reader. 逻辑伪代码类似:
-	//
+	// Slice 返回一个新的 Reader，其中包含该 Reader 的接下来 n 个字.
+	// 类似于:
 	//  var p, err = this.Next(n)
-	//  var reader = new Reader(p) // pseudocode
+	//  var reader = new Reader(p)
 	//  this.Release()
 	//  return reader, err
 	//
 	Slice(n int) (r Reader, err error)
-
-	// Release 所有读取的切片占用的内存空间. 在确认之前读取的数据不再使用后, 需要主动执行该方法来回收内存.
-	// 调用Release后,通过Next、Peek、Skip等方法获取的切片将成为无效地址, 无法再使用.
+	// 释放内存资源
 	Release() (err error)
-
-	// Len 返回阅读器中可读数据的总长度.
-	Len() (length int)
+	// Length 返回Reader总字节数.
+	Length() (length int)
 }
 
-// Writer is a collection of operations for nocopy writes.
+// Writer 是 nocopy 写入操作的集合.
 //
-// The usage of the design is a two-step operation, first apply for a section of memory,
-// fill it and then submit. E.g:
-//
+// 该设计的使用是两步操作，首先申请一段内存, 然后填充例如:
 //	var buf, _ = Malloc(n)
 //	buf = append(buf[:0], ...)
 //	Flush()
 //
-// Note that it is not recommended to submit self-managed buffers to Writer.
-// Since the writer is processed asynchronously, if the self-managed buffer is used and recycled after submission,
-// it may cause inconsistent life cycle problems. Of course this is not within the scope of the design.
+// 注意, 不建议将自管理缓冲区提交给Writer.
+// 由于writer是异步处理的, 如果使用了自管理的buffer并在提交后回收,
+// 它可能会导致不一致的生命周期问题。当然这不在设计范围之内.
 type Writer interface {
-	// Malloc returns a slice containing the next n bytes from the buffer,
-	// which will be written after submission(e.g. Flush).
+	// Malloc 返回包含缓冲区中接下来的 n 个字节的切片,
+	// 将在写入后提交.
 	//
-	// The slice p is only valid until the next submit(e.g. Flush).
-	// Therefore, please make sure that all data has been written into the slice before submission.
+	// 注意, 切片 p 仅在下一次提交之前有效(如 Flush).
+	// 因此, 提交前请确保所有数据已写入切片
 	Malloc(n int) (buf []byte, err error)
 
-	// WriteString is a faster implementation of Malloc when a string needs to be written.
-	// It replaces:
-	//
-	//  var buf, err = Malloc(len(s))
-	//  n = copy(buf, s)
+	// WriteString 当需要写入字符串时，是 Malloc 的更快实现.
+	// 类似于:
+	//	var buf, err = Malloc(len(s))
+	//	n = copy(buf, s)
 	//  return n, err
 	//
-	// The argument string s will be referenced based on the original address and will not be copied,
-	// so make sure that the string s will not be changed.
+	// 注意, 参数字符串 s 将根据原始地址进行引用, 不会被复制
+	// 所以要确保字符串 s 不会被改变.
 	WriteString(s string) (n int, err error)
 
-	// WriteBinary is a faster implementation of Malloc when a slice needs to be written.
-	// It replaces:
+	// WriteBinary 当需要写入切片时，是 Malloc 的更快实现.
+	// 类似于:
+	//	var buf, err = Malloc(len(b))
+	//	n = copy(buf, b)
+	// return n, err
 	//
-	//  var buf, err = Malloc(len(b))
-	//  n = copy(buf, b)
-	//  return n, err
-	//
-	// The argument slice b will be referenced based on the original address and will not be copied,
-	// so make sure that the slice b will not be changed.
+	// 注意, 参数切片 b 将根据原始地址进行引用, 不会被复制
+	// 所以要确保切片 b 不会被改变
 	WriteBinary(b []byte) (n int, err error)
 
-	// WriteByte is a faster implementation of Malloc when a byte needs to be written.
-	// It replaces:
-	//
-	//  var buf, _ = Malloc(1)
+	// WriteByte 当需要写入字节时，是 Malloc 的更快实现.
+	// 类似于:
+	// 	var buf, _ = Malloc(1)
 	//  buf[0] = b
-	//
 	WriteByte(b byte) (err error)
 
-	// WriteDirect is used to insert an additional slice of data on the current write stream.
-	// For example, if you plan to execute:
-	//
-	//  var bufA, _ = Malloc(nA)
+	// WriteDirect 用于在当前写入流上插入额外的数据片.
+	// 例如:
+	//	var bufA, _ = Malloc(ALen)
 	//  WriteBinary(b)
-	//  var bufB, _ = Malloc(nB)
+	//  var bufB, _ = Malloc(BLen)
 	//
-	// It can be replaced by:
+	// 可以替换为一下方式:
+	//  var buf, _= Malloc(ALen + BLen)
+	//  WriteDirect(b, BLen)
 	//
-	//  var buf, _ = Malloc(nA+nB)
-	//  WriteDirect(b, nB)
-	//
-	// where buf[:nA] = bufA, buf[nA:nA+nB] = bufB.
+	//  当 buf[:ALen] == bufA, buf[Alen:ALen + BLen] = bufB
 	WriteDirect(p []byte, remainCap int) error
 
-	// MallocAck will keep the first n malloc bytes and discard the rest.
-	// The following behavior:
+	// MallocAck 将保留前 n 个 malloc 字节并丢弃其余的.
+	// 例如:
+	//	var buf, _ = Malloc(8)
+	//  buf = buf[:6]
+	//  MallockAck(6)
 	//
-	//  var buf, _ = Malloc(8)
-	//  buf = buf[:5]
-	//  MallocAck(5)
-	//
-	// equivalent as
-	//  var buf, _ = Malloc(5)
-	//
-	//MallocAck(n int) (err error)
+	//  与下列方式相同
+	//  var buf, _ = Malloc(6)
+	MallocAck(n int) (err error)
 
-	// Append the argument writer to the tail of this writer and set the argument writer to nil,
-	// the operation is zero-copy, similar to p = append(p, w.p).
+	//  Append 将参数 writer 追加到该 writer 的尾部, 并将参数 writer 设置为 nil,
+	// 该操作是零拷贝的，类似于 p =append(p, w.p).
 	Append(w Writer) (err error)
 
-	// Flush will submit all malloc data and must confirm that the allocated bytes have been correctly assigned.
-	// Its behavior is equivalent to the io.Writer hat already has parameters(slice b).
+	// Flush 将提交所有malloc数据并且必须确认分配的字节已被正确分配.
+	// 并将缓冲区数据输出到 io.Writer
 	Flush() (err error)
 
-	// MallocLen returns the total length of the writable data that has not yet been submitted in the writer.
+	// MallocLen 返回writer中尚未提交的可写数据的总长度.
 	MallocLen() (length int)
+}
+
+type ReadWriter interface {
+	Reader
+	Writer
 }

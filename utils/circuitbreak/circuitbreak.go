@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
 	"github.com/yamakiller/velcro-go/utils/endpoint"
+	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 // State changes between Closed, Open, HalfOpen

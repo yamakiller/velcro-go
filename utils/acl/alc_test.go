@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
-	"github.com/yamakiller/velcro-go/utils/internal/test"
+	"github.com/yamakiller/velcro-go/utils/test"
+	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 var errFake = errors.New("fake error")

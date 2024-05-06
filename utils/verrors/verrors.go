@@ -10,13 +10,17 @@ import (
 
 // 基础错误信息
 var (
-	ErrInternalException = &basicError{"internal exception"}
-	ErrGetConnection     = &basicError{"get connection error"}
-	ErrNoMoreInstance    = &basicError{"no more instances to retry"}
-	ErrRPCTimeout        = &basicError{"rpc timeout"}
-	ErrACL               = &basicError{"request forbidden"}
-	ErrOverlimit         = &basicError{"request over limit"}
-	ErrPanic             = &basicError{"panic"}
+	ErrInternalException  = &basicError{"internal exception"}
+	ErrServiceDiscovery   = &basicError{"service discovery error"}
+	ErrLoadbalance        = &basicError{"loadbalance error"}
+	ErrGetConnection      = &basicError{"get connection error"}
+	ErrNoMoreInstance     = &basicError{"no more instances to retry"}
+	ErrCircuitBreak       = &basicError{"forbidden by circuitbreaker"}
+	ErrCanceledByBusiness = &basicError{"canceled by business"}
+	ErrRPCTimeout         = &basicError{"rpc timeout"}
+	ErrACL                = &basicError{"request forbidden"}
+	ErrOverlimit          = &basicError{"request over limit"}
+	ErrPanic              = &basicError{"panic"}
 
 	ErrRetry = &basicError{"retry error"}
 	// ErrRPCFinish 启用重试并且有一个呼叫已完成时发生
@@ -26,6 +30,7 @@ var (
 )
 
 var (
+	ErrNotSupported  = ErrInternalException.WithCause(errors.New("operation not supported"))
 	ErrNoDestService = ErrInternalException.WithCause(errors.New("no dest service"))
 	ErrNoDestAddress = ErrInternalException.WithCause(errors.New("no dest address"))
 	ErrNoConnection  = ErrInternalException.WithCause(errors.New("no connection available"))

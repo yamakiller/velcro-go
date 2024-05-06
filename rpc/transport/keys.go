@@ -8,7 +8,7 @@ const (
 
 	TTHeader Protocol = 1 << iota
 	Framed
-	HTTP
+	//HTTP
 	GRPC
 	HESSIAN2
 
@@ -27,8 +27,8 @@ func (tp Protocol) String() string {
 		return "TTHeader"
 	case Framed:
 		return "Framed"
-	case HTTP:
-		return "HTTP"
+	//case HTTP:
+	//	return "HTTP"
 	case TTHeaderFramed:
 		return "TTHeaderFramed"
 	case GRPC:

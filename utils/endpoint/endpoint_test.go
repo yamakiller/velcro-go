@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/yamakiller/velcro-go/utils/internal/test"
+	"github.com/yamakiller/velcro-go/utils/test"
 )
 
 type val struct {

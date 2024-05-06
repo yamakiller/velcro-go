@@ -9,6 +9,7 @@ require (
 	github.com/choleraehyq/pid v0.0.18
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redsync/redsync/v4 v4.12.1
+	github.com/golang/mock v1.6.0
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38
 	github.com/json-iterator/go v1.1.12
 	github.com/kardianos/service v1.2.2
@@ -20,6 +21,7 @@ require (
 	github.com/twmb/murmur3 v1.1.8
 	go.opentelemetry.io/otel/metric v1.21.0
 	golang.org/x/crypto v0.18.0
+	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.16.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240116215550-a9fa1716bcac
 	google.golang.org/grpc v1.60.1
@@ -29,8 +31,10 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cloudwego/thriftgo v0.3.12 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/eapache/go-resiliency v1.4.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
@@ -51,7 +55,8 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (

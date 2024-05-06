@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
+	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 // some types of error won't trigger circuit breaker

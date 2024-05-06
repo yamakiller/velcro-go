@@ -54,14 +54,14 @@ type LinkBuffer struct {
 //var _ Writer = &LinkBuffer{}
 
 // Len implements Reader.
-func (b *LinkBuffer) Len() int {
+func (b *LinkBuffer) Length() int {
 	l := atomic.LoadInt64(&b.length)
 	return int(l)
 }
 
 // IsEmpty check if this LinkBuffer is empty.
 func (b *LinkBuffer) IsEmpty() (ok bool) {
-	return b.Len() == 0
+	return b.Length() == 0
 }
 
 // ------------------------------------------ implement zero-copy reader ------------------------------------------
@@ -72,7 +72,7 @@ func (b *LinkBuffer) Next(n int) (p []byte, err error) {
 		return
 	}
 	// check whether enough or not.
-	if b.Len() < n {
+	if b.Length() < n {
 		return p, fmt.Errorf("link buffer next[%d] not enough", n)
 	}
 	b.recalLen(-n) // re-cal length
@@ -111,7 +111,7 @@ func (b *LinkBuffer) Peek(n int) (p []byte, err error) {
 		return
 	}
 	// check whether enough or not.
-	if b.Len() < n {
+	if b.Length() < n {
 		return p, fmt.Errorf("link buffer peek[%d] not enough", n)
 	}
 	// single node
@@ -148,7 +148,7 @@ func (b *LinkBuffer) Skip(n int) (err error) {
 		return
 	}
 	// check whether enough or not.
-	if b.Len() < n {
+	if b.Length() < n {
 		return fmt.Errorf("link buffer skip[%d] not enough", n)
 	}
 	b.recalLen(-n) // re-cal length
@@ -190,7 +190,7 @@ func (b *LinkBuffer) ReadString(n int) (s string, err error) {
 		return
 	}
 	// check whether enough or not.
-	if b.Len() < n {
+	if b.Length() < n {
 		return s, fmt.Errorf("link buffer read string[%d] not enough", n)
 	}
 	return unsafeSliceToString(b.readBinary(n)), nil
@@ -202,7 +202,7 @@ func (b *LinkBuffer) ReadBinary(n int) (p []byte, err error) {
 		return
 	}
 	// check whether enough or not.
-	if b.Len() < n {
+	if b.Length() < n {
 		return p, fmt.Errorf("link buffer read binary[%d] not enough", n)
 	}
 	return b.readBinary(n), nil
@@ -238,7 +238,7 @@ func (b *LinkBuffer) readBinary(n int) (p []byte) {
 // ReadByte implements Reader.
 func (b *LinkBuffer) ReadByte() (p byte, err error) {
 	// check whether enough or not.
-	if b.Len() < 1 {
+	if b.Length() < 1 {
 		return p, errors.New("link buffer read byte is empty")
 	}
 	b.recalLen(-1) // re-cal length
@@ -268,7 +268,7 @@ func (b *LinkBuffer) Slice(n int) (r Reader, err error) {
 		return NewLinkBuffer(0), nil
 	}
 	// check whether enough or not.
-	if b.Len() < n {
+	if b.Length() < n {
 		return r, fmt.Errorf("link buffer readv[%d] not enough", n)
 	}
 	b.recalLen(-n) // re-cal length
@@ -389,7 +389,7 @@ func (b *LinkBuffer) WriteBuffer(buf *LinkBuffer) (err error) {
 	if buf == nil {
 		return
 	}
-	bufLen, bufMallocLen := buf.Len(), buf.MallocLen()
+	bufLen, bufMallocLen := buf.Length(), buf.MallocLen()
 	if bufLen+bufMallocLen <= 0 {
 		return nil
 	}
@@ -535,7 +535,7 @@ func (b *LinkBuffer) Bytes() []byte {
 		return node.buf[node.off:]
 	}
 	n := 0
-	p := make([]byte, b.Len())
+	p := make([]byte, b.Length())
 	for ; node != flush; node = node.next {
 		if node.Len() > 0 {
 			n += copy(p[n:], node.buf[node.off:])
@@ -606,7 +606,7 @@ func (b *LinkBuffer) calcMaxSize() (sum int) {
 
 // indexByte returns the index of the first instance of c in buffer, or -1 if c is not present in buffer.
 func (b *LinkBuffer) indexByte(c byte, skip int) int {
-	size := b.Len()
+	size := b.Length()
 	if skip >= size {
 		return -1
 	}
