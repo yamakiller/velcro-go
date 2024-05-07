@@ -3,10 +3,12 @@ package codec
 import (
 	"context"
 	"fmt"
+	"io"
 	"math"
 
 	"github.com/yamakiller/velcro-go/rpc2/pkg/remote"
 	"github.com/yamakiller/velcro-go/rpc2/pkg/remote/codec/perrors"
+	"github.com/yamakiller/velcro-go/rpc2/pkg/remote/tansmeta"
 	"github.com/yamakiller/velcro-go/vlog"
 )
 
@@ -15,33 +17,70 @@ import (
  *     0 1 2 3 4 5 6 8 9 a b c d e f   0 1 2 3 4 5 6 7 8 9 a b c d e f
  *  +-------------2Byte--------------|-------------2Byte-------------+
  *  +----------------------------------------------------------------+
- *  | 0|				        TOTAL LENGTH 						 |
+ *  | 0|				        DATA LENGTH 						 |
  *  +----------------------------------------------------------------+
- *  | 0|				       		SN								 |
+ *  | 0|				       	SERIAL NUMBER						 |
  *  +-----------------------------------------------------------------
- *  | 0|       LABEL                |            FLAGS				 |
+ *  | 0|        V01                                  |  	MAGIC	 |
  *  +-----------------------------------------------------------------
- *  | 0|    Meta Data Size (/32)    | 			 V
- *  +--------------------------------
+ *  | 0|        FLAGS                |       META SIZE (/32)         |
+ *  +-----------------------------------------------------------------
  *
+ *  说明:
+ *  	DATA LENGTH:   除开固定头大小的实际数据大小
+ *  	SERIAL NUMBER: 数据包唯一序列号
+ *  	V01:           为VELCRO协议版本号-V代表:Velcro,A-C代表版本类型,0-F为协议版本编号
+ *  	MAGIC:		   标记ProtobufV1Magic、ThriftV1Magic、ThriftFramedV1Magic
+ *  	FLAGS: 		   标签记录协议标记
+ *  	META SIZE:     Meta数据块大小, 最大限制65535
  *
- *
- *	+----------------------------------------------------------------+
- *	| PROTOCOL ID  |NUM METAS . | META 0 ID (uint8)|
- *	+----------------------------------------------------------------+
- *	|  META 0 DATA ...
- *	+----------------------------------------------------------------+
- *	|         ...                              ...                   |
- *	+----------------------------------------------------------------+
- *	|        INFO 0 ID (uint8)      |       INFO 0  DATA ...
- *	+----------------------------------------------------------------+
- *	|         ...                              ...                   |
- *	+----------------------------------------------------------------+
+ *  META DATA Protocol
+ *    0 1 2 3 4 5 6 8 9 a b c d e f    0 1 2 3 4 5 6 7 8 9 a b c d e f
+ *  +-------------2Byte--------------|-------------2Byte-------------+
+ *  +----------------------------------------------------------------+
+ *  | PROTOCOL ID  |  META OF NUMBER | META ID (uint8) ... |
+ *  +----------------------------------------------------------------+
+ *  | META DATA ...
+ *  +-----------------------------------------------------------------
+ *  |            ...                              ...                |
+ *  +-----------------------------------------------------------------
+ *  |          INFO ID (uint8)      |      INFO DATA ...
+ *  +----------------------------------------------------------------+
+ *  |            ....                            ....                |
+ *  +----------------------------------------------------------------+
  *	|                                                                |
  *	|                              PAYLOAD                           |
  *	|                                                                |
  *	+----------------------------------------------------------------+
  */
+
+const (
+	VelcroVersion = "A01"
+)
+
+const (
+	VelcroFixedHeaderSize           = 16
+	VelcroHeaderDataSizeStart       = 0
+	VelcroHeaderDataSizeBits        = Size32
+	VelcroHeaderSequenceNumberStart = VelcroHeaderDataSizeStart + VelcroHeaderDataSizeBits
+	VelcroHeaderSequenceNumberBits  = Size32
+	VelcroHeaderVersionStart        = VelcroHeaderSequenceNumberStart + VelcroHeaderSequenceNumberBits
+	VelcroHeaderVersionBits         = 3
+
+	VelcroHeaderMagicStart = VelcroHeaderVersionStart + VelcroHeaderVersionBits
+	VelcroHeaderMagicBits  = 1
+
+	VelcroHeaderFlagStart = VelcroHeaderMagicStart + VelcroHeaderMagicBits
+	VelcroHeaderFlagBits  = Size16
+
+	VelcroHeaderMetaSizeStart = VelcroHeaderFlagStart + VelcroHeaderFlagBits
+	VelcroHeaderMetaSizeBits  = Size16
+	VelcroHeaderMetaSizeLimit = math.MaxUint16
+
+	VelcroHeaderMetaProtocolIDOffset = 0
+	VelcroHeaderMetaIDNumberOffset   = 1
+	VelcroHeaderMetaIDOffset         = 2
+)
 
 /**
  * LABEL
@@ -50,20 +89,6 @@ import (
  *+----------------------------------------------------------------+
  *
  */
-const (
-	VelcroHeaderSize            = 14
-	VelcroHeaderFlagsStart      = 6
-	VelcroHeaderSnStart         = 8
-	VelcroHeaderSnBits          = Size32
-	VelcroHeaderMetaSizeStart   = 12
-	VelcroHeaderMetaSizeBits    = 2
-	VelcroHeaderMetaSizeLimit   = math.MaxUint16
-	VelcroHeaderTotalLengthBits = Size32
-
-	VelcroHeaderMetaProtocolIDIndex = 0
-	VelcroHeaderMetaIDOfNumberIndex = 1
-	VelcroHeaderMetaIDStart         = 2
-)
 
 type VelcroHeaderFlags uint16
 
@@ -84,23 +109,38 @@ const (
 	ProtocolIDDefault                   = ProtocolIDThriftBinary
 )
 
+type InfoIDType uint8 // uint8
+
+const (
+	InfoIDPadding     InfoIDType = 0x00
+	InfoIDKeyValue    InfoIDType = 0x01
+	InfoIDIntKeyValue InfoIDType = 0x02
+	InfoIDACLToken    InfoIDType = 0x03
+)
+
 type velcroHeader struct{}
 
 func (v *velcroHeader) decode(ctx context.Context, message remote.Message, in remote.ByteBuffer) error {
-	header, err := in.Next(VelcroHeaderSize)
+	header, err := in.Next(VelcroFixedHeaderSize)
 	if err != nil {
 		return perrors.NewProtocolError(err)
 	}
 
-	// TODO: 检测是否属于Velcro消息头
+	version := header[VelcroHeaderVersionStart : VelcroHeaderVersionStart+VelcroHeaderVersionBits]
 
-	// 获取总包长度 + 获取Flag位置
-	totalLength := Bytes2Uint32NoCheck(header[:VelcroHeaderTotalLengthBits])
-	flags := Bytes2Uint16NoCheck(header[VelcroHeaderFlagsStart:])
+	if string(version) != VelcroVersion {
+		vlog.Warnf("velcro protocol version error, version:%s", string(version))
+		return perrors.NewProtocolError(fmt.Errorf("velcro protocol version error"))
+	}
+
+	// 获取数据包除固定头以外的大小
+	dataTotoalLength := Bytes2Uint32NoCheck(header[VelcroHeaderDataSizeStart : VelcroHeaderDataSizeStart+VelcroHeaderDataSizeBits])
+	flags := Bytes2Uint16NoCheck(header[VelcroHeaderFlagStart : VelcroHeaderFlagStart+VelcroHeaderFlagBits])
+
 	// 将flags信息解码到message的Tags中.
 	setFlags(flags, message)
 
-	seqID := Bytes2Uint32NoCheck(header[VelcroHeaderSnStart : VelcroHeaderSnStart+VelcroHeaderSnBits])
+	seqID := Bytes2Uint32NoCheck(header[VelcroHeaderSequenceNumberStart : VelcroHeaderSequenceNumberStart+VelcroHeaderSequenceNumberBits])
 	//检测序列号合法性
 	if err = SetOrCheckSeqID(int32(seqID), message); err != nil {
 		vlog.Warnf("the seqID in VelcroHeader check failed, error=%s", err.Error())
@@ -118,23 +158,26 @@ func (v *velcroHeader) decode(ctx context.Context, message remote.Message, in re
 		return perrors.NewProtocolError(err)
 	}
 	// 校验是否支持此协议
-	if err = verifyProtocolID(headerMeta[VelcroHeaderMetaProtocolIDIndex], message); err != nil {
+	if err = verifyProtocolID(headerMeta[VelcroHeaderMetaProtocolIDOffset], message); err != nil {
 		return err
 	}
-	metaIDNum := int(headerMeta[VelcroHeaderMetaIDOfNumberIndex])
-	if int(headerMetaSize)-VelcroHeaderMetaIDStart < metaIDNum {
+	metaIDNum := int(headerMeta[VelcroHeaderMetaIDNumberOffset])
+	if int(headerMetaSize)-VelcroHeaderMetaIDOffset < metaIDNum {
 		// 数据不足
 		return perrors.NewProtocolErrorWithType(perrors.InvalidData, fmt.Sprintf("need read %d metaIDs, but not enough", metaIDNum))
 	}
 	metaIDs := make([]uint8, metaIDNum)
 	for i := 0; i < metaIDNum; i++ {
-		metaIDs[i] = headerMeta[VelcroHeaderMetaIDStart+i]
+		metaIDs[i] = headerMeta[VelcroHeaderMetaIDOffset+i]
 	}
 	// 1.开始读取meta => key,value信息并存入message中
+	if err := readInfo(VelcroHeaderMetaIDOffset+metaIDNum, headerMeta, message); err != nil {
+		return perrors.NewProtocolError(err)
+	}
 	// 2.填充头信息
 
-	// Pay framed 字段 Size32 ?
-	message.SetPayloadLen(int(totalLength - VelcroHeaderSize - uint32(headerMetaSize) + Size32))
+	// + Size32 Pay framed 字段 大小
+	message.SetPayloadLen(int(dataTotoalLength - uint32(headerMetaSize) + Size32))
 
 	return err
 }
@@ -155,71 +198,192 @@ func setFlags(flags uint16, message remote.Message) {
 	}
 }
 
-/*
-// Header 关键字
-const (
-	// Header Magic 部分
-	// 第0位和第16位必须为0以区分成帧和非成帧
-	VelcroHeaderMagic uint32 = 0x10000000 // 0001 0000 0000 0000 ...0000[4字节]
-	MeshHeaderMagic   uint32 = 0xFFAF0000 // 1111 1111 1010 1111 ...0000[4字节]
-	MeshHeaderLenMask uint32 = 0x0000FFFF // 低4位掩码
+func readInfo(offset int, buf []byte, message remote.Message) error {
+	intInfo := message.TransInfo().TransIntInfo()
+	strInfo := message.TransInfo().TransStrInfo()
+	for {
+		infoID, err := Bytes2Uint8(buf, offset)
+		offset++
+		if err != nil {
+			// this is the last field, read until there is no more padding
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
 
-	// HeaderMask uint32 = 0xFFFF0000
-	FlagsMask     uint32 = 0x0000FFFF
-	MethodMask    uint32 = 0x41000000 // 0100 0001 0000 0000 ...0000[4字节] method first byte [A-Za-z_]
-	MaxFrameSize  uint32 = 0x3FFFFFFF // 0011 1111 1111 1111 ...1111[4字节]
-	MaxHeaderSize uint32 = 65536
-)
+		switch InfoIDType(infoID) {
+		case InfoIDPadding:
+			continue
+		case InfoIDIntKeyValue:
+			err := readIntKeyValueInfo(&offset, buf, intInfo)
+			if err != nil {
+				return err
+			}
+			break
+		case InfoIDKeyValue:
+			err := readStrKeyValueInfo(&offset, buf, strInfo)
+			if err != nil {
+				return err
+			}
+			break
+		case InfoIDACLToken:
+			err := readACLToken(&offset, buf, strInfo)
+			if err != nil {
+				return err
+			}
+			break
+		default:
+			return fmt.Errorf("invalid infoIDType[%#x]", infoID)
+		}
+	}
+	return nil
+}
 
-type HeaderFlags uint16
-
-const (
-	HeaderFlagsKey              string      = "HeaderFlags"
-	HeaderFlagSupportOutOfOrder HeaderFlags = 0b00001
-	HeaderFlagDuplexReverse     HeaderFlags = 0b10000
-	HeaderFlagSASL              HeaderFlags = 0b10000
-)
-
-const (
-	VelcroHeaderMetaSize = 14
-)
-
-// ProtocolID is the wrapped protocol id used in THeader.
-type ProtocolID uint8
-
-// Supported ProtocolID values.
-const (
-	ProtocolIDThriftBinary    ProtocolID = 0b000
-	ProtocolIDThriftCompact   ProtocolID = 0b010 // Velcro not support
-	ProtocolIDThriftCompactV2 ProtocolID = 0b011 // Velcro not support
-	ProtocolIDVelcroProtobuf  ProtocolID = 0b100
-	ProtocolIDDefault                    = ProtocolIDThriftBinary
-)
-
-type InfoIDType uint8 // uint8
-
-const (
-	InfoIDPadding     InfoIDType = 0b00000
-	InfoIDKeyValue    InfoIDType = 0b00001
-	InfoIDIntKeyValue InfoIDType = 0b10000
-	InfoIDACLToken    InfoIDType = 0b10001
-)
-
-type VelcroHeader struct{}
-
-func (v VelcroHeader) encode(ctx context.Context, message remote.Message, out remote.ByteBuffer) (totalLengthField []byte, err error) {
-	// 1.header meta
-	var headerMeta []byte
-	headerMeta, err = out.Malloc(VelcroHeaderMetaSize)
+func readIntKeyValueInfo(offset *int, buf []byte, info map[uint16]string) error {
+	sz, err := Bytes2Uint16(buf, *offset)
+	*offset += 2
 	if err != nil {
-		return nil, perrors.NewProtocolErrorWithMsg(fmt.Sprintf("VelcroHeader malloc header meta failed, %s", err.Error()))
+		return fmt.Errorf("error reading int key/value info size: %s", err.Error())
+	}
+	if sz <= 0 {
+		return nil
+	}
+	for i := uint16(0); i < sz; i++ {
+		key, err := Bytes2Uint16(buf, *offset)
+		*offset += 2
+		if err != nil {
+			return fmt.Errorf("error reading int key/value info: %s", err.Error())
+		}
+		val, n, err := ReadString2BLen(buf, *offset)
+		*offset += n
+		if err != nil {
+			return fmt.Errorf("error reading int key/value info: %s", err.Error())
+		}
+		info[key] = val
+	}
+	return nil
+}
+
+func readStrKeyValueInfo(offset *int, buf []byte, info map[string]string) error {
+	sz, err := Bytes2Uint16(buf, *offset)
+	*offset += 2
+	if err != nil {
+		return fmt.Errorf("error reading str key/value info size: %s", err.Error())
+	}
+	if sz <= 0 {
+		return nil
+	}
+	for i := uint16(0); i < sz; i++ {
+		key, n, err := ReadString2BLen(buf, *offset)
+		*offset += n
+		if err != nil {
+			return fmt.Errorf("error reading str key/value info: %s", err.Error())
+		}
+		val, n, err := ReadString2BLen(buf, *offset)
+		*offset += n
+		if err != nil {
+			return fmt.Errorf("error reading str key/value info: %s", err.Error())
+		}
+		info[key] = val
+	}
+	return nil
+}
+
+func readACLToken(offset *int, buf []byte, info map[string]string) error {
+	val, n, err := ReadString2BLen(buf, *offset)
+	*offset += n
+	if err != nil {
+		return fmt.Errorf("error reading acl token: %s", err.Error())
 	}
 
-	message.Tags()["HeaderFlags"]
-	// 数据包总长度字段
-	totalLengthField = headerMeta[0:4]
-	headerInfoSizeField := headerMeta[12:14]
-
-	var transformIDs []uint8 // 不支持压缩
+	info[tansmeta.GDPRToken] = val
+	return nil
 }
+
+/*
+func writeKVInfo(writtenSize int, message remote.Message, out remote.ByteBuffer) (writeSize int, err error) {
+	writeSize = writtenSize
+	tm := message.TransInfo()
+	// str kv info
+	strKVMap := tm.TransStrInfo()
+	strKVSize := len(strKVMap)
+	// write gdpr token into InfoIDACLToken
+
+	if gdprToken, ok := strKVMap[transmeta.GDPRToken]; ok {
+		strKVSize--
+		// INFO ID TYPE(u8)
+		if err = WriteByte(byte(InfoIDACLToken), out); err != nil {
+			return writeSize, err
+		}
+		writeSize += 1
+
+		wLen, err := WriteString2BLen(gdprToken, out)
+		if err != nil {
+			return writeSize, err
+		}
+		writeSize += wLen
+	}
+
+	if strKVSize > 0 {
+		// INFO ID TYPE(u8) + NUM HEADERS(u16)
+		if err = WriteByte(byte(InfoIDKeyValue), out); err != nil {
+			return writeSize, err
+		}
+		if err = WriteUint16(uint16(strKVSize), out); err != nil {
+			return writeSize, err
+		}
+		writeSize += 3
+		for key, val := range strKVMap {
+			if key == transmeta.GDPRToken {
+				continue
+			}
+			keyWLen, err := WriteString2BLen(key, out)
+			if err != nil {
+				return writeSize, err
+			}
+			valWLen, err := WriteString2BLen(val, out)
+			if err != nil {
+				return writeSize, err
+			}
+			writeSize = writeSize + keyWLen + valWLen
+		}
+	}
+
+	// int kv info
+	intKVSize := len(tm.TransIntInfo())
+	if intKVSize > 0 {
+		// INFO ID TYPE(u8) + NUM HEADERS(u16)
+		if err = WriteByte(byte(InfoIDIntKeyValue), out); err != nil {
+			return writeSize, err
+		}
+		if err = WriteUint16(uint16(intKVSize), out); err != nil {
+			return writeSize, err
+		}
+		writeSize += 3
+		for key, val := range tm.TransIntInfo() {
+			if err = WriteUint16(key, out); err != nil {
+				return writeSize, err
+			}
+			valWLen, err := WriteString2BLen(val, out)
+			if err != nil {
+				return writeSize, err
+			}
+			writeSize = writeSize + 2 + valWLen
+		}
+	}
+
+	// padding = (4 - headerInfoSize%4) % 4
+	padding := (4 - writeSize%4) % 4
+	paddingBuf, err := out.Malloc(padding)
+	if err != nil {
+		return writeSize, err
+	}
+	for i := 0; i < len(paddingBuf); i++ {
+		paddingBuf[i] = byte(0)
+	}
+	writeSize += padding
+	return
+}
+
 */

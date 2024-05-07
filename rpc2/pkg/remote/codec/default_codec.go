@@ -21,19 +21,22 @@ const (
 	Size16 = 2
 )
 
+// 是否是 Framed
+// 1000 00000
+// 0x01
+// 0x02
+// 0x81
+// 0x82
 const (
 
-	// ProtobufV1Label the label code for velcro protobuf
-	ProtobufV1Label = 0x40000000
-	// ThriftV1Label the label code for thrift.VERSION_1
-	ThriftV1Label = 0x80000000
-	// ThriftFramedV1Label the label code for thrift.VERSION_1 and framed
-	ThriftFramedV1Label = 0xC0000000
-
-	// LabelProtoMask is bit mask for checking version.
-	LabelProtoMask = 0xC0000000
-	// LabelMask is bit mask for checking version.
-	//LabelMask = 0xFFFF0000
+	// ProtobufV1Magic the magic code for velcro protobuf
+	ProtobufV1Magic = 0x01
+	// ThriftV1Magic the label code for thrift.VERSION_1
+	ThriftV1Magic = 0x02
+	// ThriftFramedV1Magic the magic code for thrift.VERSION_1 and framed
+	ThriftFramedV1Magic = 0x82
+	// MagicMask is bit mask for checking version.
+	MagicMask = 0xFF
 )
 
 var (
@@ -108,38 +111,37 @@ func (c *defaultCodec) Decode(ctx context.Context, message remote.Message, in re
 }
 
 /**
- * Velcro protobuf 字段
  * +------------------------------------------------------------+
- * |                  4Byte                 |       2Byte       |
+ * |        8Byte    |          3Byte       |       1Byte       |
  * +------------------------------------------------------------+
- * |   			     Length			    	|   HEADER LABEL    |
+ * |   		....	 |		   VERSION      |   HEADER MAGIC    |
  * +------------------------------------------------------------+
  */
 func isProtobufVelcro(flagBuf []byte) bool {
-	return (binary.BigEndian.Uint32(flagBuf[Size32:]) & LabelProtoMask) == ProtobufV1Label
+	return (binary.BigEndian.Uint32(flagBuf[VelcroHeaderMagicStart:]) & MagicMask) == ProtobufV1Magic
 }
 
 /**
  * +------------------------------------------------------------+
- * |                  4Byte                 |       2Byte       |
+ * |        8Byte    |          3Byte       |       1Byte       |
  * +------------------------------------------------------------+
- * |   			     Length			    	|   HEADER LABEL    |
+ * |   		....	 |		   VERSION      |   HEADER MAGIC    |
  * +------------------------------------------------------------+
  */
 func isThriftBinary(flagBuf []byte) bool {
-	return (binary.BigEndian.Uint32(flagBuf[Size32:]) & LabelProtoMask) == ThriftV1Label
+	return (binary.BigEndian.Uint32(flagBuf[VelcroHeaderMagicStart:]) & MagicMask) == ThriftV1Magic
 }
 
 /**
  * +------------------------------------------------------------+
- * |                  4Byte                 |       2Byte       |
+ * |        8Byte    |          3Byte       |       1Byte       |
  * +------------------------------------------------------------+
- * |   			     Length			    	|   HEADER LABEL    |
+ * |   		....	 |		   VERSION      |   HEADER MAGIC    |
  * +------------------------------------------------------------+
  */
 
 func isThriftFramedBinary(flagBuf []byte) bool {
-	return (binary.BigEndian.Uint32(flagBuf[Size32:]) & LabelProtoMask) == ThriftFramedV1Label
+	return (binary.BigEndian.Uint32(flagBuf[VelcroHeaderMagicStart:]) & MagicMask) == ThriftFramedV1Magic
 
 }
 
