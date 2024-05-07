@@ -7,11 +7,12 @@ import (
 	"sync/atomic"
 
 	"github.com/yamakiller/velcro-go/rpc/transport"
+	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
 	"github.com/yamakiller/velcro-go/rpc2/pkg/remote"
 	"github.com/yamakiller/velcro-go/rpc2/pkg/remote/codec/perrors"
+	"github.com/yamakiller/velcro-go/rpc2/pkg/retry"
 	"github.com/yamakiller/velcro-go/rpc2/pkg/rpcinfo"
 	"github.com/yamakiller/velcro-go/rpc2/pkg/serviceinfo"
-	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 // The byte count of 32 and 16 integer values.
@@ -21,6 +22,213 @@ const (
 )
 
 const (
+
+	// ProtobufV1Label the label code for velcro protobuf
+	ProtobufV1Label = 0x40000000
+	// ThriftV1Label the label code for thrift.VERSION_1
+	ThriftV1Label = 0x80000000
+	// ThriftFramedV1Label the label code for thrift.VERSION_1 and framed
+	ThriftFramedV1Label = 0xC0000000
+
+	// LabelProtoMask is bit mask for checking version.
+	LabelProtoMask = 0xC0000000
+	// LabelMask is bit mask for checking version.
+	//LabelMask = 0xFFFF0000
+)
+
+var (
+	velcroHeaderCodec = velcroHeader{}
+
+	_ remote.Codec = (*defaultCodec)(nil)
+)
+
+type defaultCodec struct {
+	// maxSize  limits the max size of the payload
+	maxSize int
+}
+
+// DecodeMeta 解码Header、Meta
+func (c *defaultCodec) DecodeMeta(ctx context.Context, message remote.Message, in remote.ByteBuffer) (err error) {
+	var flagBuf []byte
+	// Header -> LENGTH + Label + Flags
+	if flagBuf, err = in.Peek(2 * Size32); err != nil {
+		return perrors.NewProtocolErrorWithErrMsg(err, fmt.Sprintf("default codec read failed: %s", err.Error()))
+	}
+
+	if err = verifyRPCState(ctx, message); err != nil {
+		// 重试任务中有一个调用已完成，不需要对此调用进行解码
+		return err
+	}
+
+	// 解码Header
+	if err = velcroHeaderCodec.decode(ctx, message, in); err != nil {
+		return err
+	}
+
+	return verifyPayload(flagBuf, message, in, true, c.maxSize)
+}
+
+func (c *defaultCodec) DecodePayload(ctx context.Context, message remote.Message, in remote.ByteBuffer) error {
+	// 统计信息
+	defer func() {
+		if rio := message.RPCInfo(); rio != nil {
+			if ms := rpcinfo.AsMutableRPCStats(rio.Stats()); ms != nil {
+				ms.SetRecvSize(uint64(in.ReadLen()))
+			}
+		}
+	}()
+
+	nRead := in.ReadLen()
+	// 获取解码器
+	pCodec, err := remote.GetPayloadCodec(message)
+	if err != nil {
+		return err
+	}
+	// 解码
+	if err = pCodec.Unmarshal(ctx, message, in); err != nil {
+		return err
+	}
+
+	if message.PayloadLen() == 0 {
+		// if protocol is PurePayload, should set payload length after decoded
+		message.SetPayloadLen(in.ReadLen() - nRead)
+	}
+	return nil
+}
+
+// Decode 解码
+func (c *defaultCodec) Decode(ctx context.Context, message remote.Message, in remote.ByteBuffer) error {
+	// 1.解码元信息(meta)
+	if err := c.DecodeMeta(ctx, message, in); err != nil {
+		return err
+	}
+
+	//2.解码数据体
+	return c.DecodePayload(ctx, message, in)
+}
+
+/**
+ * Velcro protobuf 字段
+ * +------------------------------------------------------------+
+ * |                  4Byte                 |       2Byte       |
+ * +------------------------------------------------------------+
+ * |   			     Length			    	|   HEADER LABEL    |
+ * +------------------------------------------------------------+
+ */
+func isProtobufVelcro(flagBuf []byte) bool {
+	return (binary.BigEndian.Uint32(flagBuf[Size32:]) & LabelProtoMask) == ProtobufV1Label
+}
+
+/**
+ * +------------------------------------------------------------+
+ * |                  4Byte                 |       2Byte       |
+ * +------------------------------------------------------------+
+ * |   			     Length			    	|   HEADER LABEL    |
+ * +------------------------------------------------------------+
+ */
+func isThriftBinary(flagBuf []byte) bool {
+	return (binary.BigEndian.Uint32(flagBuf[Size32:]) & LabelProtoMask) == ThriftV1Label
+}
+
+/**
+ * +------------------------------------------------------------+
+ * |                  4Byte                 |       2Byte       |
+ * +------------------------------------------------------------+
+ * |   			     Length			    	|   HEADER LABEL    |
+ * +------------------------------------------------------------+
+ */
+
+func isThriftFramedBinary(flagBuf []byte) bool {
+	return (binary.BigEndian.Uint32(flagBuf[Size32:]) & LabelProtoMask) == ThriftFramedV1Label
+
+}
+
+func verifyRPCState(ctx context.Context, message remote.Message) error {
+	if message.RPCRole() == remote.Server {
+		return nil
+	}
+
+	if ctx.Err() == context.DeadlineExceeded || ctx.Err() == context.Canceled {
+		return verrors.ErrRPCFinish
+	}
+	if respOp, ok := ctx.Value(retry.ContextRespOp).(*int32); ok {
+		if !atomic.CompareAndSwapInt32(respOp, retry.OpNo, retry.OpDoing) {
+			// 先前的调用正在处理或完成此标志用于检查重试(回退请求)场景中的请求状态.
+			return verrors.ErrRPCFinish
+		}
+	}
+	return nil
+}
+
+// verifyPayload 校验数据体
+func verifyPayload(flagBuf []byte, message remote.Message, in remote.ByteBuffer, isHeader bool, maxPayloadSize int) error {
+	var (
+		transProto transport.Protocol
+		codecType  serviceinfo.PayloadCodec
+	)
+
+	if isThriftBinary(flagBuf) {
+		codecType = serviceinfo.Thrift
+		if isHeader {
+			transProto = transport.VHeader
+		} else {
+			transProto = transport.PurePayload
+		}
+	} else if isThriftFramedBinary(flagBuf) {
+		codecType = serviceinfo.Thrift
+		if isHeader {
+			transProto = transport.VHeaderFramed
+		} else {
+			transProto = transport.Framed
+		}
+		payloadLen := binary.BigEndian.Uint32((flagBuf[:Size32]))
+		message.SetPayloadLen(int(payloadLen))
+		if err := in.Skip(Size32); err != nil {
+			return err
+		}
+	} else if isProtobufVelcro(flagBuf) {
+		codecType = serviceinfo.Protobuf
+		if isHeader {
+			transProto = transport.VHeaderFramed
+		} else {
+			transProto = transport.Framed
+		}
+		payloadLen := binary.BigEndian.Uint32(flagBuf[:Size32])
+		message.SetPayloadLen(int(payloadLen))
+		if err := in.Skip(Size32); err != nil {
+			return err
+		}
+	} else {
+		first4Bytes := binary.BigEndian.Uint32(flagBuf[:Size32])
+		second4Bytes := binary.BigEndian.Uint32(flagBuf[Size32:])
+		// 0xfff4fffd is the interrupt message of telnet
+		err := perrors.NewProtocolErrorWithMsg(fmt.Sprintf("invalid payload (first4Bytes=%#x, second4Bytes=%#x)", first4Bytes, second4Bytes))
+		return err
+	}
+	if err := verifyPayloadSize(message.PayloadLen(), maxPayloadSize); err != nil {
+		return err
+	}
+
+	message.SetProtocolInfo(remote.NewProtocolInfo(transProto, codecType))
+	cfg := rpcinfo.AsMutableRPCConfig(message.RPCInfo().Config())
+	if cfg != nil {
+		tp := message.ProtocolInfo().TransProto
+		cfg.SetTransportProtocol(tp)
+	}
+	return nil
+}
+
+func verifyPayloadSize(payloadLen, maxSize int) error {
+	if maxSize > 0 && payloadLen > 0 && payloadLen > maxSize {
+		return perrors.NewProtocolErrorWithType(
+			perrors.InvalidData,
+			fmt.Sprintf("invalid data: payload size(%d) larger than the limit(%d)", payloadLen, maxSize),
+		)
+	}
+	return nil
+}
+
+/*const (
 	// ThriftV1Magic is the magic code for thrift.VERSION_1
 	ThriftV1Magic = 0x80010000
 	// ProtobufV1Magic is the magic code for kitex protobuf
@@ -219,7 +427,7 @@ func (c *defaultCodec) encodePayload(ctx context.Context, message remote.Message
 		return err
 	}
 	return pCodec.Marshal(ctx, message, out)
-}
+}*/
 
 /**
  * +------------------------------------------------------------+
@@ -228,9 +436,9 @@ func (c *defaultCodec) encodePayload(ctx context.Context, message remote.Message
  * |   			     Length			    	|   HEADER MAGIC    |
  * +------------------------------------------------------------+
  */
-func IsTTHeader(flagBuf []byte) bool {
-	return binary.BigEndian.Uint32(flagBuf[Size32:])&MagicMask == TTHeaderMagic
-}
+//func IsTTHeader(flagBuf []byte) bool {
+//	return binary.BigEndian.Uint32(flagBuf[Size32:])&MagicMask == TTHeaderMagic
+//}
 
 /**
  * +----------------------------------------+
@@ -239,21 +447,21 @@ func IsTTHeader(flagBuf []byte) bool {
  * |    HEADER MAGIC    |   HEADER SIZE     |
  * +----------------------------------------+
  */
-func isMeshHeader(flagBuf []byte) bool {
-	return binary.BigEndian.Uint32(flagBuf[:Size32])&MagicMask == MeshHeaderMagic
-}
+//func isMeshHeader(flagBuf []byte) bool {
+//	return binary.BigEndian.Uint32(flagBuf[:Size32])&MagicMask == MeshHeaderMagic
+//}
 
 /**
- * Kitex protobuf has framed field
+ * Velcro protobuf has framed field
  * +------------------------------------------------------------+
  * |                  4Byte                 |       2Byte       |
  * +------------------------------------------------------------+
  * |   			     Length			    	|   HEADER MAGIC    |
  * +------------------------------------------------------------+
  */
-func isProtobufVelcro(flagBuf []byte) bool {
-	return binary.BigEndian.Uint32(flagBuf[Size32:])&MagicMask == ProtobufV1Magic
-}
+//func isProtobufVelcro(flagBuf []byte) bool {
+//	return binary.BigEndian.Uint32(flagBuf[Size32:])&MagicMask == ProtobufV1Magic
+//}
 
 /**
  * +-------------------+
@@ -262,9 +470,9 @@ func isProtobufVelcro(flagBuf []byte) bool {
  * |   HEADER MAGIC    |
  * +-------------------
  */
-func isThriftBinary(flagBuf []byte) bool {
-	return binary.BigEndian.Uint32(flagBuf[:Size32])&MagicMask == ThriftV1Magic
-}
+//func isThriftBinary(flagBuf []byte) bool {
+//	return binary.BigEndian.Uint32(flagBuf[:Size32])&MagicMask == ThriftV1Magic
+//}
 
 /**
  * +------------------------------------------------------------+
@@ -273,7 +481,7 @@ func isThriftBinary(flagBuf []byte) bool {
  * |   			     Length			    	|   HEADER MAGIC    |
  * +------------------------------------------------------------+
  */
-func isThriftFramedBinary(flagBuf []byte) bool {
+/*func isThriftFramedBinary(flagBuf []byte) bool {
 	return binary.BigEndian.Uint32(flagBuf[Size32:])&MagicMask == ThriftV1Magic
 }
 
@@ -356,3 +564,4 @@ func checkPayloadSize(payloadLen, maxSize int) error {
 	}
 	return nil
 }
+*/

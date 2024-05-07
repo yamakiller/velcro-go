@@ -6,13 +6,13 @@ type Protocol int
 const (
 	PurePayload Protocol = 0
 
-	TTHeader Protocol = 1 << iota
+	VHeader Protocol = 1 << iota
 	Framed
 	//HTTP
 	GRPC
 	HESSIAN2
 
-	TTHeaderFramed = TTHeader | Framed
+	VHeaderFramed = VHeader | Framed
 )
 
 // Unknown indicates the protocol is unknown.
@@ -23,14 +23,14 @@ func (tp Protocol) String() string {
 	switch tp {
 	case PurePayload:
 		return "PurePayload"
-	case TTHeader:
-		return "TTHeader"
+	case VHeader:
+		return "VHeader"
 	case Framed:
 		return "Framed"
 	//case HTTP:
 	//	return "HTTP"
-	case TTHeaderFramed:
-		return "TTHeaderFramed"
+	case VHeaderFramed:
+		return "VHeaderFramed"
 	case GRPC:
 		return "GRPC"
 	case HESSIAN2:
