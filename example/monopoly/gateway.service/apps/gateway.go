@@ -77,7 +77,11 @@ func (gs *gatewayService) newEncryption() *gateway.Encryption {
 
 	return &gateway.Encryption{Ecdh: &ecdh.Curve25519{A: 247, B: 127, C: 64}}
 }
-
+/*
+**************************UDP 消息数据结构**************************************
+* |----------36字节 用户ID---------------|-2字节 大端 数据长度-|--------pubs.ReportNatClient 数据---------------------
+*****************************************************************
+*/
 func (gs *gatewayService) udpLoop() {
 	defer gs.udpWait.Done()
 	var temp [1500]byte
