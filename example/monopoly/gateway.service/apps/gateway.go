@@ -116,6 +116,8 @@ func (gs *gatewayService) udpLoop() {
 					continue
 				}
 				dLen = copy(temp[:len(decrypt)], decrypt)
+			}else{
+				dLen = copy(temp[:dLen], temp[38:38+dLen])
 			}
 
 			if err := proto.Unmarshal(temp[:dLen], &request); err != nil {
