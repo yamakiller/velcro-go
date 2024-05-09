@@ -122,8 +122,8 @@ func (c *tcpClientHandler) sender() {
 			if c.sendbox.MallocLen() != 0 {
 				c.sendbox.Flush()
 			}
-			if c.sendbox.Len() > 0 {
-				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
+			if c.sendbox.Length() > 0 {
+				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Length())
 				if err != nil {
 					c.sendcond.L.Unlock()
 					vlog.Errorf("tcp handler error sendbuffer readbinary fail %s", err.Error())

@@ -1,0 +1,12 @@
+syntax="proto3";
+package protobuf;
+
+option go_package = "github.com/yamakiller/velcro-go/rpc/pkg/remote/codec/protobuf";
+
+
+message ErrorProto {
+    int32  TypeID = 1;
+    string Message = 2;
+}
+                             
+// protoc --go_out=$GOPATH/src velcro-go/rpc2/pkg/remote/codec/protobuf/error.proto

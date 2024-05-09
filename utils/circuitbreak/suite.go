@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yamakiller/velcro-go/rpc2/pkg/discovery"
-	"github.com/yamakiller/velcro-go/rpc2/pkg/rpcinfo"
+	"github.com/yamakiller/velcro-go/rpc/pkg/discovery"
+	"github.com/yamakiller/velcro-go/rpc/pkg/rpcinfo"
 	"github.com/yamakiller/velcro-go/utils/endpoint"
 	"github.com/yamakiller/velcro-go/utils/event"
 	"github.com/yamakiller/velcro-go/utils/verrors"

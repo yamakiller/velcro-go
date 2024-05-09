@@ -3,24 +3,23 @@ package protomessge
 import (
 	"encoding/binary"
 
-
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/encryption"
 )
 
 func UnMarshal(reader circbuf.Reader, secret []byte) ([]byte, error) {
 
-	if reader.Len() < HeaderSize {
-		return  nil, nil
+	if reader.Length() < HeaderSize {
+		return nil, nil
 	}
 
 	HeaderByte, err := reader.Peek(HeaderSize)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	readDataLen := binary.BigEndian.Uint16(HeaderByte[:])
-	if readDataLen+HeaderSize > uint16(reader.Len()) {
+	if readDataLen+HeaderSize > uint16(reader.Length()) {
 		return nil, nil
 	}
 
