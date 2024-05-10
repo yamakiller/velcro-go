@@ -3,7 +3,7 @@ package endpoint
 import (
 	"context"
 
-	"github.com/yamakiller/velcro-go/rpc/utils/streaming"
+	"github.com/yamakiller/velcro-go/utils/streaming"
 )
 
 // SendEndpoint represent one Send call

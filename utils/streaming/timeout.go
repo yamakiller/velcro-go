@@ -6,8 +6,8 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
 	"github.com/yamakiller/velcro-go/utils/gopool"
+	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 func CallWithTimeout(timeout time.Duration, cancel context.CancelFunc, f func() (err error)) error {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
+	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 // corresponding with thrift TApplicationException, cannot change it

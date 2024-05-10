@@ -21,6 +21,7 @@ var (
 	ErrACL                = &basicError{"request forbidden"}
 	ErrOverlimit          = &basicError{"request over limit"}
 	ErrPanic              = &basicError{"panic"}
+	ErrBiz                = &basicError{"biz error"}
 
 	ErrRetry = &basicError{"retry error"}
 	// ErrRPCFinish 启用重试并且有一个呼叫已完成时发生

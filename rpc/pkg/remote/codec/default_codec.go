@@ -12,7 +12,7 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/pkg/rpcinfo"
 	"github.com/yamakiller/velcro-go/rpc/pkg/serviceinfo"
 	"github.com/yamakiller/velcro-go/rpc/transport"
-	"github.com/yamakiller/velcro-go/rpc/utils/verrors"
+	"github.com/yamakiller/velcro-go/utils/verrors"
 )
 
 // The byte count of 32 and 16 integer values.
