@@ -1,7 +1,9 @@
 package apps
 
 import (
+	"encoding/binary"
 	"fmt"
+	"net"
 	"sync/atomic"
 	"time"
 
@@ -9,8 +11,10 @@ import (
 	"github.com/yamakiller/velcro-go/example/monopoly/client.broker/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/client.broker/tcpclient"
 	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
+	"github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/vlog"
+	"google.golang.org/protobuf/proto"
 )
 
 var index = int32(0)
@@ -22,9 +26,10 @@ func Test() {
 }
 
 
-func owner(cli *tcpclient.Conn,i int32) string{
-	singin(cli,fmt.Sprintf("test_00%d&123456", i))
-	return createbattlespace(cli)
+func owner(cli *tcpclient.Conn,i int32) (string,string){
+	uid:= singin(cli,fmt.Sprintf("test_00%d&123456", i))
+	spaceid :=createbattlespace(cli)
+	return uid,spaceid
 }
 func user(cli *tcpclient.Conn,i int32,spaceid string){
 	uid:=singin(cli,fmt.Sprintf("test_00%d&123456", i))
@@ -38,21 +43,58 @@ func NewConn() *tcpclient.Conn{
 	cli.Dial( envs.Instance().Get("configs").(*configs.Config).TargetAddr,2*time.Second)
 	return cli
 }
+func NewUDPConn()*net.UDPConn{
+	udpAddr, err := net.ResolveUDPAddr("udp",envs.Instance().Get("configs").(*configs.Config).TargetAddr)
+	if err != nil{
+		fmt.Println("Err resolve UDP address: ", err)
+		return nil
+	}
+
+	conn, err := net.DialUDP("udp", nil, udpAddr)
+	if err != nil{
+		fmt.Println("Dial UDP error: ", err)
+		return nil
+	}
+	return conn
+}
+func sendUDP(conn *net.UDPConn,uid,spaceid,code string){
+	req := &pubs.ReportNatClient{
+		BattleSpaceID: spaceid,
+		VerifiyCode: code,
+	}
+	b, _:=proto.Marshal(req)
+	buff := make([]byte,1500)
+	offset := 0
+	buff[offset] =byte(len(uid)) 
+	offset += 1
+	copy(buff[offset:],uid)
+	offset += len(uid)
+	binary.BigEndian.PutUint16(buff[offset:offset+2],uint16(len(b)))
+	offset += 2
+	copy(buff[offset:],b)
+	offset += len(b)
+	conn.Write(buff[:offset])
+}
 
 func clientRun(i int32) {
 	cli1 := NewConn()
-	spaceid :=owner(cli1,i)
-	cli2 := NewConn()
-	t1 := time.NewTicker(time.Millisecond * 500)
-	for {
-		select {
-		case <-t1.C:
-			if spaceid != ""{
-				user(cli2,i + envs.Instance().Get("configs").(*configs.Config).ClientNumber,spaceid )
-				spaceid = ""
-			}
-		}
+	uid, spaceid :=owner(cli1,i)
+	if spaceid != ""{
+		udpConn := NewUDPConn()
+		sendUDP(udpConn,uid,spaceid,"123456")
 	}
+
+	// cli2 := NewConn()
+	// t1 := time.NewTicker(time.Millisecond * 500)
+	// for {
+	// 	select {
+	// 	case <-t1.C:
+	// 		if spaceid != ""{
+	// 			user(cli2,i + envs.Instance().Get("configs").(*configs.Config).ClientNumber,spaceid )
+	// 			spaceid = ""
+	// 		}
+	// 	}
+	// }
 }
 
 func singin(cp *tcpclient.Conn, token string) string {

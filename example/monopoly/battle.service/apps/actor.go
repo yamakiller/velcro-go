@@ -3,10 +3,8 @@ package apps
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/serve"
@@ -208,9 +206,7 @@ func (actor *BattleActor) onReportNat(ctx context.Context) (proto.Message, error
 	}
 	players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
 	for _, v := range players {
-		if !sender.Equal(v) {
-			actor.submitRequestGatewayPush(ctx, v, request)
-		}
+		actor.submitRequestGatewayPush(ctx, v, request)
 	}
 	return request, nil
 }
@@ -220,7 +216,6 @@ func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.M
 	sender := serve.GetServantClientInfo(ctx).Sender()
 	
 	// request := ctx.Message.(*mprvs.RequestExitBattleSpace)
-	t1 := time.Now()
 	if ok, err := rds.IsMaster(ctx, sender); err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
 		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
@@ -254,7 +249,6 @@ func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.M
 		}
 	}
 
-	fmt.Println(time.Now().UnixMilli() - t1.UnixMilli())
 	return &mprvs.RequestExitBattleSpace{
 		BattleSpaceID: request.BattleSpaceID,
 		UID:           request.UID,

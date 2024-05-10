@@ -1,5 +1,5 @@
-target-addr: 0.0.0.0:10000
+target-addr: zctj.tpddns.cn:10000
 client-connection-timeout: 200000
-client-number: 20
+client-number: 1
 interval-second: 5
 screen-refresh-frequency: 4000
