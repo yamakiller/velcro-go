@@ -460,8 +460,9 @@ func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) (uid stri
 }
 
 func GetBattleSpaceList(ctx context.Context, start int64, size int64) ([]string, error) {
-
-	val, err := client.LRange(ctx, rdsconst.GetBattleSpaceOnlineDataKey(""), start, (start+1)*size).Result()
+	//pipe.RPush(ctx, rdsconst.BattleSpaceOnlinetable, spaceid)
+	//val, err := client.LRange(ctx, rdsconst.GetBattleSpaceOnlineDataKey(""), start, (start+1)*size).Result()
+	val, err := client.LRange(ctx, rdsconst.BattleSpaceOnlinetable, start, (start+1)*size).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +482,7 @@ func BattleSpaceReportNat(ctx context.Context, spaceid string, nat string, clien
 	defer space_mutex.Unlock()
 	results, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpaceNatAddr, rdsconst.PalyerMapClientIdAddress, rdsconst.PlayerMapClientIdId).Result()
 	if err != nil {
-		
+
 		return err
 	}
 	if len(results) != 3 {
