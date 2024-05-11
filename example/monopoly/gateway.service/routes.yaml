@@ -33,4 +33,5 @@ routes:
       - pubs.RequsetStartBattleSpace,5000
       - pubs.RequsetStartBattleSpaceResp
       - prvs.RequestExitBattleSpace,5000
+      - prvs.ReportNat
 
