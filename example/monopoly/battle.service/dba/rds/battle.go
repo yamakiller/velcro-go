@@ -462,7 +462,7 @@ func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) (uid stri
 func GetBattleSpaceList(ctx context.Context, start int64, size int64) ([]string, error) {
 	//pipe.RPush(ctx, rdsconst.BattleSpaceOnlinetable, spaceid)
 	//val, err := client.LRange(ctx, rdsconst.GetBattleSpaceOnlineDataKey(""), start, (start+1)*size).Result()
-	val, err := client.LRange(ctx, rdsconst.BattleSpaceOnlinetable, start, (start+1)*size).Result()
+	val, err := client.LRange(ctx, rdsconst.BattleSpaceOnlinetable, start*size, (start+1)*size).Result()
 	if err != nil {
 		return nil, err
 	}
