@@ -101,12 +101,6 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx context.Context) (proto.Messa
 				continue
 			}
 			player_data := rdsconst.SplitData(result[rdsconst.GetBattleSpacePlayerDataKey(id)])
-			pos, _ := (strconv.Atoi(player_data[4]))
-			player := &mpubs.BattleSpacePlayerSimple{
-				Display: player_data[2],
-				Pos:     int32(pos),
-			}
-			player_data := rdsconst.SplitData(result[rdsconst.GetBattleSpacePlayerDataKey(id)])
 			if len(player_data) == 5 {
 				pos, _ := (strconv.Atoi(player_data[4]))
 				player := &mpubs.BattleSpacePlayerSimple{
