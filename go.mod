@@ -3,6 +3,7 @@ module github.com/yamakiller/velcro-go
 go 1.20
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redsync/redsync/v4 v4.11.0
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38

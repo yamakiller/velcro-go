@@ -30,10 +30,11 @@ message BattleSpaceDataSimple {
 
 
 message BattleSpacePlayer {
-    string uid = 1;
+    string uid     = 1;
     string display = 2;
     string icon    = 3;
     int32  pos     = 4;
+    string token   = 5;
 }
 
 message BattleSpaceData {
@@ -89,4 +90,5 @@ message RequsetStartBattleSpace{
 
 message RequsetStartBattleSpaceResp{
     string spaceId = 1;
+    map<string,string> tokens = 2;
 }

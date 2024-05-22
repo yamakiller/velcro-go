@@ -185,14 +185,28 @@ func (actor *BattleActor) onRequestStartBattleSpace(ctx context.Context) (proto.
 		return nil, err
 	}
 	players := rds.GetBattleSpacePlayers(ctx, request.SpaceId)
-	res := &mpubs.RequsetStartBattleSpaceResp{}
+	res := &mpubs.RequsetStartBattleSpaceResp{
+		Tokens: make(map[string]string),
+	}
 	res.SpaceId = request.SpaceId
+	for _,v:= range players{
+		uid, err := rds.GetPlayerUID(ctx, v)
+		if err != nil{
+			return nil,err
+		}
+		token,err := rds.CreateSpaceUserToken(ctx,res.SpaceId,uid)
+		if err != nil{
+			return nil,err
+		}
+		res.Tokens[uid] = token
+	}
 
 	for _, v := range players {
 		if !sender.Equal(v) {
 			actor.submitRequestGatewayPush(ctx, v, res)
 		}
 	}
+
 	return res, nil
 }
 

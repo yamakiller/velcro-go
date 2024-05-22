@@ -9,7 +9,10 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/lithammer/shortuuid/v4"
+	"github.com/yamakiller/velcro-go/envs"
+	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/errs"
+	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/jwt"
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
 	"github.com/yamakiller/velcro-go/network"
 )
@@ -641,6 +644,20 @@ func IsMaster(ctx context.Context, clientId *network.ClientID) (bool, error) {
 
 	return masterid == uid, nil
 }
+
+func CreateSpaceUserToken(ctx context.Context,spaceid, uid string)(string,error){
+	expiration := time.Duration(envs.Instance().Get("configs").(*configs.Config).Server.JwtTimeout) * time.Second
+	token,err  := jwt.GenToken(envs.Instance().Get("configs").(*configs.Config).Server.JwtSecret,expiration, spaceid,uid,)
+	if err != nil{
+		return "",err
+	}
+	if err := client.Set(ctx,token,"",expiration).Err(); err != nil{
+		return "",err
+	}
+
+	return token,nil
+}
+
 
 func getBattleSpacePlayerClientID(ctx context.Context, uid string) *network.ClientID {
 	player_mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
