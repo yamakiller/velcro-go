@@ -5,10 +5,14 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/serve"
+	"github.com/yamakiller/velcro-go/envs"
+	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/dba/rds"
+	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/jwt"
 	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
@@ -93,6 +97,9 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx context.Context) (proto.Messa
 		spacse.MaxCount =int32(max_count) 
 		battleSpacePos := result[rdsconst.BattleSpacePlayerPos]
 		for _, id := range strings.Split(battleSpacePos, "&") {
+			if id == ""{
+				continue
+			}
 			player_data := rdsconst.SplitData(result[rdsconst.GetBattleSpacePlayerDataKey(id)])
 			pos, _ := (strconv.Atoi(player_data[4]))
 			player := &mpubs.BattleSpacePlayerSimple{
@@ -109,7 +116,12 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx context.Context) (proto.Messa
 func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.EnterBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
-
+	uid, err := rds.GetPlayerUID(ctx, sender)
+	if err != nil {
+		actor.submitRequestCloseClient(ctx, sender)
+		vlog.Debugf("onCreateBattleSpace error %s", err.Error())
+		return nil, err
+	}
 	if err := rds.EnterBattleSpace(ctx, request.SpaceId, sender); err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
 		vlog.Debugf("onEnterBattleSpace error %s", err.Error())
@@ -122,6 +134,7 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 		return nil, err
 	}
 	res := &mpubs.EnterBattleSpaceResp{}
+	res.Uid = uid
 	res.Space = &mpubs.BattleSpaceData{}
 	res.Space.SpaceId = result[rdsconst.BattleSpaceId]
 	res.Space.MapURI = result[rdsconst.BattleSpaceMapURi]
@@ -188,19 +201,31 @@ func (actor *BattleActor) onRequestStartBattleSpace(ctx context.Context) (proto.
 	res := &mpubs.RequsetStartBattleSpaceResp{
 		Tokens: make(map[string]string),
 	}
+
+	spaceinfo,err := rds.GetBattleSpaceInfo(ctx, request.SpaceId)
+	if err != nil{
+		return nil, err
+	}
+	master := spaceinfo[0].(string)
+	max_count, _ :=strconv.Atoi(spaceinfo[1].(string))
 	res.SpaceId = request.SpaceId
+	auth := int32(0)
 	for _,v:= range players{
 		uid, err := rds.GetPlayerUID(ctx, v)
 		if err != nil{
 			return nil,err
 		}
-		token,err := rds.CreateSpaceUserToken(ctx,res.SpaceId,uid)
+		auth = 0
+		if uid == master {
+			auth = 1
+		}
+		expiration := time.Duration(envs.Instance().Get("configs").(*configs.Config).Server.JwtTimeout) * time.Second
+		token,err  := jwt.GenToken(envs.Instance().Get("configs").(*configs.Config).Server.JwtSecret, request.SpaceId,uid,auth,int32(max_count), expiration)
 		if err != nil{
 			return nil,err
 		}
 		res.Tokens[uid] = token
 	}
-
 	for _, v := range players {
 		if !sender.Equal(v) {
 			actor.submitRequestGatewayPush(ctx, v, res)

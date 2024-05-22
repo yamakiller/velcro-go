@@ -40,13 +40,13 @@ func (c *ServantClientConn) Accept(ctx network.Context) {
 func (c *ServantClientConn) Recvice(ctx network.Context) {
 	offset := 0
 	for {
-
 		n, err := c.recvice.WriteBinary(ctx.Message()[offset:])
 		offset += n
 		if err :=  c.recvice.Flush(); err != nil {
 			ctx.Close(ctx.Self())
 			return
 		}
+		
 		_, msg, msgErr := messages.UnMarshalProtobuf(c.recvice)
 		if msgErr != nil {
 			ctx.Close(ctx.Self())

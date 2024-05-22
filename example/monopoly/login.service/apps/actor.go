@@ -3,6 +3,8 @@ package apps
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/yamakiller/velcro-go/cluster/protocols/prvs"
 	"github.com/yamakiller/velcro-go/cluster/serve"
@@ -104,7 +106,7 @@ func (actor *LoginActor) onClientClosed(ctx context.Context) (proto.Message, err
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Fprintln(os.Stderr,"close ",uid)
 	results, err := rds.FindPlayerData(ctx, request.ClientID)
 	if err != nil {
 		return nil, err

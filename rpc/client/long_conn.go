@@ -245,12 +245,12 @@ func (c *LongConn) reader() {
 			switch pingMessage := msg.(type) {
 			case *messages.RpcPingMessage:
 				pingMessage.VerifyKey += 1
-				byteKleepAlive, err = proto.Marshal(pingMessage)
+				byteKleepAlive, err =messages.MarshalPingProtobuf(pingMessage.VerifyKey+1)
 				if err != nil {
 					vlog.Debugf("rpc-long-conn Marshal KleepAlive Message fail error:%s", err)
 					goto exit_reader_lable
 				}
-
+				
 				_, err = c.conn.Write(byteKleepAlive)
 				if err != nil {
 					vlog.Debugf("rpc-long-conn Response KleepAlive Message fail error:%s", err)

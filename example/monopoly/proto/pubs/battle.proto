@@ -64,6 +64,7 @@ message EnterBattleSpace {
 
 message EnterBattleSpaceResp {
     BattleSpaceData space = 1;
+    string uid = 2;
 }
 
 message ReadyBattleSpace {

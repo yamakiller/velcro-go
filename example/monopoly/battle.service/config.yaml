@@ -1,7 +1,7 @@
 server:
   laddr: 0.0.0.0:10200
   vaddr: 0.0.0.0:10200
-  jwt_secret: 948314AA9895114C8A0E4F612AF88FBA
+  jwt_secret: 8A0E4F612AF88FBA
   jwt_timeout: 180
 redis:
   address: 0.0.0.0:6379

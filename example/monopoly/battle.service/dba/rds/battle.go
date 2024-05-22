@@ -9,10 +9,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/lithammer/shortuuid/v4"
-	"github.com/yamakiller/velcro-go/envs"
-	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/errs"
-	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/jwt"
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
 	"github.com/yamakiller/velcro-go/network"
 )
@@ -31,16 +28,16 @@ import (
 //									7-4-2.修改对战区状态,修改对战区倒计时时间
 
 func CreateBattleSpace(ctx context.Context,
-	uid string,
+	master string,
 	clientId *network.ClientID,
 	mapURi string,
 	max_count int32) (string, error) {
 
-	player_mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	player_mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(master))
 	if err := player_mutex.Lock(); err != nil {
 		return "", err
 	}
-	results, err := client.HMGet(ctx, rdsconst.GetPlayerOnlineDataKey(uid),
+	results, err := client.HMGet(ctx, rdsconst.GetPlayerOnlineDataKey(master),
 		rdsconst.PlayerMapClientIcon,
 		rdsconst.PlayerMapClientBattleSpaceId,
 		rdsconst.PlayerMapClientDisplayName).Result()
@@ -79,17 +76,17 @@ func CreateBattleSpace(ctx context.Context,
 		rdsconst.PlayerMapClientIdId:              clientId.Id,
 		rdsconst.BattleSpaceMapURi:                mapURi,
 		rdsconst.BattleSpaceNatAddr:               "",
-		rdsconst.BattleSpaceMasterUid:             uid,
+		rdsconst.BattleSpaceMasterUid:             master,
 		rdsconst.BattleSpaceMasterIcon:            player_icon,
 		rdsconst.BattleSpaceMasterDisplay:         rdsconst.BattleSpaceStateReady,
 		rdsconst.BattleSpacePlayerCount:           strconv.FormatInt(int64(max_count), 10),
-		rdsconst.BattleSpacePlayerPos:             rdsconst.UpdateData(make([]string, max_count), 0, uid),
-		rdsconst.GetBattleSpacePlayerDataKey(uid): fmt.Sprintf("%s&%s&%s&%s&%s", uid, player_icon, player_display, rdsconst.BattleSpaceStateReady, "0"),
+		rdsconst.BattleSpacePlayerPos:             rdsconst.UpdateData(make([]string, max_count), 0, master),
+		rdsconst.GetBattleSpacePlayerDataKey(master): fmt.Sprintf("%s&%s&%s&%s&%s", master, player_icon, player_display, rdsconst.BattleSpaceStateReady, "0"),
 		rdsconst.BattleSpaceTime:                  strconv.FormatInt(time.Now().UnixMilli(), 10),
 		rdsconst.BattleSpaceState:                 rdsconst.BattleSpaceStateNomal,
 	}
 
-	pipe.HSet(ctx, rdsconst.GetPlayerOnlineDataKey(uid), rdsconst.PlayerMapClientBattleSpaceId, spaceid)
+	pipe.HSet(ctx, rdsconst.GetPlayerOnlineDataKey(master), rdsconst.PlayerMapClientBattleSpaceId, spaceid)
 	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), battleSpace)
 	pipe.RPush(ctx, rdsconst.BattleSpaceOnlinetable, spaceid)
 
@@ -392,6 +389,30 @@ func StartBattleSpace(ctx context.Context, spaceid string, clientId *network.Cli
 	return
 }
 
+func GetBattleSpaceInfo(ctx context.Context, spaceid string)([]interface{},error){
+	space_mutex := sync.NewMutex(rdsconst.GetBattleSpaceLockKey(spaceid))
+	if err := space_mutex.Lock(); err != nil {
+		return nil,err
+	}
+	results, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid),
+	 rdsconst.BattleSpaceMasterUid,
+	 rdsconst.BattleSpacePlayerCount,
+	).Result()
+
+	if err != nil {
+		return nil,err
+	}
+	if len(results) != 2 {
+		return nil,errs.ErrorSpaceOnlineDataLost
+	}
+	if results[0] == nil {
+		return nil,errs.ErrorSpaceOnlineDataLost
+	}
+	if results[1] == nil {
+		return nil,errs.ErrorSpaceOnlineDataLost
+	}
+	return results,nil
+}
 func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) (uid string, spaceid string, err error) {
 	uid, err = client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
 	if err != nil {
@@ -465,7 +486,7 @@ func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) (uid stri
 func GetBattleSpaceList(ctx context.Context, start int64, size int64) ([]string, error) {
 	//pipe.RPush(ctx, rdsconst.BattleSpaceOnlinetable, spaceid)
 	//val, err := client.LRange(ctx, rdsconst.GetBattleSpaceOnlineDataKey(""), start, (start+1)*size).Result()
-	val, err := client.LRange(ctx, rdsconst.BattleSpaceOnlinetable, start, (start+1)*size).Result()
+	val, err := client.LRange(ctx, rdsconst.BattleSpaceOnlinetable, start*size, (start+1)*size).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -644,20 +665,6 @@ func IsMaster(ctx context.Context, clientId *network.ClientID) (bool, error) {
 
 	return masterid == uid, nil
 }
-
-func CreateSpaceUserToken(ctx context.Context,spaceid, uid string)(string,error){
-	expiration := time.Duration(envs.Instance().Get("configs").(*configs.Config).Server.JwtTimeout) * time.Second
-	token,err  := jwt.GenToken(envs.Instance().Get("configs").(*configs.Config).Server.JwtSecret,expiration, spaceid,uid,)
-	if err != nil{
-		return "",err
-	}
-	if err := client.Set(ctx,token,"",expiration).Err(); err != nil{
-		return "",err
-	}
-
-	return token,nil
-}
-
 
 func getBattleSpacePlayerClientID(ctx context.Context, uid string) *network.ClientID {
 	player_mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
