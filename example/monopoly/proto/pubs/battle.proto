@@ -6,6 +6,9 @@ option go_package=".;pubs";
 message CreateBattleSpace{
     string mapURI = 1;
     fixed32 maxCount = 2;
+    string password = 3;
+    string roomName = 4;
+    string extend = 5;
 }
 
 message CreateBattleSpaceResp{
@@ -26,6 +29,8 @@ message BattleSpaceDataSimple {
     string masterDisplay = 5;
     int32 maxCount = 6;
     repeated BattleSpacePlayerSimple players = 7;
+    bool isHavePassword = 8;
+    string roomName = 9;
 }
 
 
@@ -44,6 +49,8 @@ message BattleSpaceData {
     fixed64 starttime = 4;
     string   state = 5;
     repeated BattleSpacePlayer players = 6;
+    string extent = 7;
+    string roomName = 8; 
 }
 
 message GetBattleSpaceList {
@@ -60,6 +67,7 @@ message GetBattleSpaceListResp {
 
 message EnterBattleSpace {
     string spaceId = 1;
+    string password = 2;
 }
 
 message EnterBattleSpaceResp {
@@ -92,4 +100,49 @@ message RequsetStartBattleSpace{
 message RequsetStartBattleSpaceResp{
     string spaceId = 1;
     map<string,string> tokens = 2;
+}
+
+//更改密码
+message ChanggePasswordRequest{
+    string newPassword = 1;
+    string spaceID = 2;
+}
+
+message ChanggePasswordResponse{
+    int32 res = 1;
+}
+
+//修改房间参数
+message ModifyRoomParametersRequset{
+    string spaceID = 1;
+    string mapURI = 2;
+    fixed32 maxCount = 3;
+    string roomName = 4;
+    string extend = 5;
+}
+
+message ModifyRoomParametersResponse{
+    int32 res = 1;
+}
+
+message ModifyRoomParametersNotify{
+    string spaceID = 1;
+    string mapURI = 2;
+    fixed32 maxCount = 3;
+    string roomName = 4;
+    string extend = 5;
+}
+
+//踢人
+message KickUserRequest{
+    string spaceID =1;
+    string uid =2;
+}
+message KickUserResponse{
+    int32 res = 1;
+}
+//玩家离开房间通知
+message UserExitSpaceNotify{
+    string spaceID =1;
+    string uid =2;
 }

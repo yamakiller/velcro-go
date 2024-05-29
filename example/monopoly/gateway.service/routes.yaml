@@ -34,4 +34,7 @@ routes:
       - pubs.RequsetStartBattleSpaceResp
       - prvs.RequestExitBattleSpace,5000
       - prvs.ReportNat
+      - pubs.KickUserRequest
+      - pubs.ChanggePasswordRequest
+      - pubs.ModifyRoomParametersRequset
 
