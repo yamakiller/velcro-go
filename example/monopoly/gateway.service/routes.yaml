@@ -37,4 +37,5 @@ routes:
       - pubs.KickUserRequest
       - pubs.ChanggePasswordRequest
       - pubs.ModifyRoomParametersRequset
+      - pubs.DissBattleSpaceRequest
 

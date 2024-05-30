@@ -8,8 +8,7 @@
     "net8.0-windows7.0": []
   },
   "packageFolders": {
-    "C:\\Users\\冷帆\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\OTO\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
@@ -17,15 +16,11 @@
       "projectUniqueName": "D:\\GOPATH\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\NodeView\\NodeBehavior.csproj",
       "projectName": "NodeBehavior",
       "projectPath": "D:\\GOPATH\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\NodeView\\NodeBehavior.csproj",
-      "packagesPath": "C:\\Users\\冷帆\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\OTO\\.nuget\\packages\\",
       "outputPath": "D:\\GOPATH\\src\\github.com\\yamakiller\\velcro-go\\tools\\behavior\\NodeView\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\冷帆\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Users\\OTO\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -74,7 +69,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.205/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.204/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

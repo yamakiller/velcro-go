@@ -3,6 +3,8 @@ syntax = "proto3";
 package pubs;
 option go_package=".;pubs";
 
+
+//创建房间
 message CreateBattleSpace{
     string mapURI = 1;
     fixed32 maxCount = 2;
@@ -53,6 +55,7 @@ message BattleSpaceData {
     string roomName = 8; 
 }
 
+//获取房间列表
 message GetBattleSpaceList {
     int32 start = 1;
     int32 size  = 2;
@@ -64,7 +67,7 @@ message GetBattleSpaceListResp {
     repeated BattleSpaceDataSimple spaces = 3;
 }
 
-
+//进入房间
 message EnterBattleSpace {
     string spaceId = 1;
     string password = 2;
@@ -74,7 +77,12 @@ message EnterBattleSpaceResp {
     BattleSpaceData space = 1;
     string uid = 2;
 }
+message EnterBattleSpaceNotify {
+    string spaceId = 1;
+    BattleSpacePlayer player = 2;
+}
 
+//房间准备
 message ReadyBattleSpace {
     string spaceId = 1;
     string uid = 2;
@@ -87,7 +95,21 @@ message ReadyBattleSpaceResp {
     bool ready = 3;
 }
 
+message ReadyBattleSpaceNotify {
+    string spaceId = 1;
+    string uid = 2;
+    bool ready = 3;
+}
+
 //解散房间
+message DissBattleSpaceRequest{
+    string spaceId = 1;
+}
+
+message DissBattleSpaceResponse{
+    string spaceId = 1;
+}
+
 message DissBattleSpaceNotify{
     string spaceId = 1;
 }

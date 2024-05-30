@@ -152,12 +152,18 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 	res.Space.Extent = result[rdsconst.BattleSpaceExtend]
 	res.Space.RoomName = result[rdsconst.BattleSpaceName]
 	battleSpacePos := result[rdsconst.BattleSpacePlayerPos]
+
+	notify := &mpubs.EnterBattleSpaceNotify{
+		SpaceId: request.SpaceId,
+	}
+
 	for _, id := range strings.Split(battleSpacePos, "&") {
 		if id == "" {
 			continue
 		}
 		player_data := rdsconst.SplitData(result[rdsconst.GetBattleSpacePlayerDataKey(id)])
 		pos, _ := (strconv.Atoi(player_data[4]))
+
 		player := &mpubs.BattleSpacePlayer{
 			Uid:     player_data[0],
 			Icon:    player_data[1],
@@ -165,11 +171,14 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 			Pos:     int32(pos),
 		}
 		res.Space.Players = append(res.Space.Players, player)
+		if player.Uid == uid {
+			notify.Player = player
+		}
 	}
 	players := rds.GetBattleSpacePlayers(ctx, request.SpaceId)
 	for _, v := range players {
 		if !sender.Equal(v) {
-			actor.submitRequestGatewayPush(ctx, v, res)
+			actor.submitRequestGatewayPush(ctx, v, notify)
 		}
 	}
 	return res, nil
@@ -328,6 +337,35 @@ func (actor *BattleActor) onModifyRoomParametersRequset(ctx context.Context) (pr
 	return res, nil
 }
 
+func (actor *BattleActor) onDissBattleSpaceRequest(ctx context.Context) (proto.Message, error) {
+	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.DissBattleSpaceRequest)
+	sender := serve.GetServantClientInfo(ctx).Sender()
+
+	// request := ctx.Message.(*mprvs.RequestExitBattleSpace)
+	if ok, err := rds.IsMaster(ctx, sender); err != nil {
+		actor.submitRequestCloseClient(ctx, sender)
+		return nil, err
+	} else if ok {
+		// 房主离开，解散房间
+		players := rds.GetBattleSpacePlayers(ctx, request.SpaceId)
+		if err := rds.DeleteBattleSpace(ctx, sender); err != nil {
+			return nil, nil
+		}
+
+		res := &mpubs.DissBattleSpaceNotify{
+			SpaceId: request.SpaceId,
+		}
+		for _, v := range players {
+			if !sender.Equal(v) {
+				actor.submitRequestGatewayPush(ctx, v, res)
+			}
+		}
+	}
+	res := &mpubs.DissBattleSpaceResponse{
+		SpaceId: request.SpaceId,
+	}
+	return res, nil
+}
 func (actor *BattleActor) onReportNat(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mprvs.ReportNat)
 	sender := serve.GetServantClientInfo(ctx).Sender()
@@ -371,7 +409,7 @@ func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.M
 		rds.LeaveBattleSpace(ctx, sender)
 		res := &mpubs.UserExitSpaceNotify{
 			SpaceID: request.BattleSpaceID,
-			Uid:           request.UID,
+			Uid:     request.UID,
 		}
 		players := rds.GetBattleSpacePlayers(ctx, request.BattleSpaceID)
 		for _, v := range players {
