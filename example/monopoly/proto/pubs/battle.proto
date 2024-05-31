@@ -41,7 +41,10 @@ message BattleSpacePlayer {
     string display = 2;
     string icon    = 3;
     int32  pos     = 4;
-    string token   = 5;
+    string role    = 5;
+    string camp    = 6;
+    bool   ready   = 7;
+    map<string,string> extends  = 8;
 }
 
 message BattleSpaceData {
@@ -167,4 +170,34 @@ message KickUserResponse{
 message UserExitSpaceNotify{
     string spaceID =1;
     string uid =2;
+}
+
+message ModifyUserRoleRequest{
+    string spaceID = 1;
+    string role = 2;
+}
+
+message ModifyUserRoleResponse{
+    int32 res = 1;
+}
+
+message ModifyUserRoleNotify{
+    string spaceID = 1;
+    string uid = 2;
+    string role = 3;
+}
+
+message ModifyUserCampRequest{
+    string spaceID = 1;
+    string camp = 2;
+}
+
+message ModifyUserCampResponse{
+    int32 res = 1;
+}
+
+message ModifyUserCampNotify{
+    string spaceID = 1;
+    string uid = 2;
+    string camp = 3;
 }

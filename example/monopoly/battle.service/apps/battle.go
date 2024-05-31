@@ -66,10 +66,9 @@ func (bs *battleService) newBattleActor(conn *serve.ServantClientConn) serve.Ser
 	conn.Register(&mpubs.KickUserRequest{}, actor.onKickUserRequest)
 	conn.Register(&mpubs.ModifyRoomParametersRequset{}, actor.onModifyRoomParametersRequset)
 	conn.Register(&mpubs.DissBattleSpaceRequest{}, actor.onDissBattleSpaceRequest)
-	
-	
+	conn.Register(&mpubs.ModifyUserRoleRequest{}, actor.onModifyUserRoleRequest)
+	conn.Register(&mpubs.ModifyUserCampRequest{}, actor.onModifyUserCampRequest)
 
-	conn.Register(&mprvs.ReportNat{}, actor.onReportNat)
 	conn.Register(&mprvs.RequestExitBattleSpace{}, actor.onRequestExitBattleSpace)
 	return actor
 }
