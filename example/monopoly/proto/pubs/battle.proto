@@ -3,9 +3,14 @@ syntax = "proto3";
 package pubs;
 option go_package=".;pubs";
 
+
+//创建房间
 message CreateBattleSpace{
     string mapURI = 1;
     fixed32 maxCount = 2;
+    string password = 3;
+    string roomName = 4;
+    string extend = 5;
 }
 
 message CreateBattleSpaceResp{
@@ -26,14 +31,17 @@ message BattleSpaceDataSimple {
     string masterDisplay = 5;
     int32 maxCount = 6;
     repeated BattleSpacePlayerSimple players = 7;
+    bool isHavePassword = 8;
+    string roomName = 9;
 }
 
 
 message BattleSpacePlayer {
-    string uid = 1;
+    string uid     = 1;
     string display = 2;
     string icon    = 3;
     int32  pos     = 4;
+    string token   = 5;
 }
 
 message BattleSpaceData {
@@ -43,8 +51,11 @@ message BattleSpaceData {
     fixed64 starttime = 4;
     string   state = 5;
     repeated BattleSpacePlayer players = 6;
+    string extent = 7;
+    string roomName = 8; 
 }
 
+//获取房间列表
 message GetBattleSpaceList {
     int32 start = 1;
     int32 size  = 2;
@@ -56,15 +67,22 @@ message GetBattleSpaceListResp {
     repeated BattleSpaceDataSimple spaces = 3;
 }
 
-
+//进入房间
 message EnterBattleSpace {
     string spaceId = 1;
+    string password = 2;
 }
 
 message EnterBattleSpaceResp {
     BattleSpaceData space = 1;
+    string uid = 2;
+}
+message EnterBattleSpaceNotify {
+    string spaceId = 1;
+    BattleSpacePlayer player = 2;
 }
 
+//房间准备
 message ReadyBattleSpace {
     string spaceId = 1;
     string uid = 2;
@@ -77,7 +95,21 @@ message ReadyBattleSpaceResp {
     bool ready = 3;
 }
 
+message ReadyBattleSpaceNotify {
+    string spaceId = 1;
+    string uid = 2;
+    bool ready = 3;
+}
+
 //解散房间
+message DissBattleSpaceRequest{
+    string spaceId = 1;
+}
+
+message DissBattleSpaceResponse{
+    string spaceId = 1;
+}
+
 message DissBattleSpaceNotify{
     string spaceId = 1;
 }
@@ -89,4 +121,50 @@ message RequsetStartBattleSpace{
 
 message RequsetStartBattleSpaceResp{
     string spaceId = 1;
+    map<string,string> tokens = 2;
+}
+
+//更改密码
+message ChanggePasswordRequest{
+    string newPassword = 1;
+    string spaceID = 2;
+}
+
+message ChanggePasswordResponse{
+    int32 res = 1;
+}
+
+//修改房间参数
+message ModifyRoomParametersRequset{
+    string spaceID = 1;
+    string mapURI = 2;
+    fixed32 maxCount = 3;
+    string roomName = 4;
+    string extend = 5;
+}
+
+message ModifyRoomParametersResponse{
+    int32 res = 1;
+}
+
+message ModifyRoomParametersNotify{
+    string spaceID = 1;
+    string mapURI = 2;
+    fixed32 maxCount = 3;
+    string roomName = 4;
+    string extend = 5;
+}
+
+//踢人
+message KickUserRequest{
+    string spaceID =1;
+    string uid =2;
+}
+message KickUserResponse{
+    int32 res = 1;
+}
+//玩家离开房间通知
+message UserExitSpaceNotify{
+    string spaceID =1;
+    string uid =2;
 }

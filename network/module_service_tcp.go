@@ -91,7 +91,7 @@ func (t *tcpNetworkServerModule) Stop() {
 		t.listen.Close()
 	}
 
-	t.waitGroup.Wait()
+	// t.waitGroup.Wait()
 	t.stoped = nil
 	t.listen = nil
 }
