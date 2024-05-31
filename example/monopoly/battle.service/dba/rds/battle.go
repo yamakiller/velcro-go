@@ -297,33 +297,47 @@ func ChangeModifyRoomParameters(ctx context.Context, spaceid string, map_url str
 		return err
 	}
 	defer space_mutex.Unlock()
-	
-	pos_result, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos).Result()
-	if err != nil {
-		return err
-	}
-	list := make([]string, max_count)
-	players := rdsconst.SplitData(pos_result[0].(string))
-	for i, v := range players {
-		if i >= len(list) {
-			break
-		}
-		list[i] = v
-	}
 
-	space_pos := rdsconst.MakeData(list)
-
-	
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 
-	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpaceMapURi, map_url)
-	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerCount, strconv.FormatInt(int64(max_count), 10))
-	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpaceName, room_name)
-	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpaceExtend, extend)
+	if max_count > 1 {
+		pos_result, err := client.HMGet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos).Result()
+		if err != nil {
+			return err
+		}
 
-	pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos, space_pos)
-	_, err = pipe.Exec(ctx)
+		if len(pos_result) == 0 || pos_result[0] == nil {
+			return errors.ErrUnsupported
+		}
+		list := make([]string, max_count)
+		players := rdsconst.SplitData(pos_result[0].(string))
+		for i, v := range players {
+			if i >= len(list) {
+				break
+			}
+			list[i] = v
+		}
+
+		space_pos := rdsconst.MakeData(list)
+
+		pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerCount, strconv.FormatInt(int64(max_count), 10))
+		pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpacePlayerPos, space_pos)
+	}
+
+	if map_url != "" {
+		pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpaceMapURi, map_url)
+	}
+
+	if room_name != "" {
+		pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpaceName, room_name)
+	}
+
+	if extend != "" {
+		pipe.HMSet(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), rdsconst.BattleSpaceExtend, extend)
+	}
+
+	_, err := pipe.Exec(ctx)
 	if err != nil {
 		pipe.Discard()
 		return err
