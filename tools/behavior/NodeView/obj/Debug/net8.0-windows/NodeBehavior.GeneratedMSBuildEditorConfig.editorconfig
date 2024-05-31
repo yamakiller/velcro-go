@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = NodeBehavior
-build_property.ProjectDir = D:\GOPATH\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\
+build_property.ProjectDir = D:\Workspaces\Go\src\github.com\yamakiller\velcro-go\tools\behavior\NodeView\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
