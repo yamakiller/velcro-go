@@ -27,6 +27,7 @@ const (
 	battle_space_lock        = "battle_space_lock_"
 	battle_space_online_data = "battle_space_online_data_"
 	BattleSpaceId            = "space_id"
+	BattleSpaceName          = "space_name"
 	BattleSpaceMapURi        = "space_map_uri"
 	BattleSpaceTime          = "space_time"
 	BattleSpaceNatAddr       = "space_nat_addr"
@@ -35,6 +36,8 @@ const (
 	BattleSpaceMasterIcon    = "space_master_icon"
 	BattleSpaceMasterDisplay = "space_master_display"
 	BattleSpacePlayerCount   = "space_player_count"
+	BattleSpacePassword      = "space_player_password"
+	BattleSpaceExtend        = "space_player_extend"
 	BattleSpacePlayerPos     = "space_player_pos" //玩家位置
 	BattleSpacePlayer        = "space_player_"    //玩家信息
 	BattleSpaceStateNomal    = "nomal"            // 正常状态

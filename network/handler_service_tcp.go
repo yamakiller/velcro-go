@@ -56,7 +56,6 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return errors.New("client: closed")
 	}
-
 	if _, err := c.sendbox.WriteBinary(b); err != nil {
 		c.sendcond.L.Unlock()
 		return err
@@ -208,9 +207,13 @@ func (c *tcpClientHandler) reader() {
 			}
 			break
 		}
-
 		c.keepaliveError = 0
-		c.mailbox <- &RecviceMessage{Data: tmp[:n], Addr: remoteAddr}
+		rec := &RecviceMessage{
+			Data: make([]byte, n),
+			Addr: remoteAddr,
+		}
+		copy(rec.Data,tmp[:n])
+		c.mailbox <- rec
 	}
 
 	c.conn.Close()
