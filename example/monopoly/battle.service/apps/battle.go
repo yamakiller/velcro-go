@@ -1,6 +1,8 @@
 package apps
 
 import (
+	"context"
+
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
@@ -24,6 +26,8 @@ func (bs *battleService) Start() error {
 	if err := rds.Connection(); err != nil {
 		return err
 	}
+
+	rds.ClearBattleSpace(context.Background())
 
 	bs.battle = serve.New(
 		serve.WithProducerActor(bs.newBattleActor),

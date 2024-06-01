@@ -9,7 +9,7 @@ import (
 )
 
 var logger FullLogger = &defaultLogger{
-	level:  LevelInfo,
+	level:  LevelTrace,
 	stdlog: log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile|log.Lmicroseconds),
 }
 

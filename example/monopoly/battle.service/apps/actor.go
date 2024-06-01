@@ -79,7 +79,8 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx context.Context) (proto.Messa
 	res.Start = request.Start
 	for _, spaceid := range spaceids {
 		result, err := rds.GetBattleSpaceInfo(ctx, spaceid)
-		if err != nil {
+		if err != nil || result == nil {
+			rds.RemoveBattleSpaceList(spaceid)
 			continue
 		}
 
@@ -112,7 +113,7 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 	player_data, err := rds.GetPlayerData(ctx, sender)
 	if err != nil {
 		actor.submitRequestCloseClient(ctx, sender)
-		vlog.Debugf("onCreateBattleSpace error %s", err.Error())
+		vlog.Debugf("onEnterBattleSpace error %s", err.Error())
 		return nil, err
 	}
 
@@ -393,10 +394,10 @@ func (actor *BattleActor) onModifyUserCampRequest(ctx context.Context) (proto.Me
 func (actor *BattleActor) onDissBattleSpaceRequest(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.DissBattleSpaceRequest)
 	sender := serve.GetServantClientInfo(ctx).Sender()
-
+	vlog.Infof("onDissBattleSpaceRequest spaceid %s  ", request.SpaceId)
 	// request := ctx.Message.(*mprvs.RequestExitBattleSpace)
 	if ok, err := rds.IsMaster(ctx, sender); err != nil {
-		actor.submitRequestCloseClient(ctx, sender)
+		// actor.submitRequestCloseClient(ctx, sender)
 		return nil, err
 	} else if ok {
 		// 房主离开，解散房间
@@ -423,10 +424,10 @@ func (actor *BattleActor) onDissBattleSpaceRequest(ctx context.Context) (proto.M
 func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mprvs.RequestExitBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
-
+	vlog.Infof("onRequestExitBattleSpace spaceid %s   5%s", request.BattleSpaceID, request.UID)
 	// request := ctx.Message.(*mprvs.RequestExitBattleSpace)
 	if ok, err := rds.IsMaster(ctx, sender); err != nil {
-		actor.submitRequestCloseClient(ctx, sender)
+		// actor.submitRequestCloseClient(ctx, sender)
 		vlog.Debugf("onRequestExitBattleSpace error %s", err.Error())
 	} else if ok {
 		// 房主离开，解散房间

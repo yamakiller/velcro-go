@@ -47,31 +47,20 @@ func GetPlayerDataByUID(ctx context.Context, uid string) (*rdsstruct.RdsPlayerDa
 	return oldClient, nil
 }
 
-// UpdatePlayerData
-func UpdatePlayerDataSpaceID(ctx context.Context, uid string, spaceid string) error {
-	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
-	if err := mutex.Lock(); err != nil {
-		return err
-	}
-
-	defer mutex.Unlock()
-
-	oldClient := &rdsstruct.RdsPlayerData{}
-	if err := client.Get(ctx, rdsconst.GetPlayerOnlineDataKey(uid)).Scan(oldClient); err != nil {
-		return err
-	}
-	oldClient.BattleSpaceId = spaceid
-
-	if err := client.Set(ctx, rdsconst.GetPlayerOnlineDataKey(uid), oldClient, 0).Err(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func GetBattleSpacePlayerClientID(ctx context.Context, uid string) *network.ClientID {
 	player_data, err := GetPlayerDataByUID(ctx, uid)
 	if err != nil {
 		return nil
 	}
 	return &network.ClientID{Address: player_data.ClientIdAddress, Id: player_data.ClientIdId}
+}
+
+func GetPlayerBattleSpaceID(ctx context.Context, uid string) (string, error) {
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	if err := mutex.Lock(); err != nil {
+		return "", err
+	}
+
+	defer mutex.Unlock()
+	return client.Get(ctx, rdsconst.GetPlayerBattleSpaceIDKey(uid)).Result()
 }

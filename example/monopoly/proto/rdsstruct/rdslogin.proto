@@ -8,6 +8,5 @@ message RdsPlayerData{
     string DisplayName = 2;
     string ClientIdAddress = 3;
     string ClientIdId = 4;
-    string BattleSpaceId = 5;
-    map<string,string> Externs = 6;
+    map<string,string> Externs = 5;
 }

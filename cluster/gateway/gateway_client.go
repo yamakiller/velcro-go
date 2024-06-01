@@ -42,14 +42,14 @@ type Client interface {
 }
 
 type ClientConn struct {
-	gateway        *Gateway
-	clientID       *network.ClientID
-	ruleID         int32  //角色ID
-	secret         []byte //密钥
-	recvice        *circbuf.LinkBuffer
-	ping           uint64
+	gateway  *Gateway
+	clientID *network.ClientID
+	ruleID   int32  //角色ID
+	secret   []byte //密钥
+	recvice  *circbuf.LinkBuffer
+	ping     uint64
 	// requestTimeout int64 //最大超时时间 毫秒级
-	reference      int32 //引用计数器
+	reference int32 //引用计数器
 }
 
 func (dl *ClientConn) ClientID() *network.ClientID {
@@ -75,10 +75,10 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 		return
 	}
 
-
 	dl.ping = fastrand.Uint64n(math.MaxUint64)
 
 	msg := &pubs.PingMsg{VerificationKey: dl.ping}
+	vlog.Errorf("ping marshal message [error:%v]", msg.VerificationKey)
 	msgb, err := protomessge.Marshal(msg, dl.secret)
 	if err != nil {
 		vlog.Errorf("ping marshal message [error:%v]", err.Error())
@@ -133,7 +133,7 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 			}
 			continue
 		}
-		
+
 		switch message := msg.(type) {
 		case *pubs.PingMsg:
 			dl.onPingReply(ctx, message)
@@ -175,14 +175,13 @@ func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
 		return
 	}
 
-	if dl.ping+1 != message.VerificationKey {
-		vlog.Debugf("ping reply error %d/%d", dl.ping+1, message.VerificationKey)
-		ctx.Close(ctx.Self())
-		return
-	}
+	// if dl.ping+1 != message.VerificationKey {
+	// 	vlog.Debugf("ping reply error %d/%d", dl.ping+1, message.VerificationKey)
+	// 	ctx.Close(ctx.Self())
+	// 	return
+	// }
 
 	dl.ping = 0
-	vlog.Debug("ping reply success")
 }
 
 func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg) {
@@ -261,7 +260,6 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 		ctx.Close(ctx.Self())
 		return
 	}
-
 
 	bodyAny, err := anypb.New(message)
 	if err != nil {

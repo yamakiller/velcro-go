@@ -192,6 +192,16 @@ func FindPlayerData(ctx context.Context, clientId *network.ClientID) (*rdsstruct
 	return oldClient, nil
 }
 
+func GetPlayerBattleSpaceID(ctx context.Context, uid string) (string, error) {
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	if err := mutex.Lock(); err != nil {
+		return "", err
+	}
+
+	defer mutex.Unlock()
+	return client.Get(ctx, rdsconst.GetPlayerBattleSpaceIDKey(uid)).Result()
+}
+
 // GetPlayerUID 获取客户端绑定的UID
 func GetPlayerUID(ctx context.Context, clientId *network.ClientID) (string, error) {
 	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()

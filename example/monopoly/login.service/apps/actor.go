@@ -80,10 +80,12 @@ func (actor *LoginActor) onSignOut(ctx context.Context) (proto.Message, error) {
 	if err != nil {
 		return nil, err
 	}
+	vlog.Debugf("onSignOut %s", uid)
 	if results != nil {
 		// TODO:退出Battle
-		if results.BattleSpaceId != "" {
-			actor.submitRequest(ctx, &mprvs.RequestExitBattleSpace{BattleSpaceID: results.BattleSpaceId, UID: uid})
+		BattleSpaceId, err := rds.GetPlayerBattleSpaceID(ctx, uid)
+		if err == nil && BattleSpaceId != "" {
+			actor.submitRequest(ctx, &mprvs.RequestExitBattleSpace{BattleSpaceID: BattleSpaceId, UID: uid})
 			// TODO: 是否需要判断执行失败
 		}
 	}
@@ -108,10 +110,12 @@ func (actor *LoginActor) onClientClosed(ctx context.Context) (proto.Message, err
 	if err != nil {
 		return nil, err
 	}
+	vlog.Debugf("onClientClosed %s", uid)
 	if results != nil {
 		// TODO:退出Battle
-		if results.BattleSpaceId != "" {
-			actor.submitForwardBundleRequest(ctx, request.ClientID, &mprvs.RequestExitBattleSpace{BattleSpaceID: results.BattleSpaceId, UID: uid})
+		BattleSpaceId, err := rds.GetPlayerBattleSpaceID(ctx, uid)
+		if err == nil && BattleSpaceId != "" {
+			actor.submitForwardBundleRequest(ctx, request.ClientID, &mprvs.RequestExitBattleSpace{BattleSpaceID: BattleSpaceId, UID: uid})
 			// TODO: 是否需要判断执行失败
 		}
 	}

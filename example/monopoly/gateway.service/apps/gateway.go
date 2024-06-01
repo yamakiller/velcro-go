@@ -19,6 +19,7 @@ func (gs *gatewayService) Start() error {
 	gs.gwy = gateway.New(
 		gateway.WithLAddr(envs.Instance().Get("configs").(*configs.Config).Server.LAddr),
 		gateway.WithVAddr(envs.Instance().Get("configs").(*configs.Config).Server.VAddr),
+		gateway.WithKleepalive(envs.Instance().Get("configs").(*configs.Config).Server.Kleepalive),
 		gateway.WithLAddrServant(envs.Instance().Get("configs").(*configs.Config).Server.LAddrServant),
 		gateway.WithRoute(&envs.Instance().Get("configs").(*configs.Config).Router),
 		gateway.WithNewEncryption(gs.newEncryption),

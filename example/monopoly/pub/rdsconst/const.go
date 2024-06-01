@@ -4,8 +4,9 @@ const (
 	player_lock = "player_lock_" // uid
 	player_uid  = "player_uid_"  // uid
 	// player_dispay_name = "player_dispaly_name_" // display name to uid
-	player_client_id   = "player_client_id_"   // string from clientid to uid
-	player_online_data = "player_online_data_" // uid
+	player_client_id       = "player_client_id_"       // string from clientid to uid
+	player_online_data     = "player_online_data_"     // uid
+	player_battle_space_id = "player_battle_space_id_" //battle space id
 
 	PlayerOnlineTable      = "player_online_table"       // 用户在线表
 	BattleSpaceOnlinetable = "battle_sapce_online_table" // 对战战空间在线表
@@ -64,6 +65,12 @@ func GetPlayerClientIDKey(clientId string) string {
 // GetPlayerOnlineDataKey player 在线数据的key
 func GetPlayerOnlineDataKey(uid string) string {
 	return player_online_data + uid
+}
+
+// GetPlayerBattleSpaceIDKey uid => battle space id
+
+func GetPlayerBattleSpaceIDKey(uid string) string {
+	return player_battle_space_id + uid
 }
 
 // GetBattleSpaceOnlineDataKey
