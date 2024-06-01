@@ -25,6 +25,8 @@ go.work
 log.*
 example/monopoly/bin/
 tools/behavior/Editor/obj/
+tools/behavior/NodeView/bin/
+tools/behavior/NodeView/obj/
 tools/behavior/.vs/behavior/FileContentIndex/3d37522d-a9bd-4ead-8b33-73b22308b9ee.vsidx
 tools/behavior/.vs/behavior/FileContentIndex/6d126310-e2e1-452a-bddc-31f9ad5cb8c3.vsidx
 tools/behavior/.vs/behavior/FileContentIndex/8a630673-995e-42bc-ad94-9d73109ab09f.vsidx

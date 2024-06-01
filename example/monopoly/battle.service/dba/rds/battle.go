@@ -48,6 +48,7 @@ func CreateBattleSpace(ctx context.Context,
 	battleSpace.SpaceName = spaceName
 	battleSpace.SpacePassword = password
 	battleSpace.SpaceExtend = extend
+	battleSpace.SpaceMapURI = mapURi
 	battleSpace.SpaceMasterUid = master.UID
 	battleSpace.SpaceMasterClientAddress = master.ClientIdAddress
 	battleSpace.SpaceMasterClinetID = master.ClientIdId

@@ -150,7 +150,16 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 			Icon:    v.Icon,
 			Display: v.Display,
 			Pos:     v.Pos,
+			Role:    v.Role,
+			Camp:    v.Camp,
+			Ready:   v.Ready,
+			Extends: make(map[string]string),
 		}
+
+		for k, v := range v.Extends {
+			player.Extends[k] = v
+		}
+
 		res.Space.Players = append(res.Space.Players, player)
 		if player.Uid == player_data.UID {
 			notify.Player = player
