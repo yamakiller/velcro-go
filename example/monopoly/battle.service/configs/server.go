@@ -7,4 +7,5 @@ type Server struct {
 	JwtSecret          string `yaml:"jwt_secret"`
 	JwtTimeout         int    `yaml:"jwt_timeout"`
 	BattleSpaceDieTime int64  `yaml:"battle_space_die_time"`
+	LogsPath           string `yaml:"logs_path"`
 }

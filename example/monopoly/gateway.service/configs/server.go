@@ -8,4 +8,5 @@ type Server struct {
 	EncryptionEnabled bool   `yaml:"encryption-enabled"` // 是否开启通信加密
 	OnlineOfNumber    int    `yaml:"online-number"`      // 在线人数限制
 	RequestTimeoutMax int32  `yaml:"request-timeout-max"`
+	LogsPath          string `yaml:"logs_path"`
 }

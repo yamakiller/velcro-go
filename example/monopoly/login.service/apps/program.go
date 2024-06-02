@@ -3,11 +3,9 @@ package apps
 import (
 	// "strings"
 
-	"strings"
-
 	"github.com/kardianos/service"
 	// "github.com/yamakiller/velcro-go/cluster/logs"
-	"github.com/yamakiller/velcro-go/cluster/logs"
+
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
 	"github.com/yamakiller/velcro-go/utils/files"
@@ -19,7 +17,9 @@ type Program struct {
 }
 
 func (p *Program) Start(s service.Service) error {
-
+	if err := vlog.SetLogFile("", "LoginService"); err != nil {
+		return err
+	}
 	vlog.Info("[PROGRAM]", "LoginService Start loading environment variables")
 
 	envs.With(&envs.YAMLEnv{})
@@ -28,8 +28,8 @@ func (p *Program) Start(s service.Service) error {
 		return err
 	}
 
-	vaddr := strings.ReplaceAll(strings.ToLower("login@"+envs.Instance().Get("configs").(*configs.Config).Server.VAddr), ":", ".")
-	vlog.SetOutput(logs.NewElastic(envs.Instance().Get("configs").(*configs.Config).LogRemoteAddr, vaddr))
+	// vaddr := strings.ReplaceAll(strings.ToLower("login@"+envs.Instance().Get("configs").(*configs.Config).Server.VAddr), ":", ".")
+	// vlog.SetOutput(logs.NewElastic(envs.Instance().Get("configs").(*configs.Config).LogRemoteAddr, vaddr))
 
 	p.service = &loginService{}
 	if err := p.service.Start(); err != nil {

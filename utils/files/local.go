@@ -32,3 +32,10 @@ func NewLocalPathFull(fileName string) string {
 	exPath := filepath.Dir(ex)
 	return filepath.Join(exPath, fileName)
 }
+
+func MkdirAll(dir string) error {
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return err
+	}
+	return nil
+}

@@ -17,7 +17,9 @@ type Program struct {
 }
 
 func (p *Program) Start(s service.Service) error {
-
+	if err := vlog.SetLogFile("", "GatewayService"); err != nil {
+		return err
+	}
 	vlog.Info("[PROGRAM]", "Gateway Start loading environment variables")
 
 	envs.With(&envs.YAMLEnv{})

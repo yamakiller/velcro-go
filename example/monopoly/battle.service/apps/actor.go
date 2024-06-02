@@ -304,12 +304,14 @@ func (actor *BattleActor) onModifyRoomParametersRequset(ctx context.Context) (pr
 
 	ok, err := rds.IsMaster(ctx, sender)
 	if err != nil {
+		vlog.Debugf("onModifyRoomParametersRequset IsMaster  %v", err.Error())
 		return nil, err
 	}
 	if !ok {
 		return nil, errs.ErrorPermissionsLost
 	}
 	if err := rds.ChangeModifyRoomParameters(ctx, request.SpaceID, request.MapURI, request.MaxCount, request.RoomName, request.Extend); err != nil {
+		vlog.Debugf("onModifyRoomParametersRequset ChangeModifyRoomParameters  %v", err.Error())
 		return nil, err
 	}
 

@@ -539,7 +539,7 @@ func IsMaster(ctx context.Context, clientId *network.ClientID) (bool, error) {
 		return false, err
 	}
 	BattleSpaceId, err := GetPlayerBattleSpaceID(ctx, player_data.UID)
-	if BattleSpaceId == "" {
+	if BattleSpaceId == "" || err != nil {
 		return false, errs.ErrorPlayerIsNotInBattleSpace
 	}
 
