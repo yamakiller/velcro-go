@@ -78,7 +78,6 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 	dl.ping = fastrand.Uint64n(math.MaxUint64)
 
 	msg := &pubs.PingMsg{VerificationKey: dl.ping}
-	vlog.Errorf("ping marshal message [error:%v]", msg.VerificationKey)
 	msgb, err := protomessge.Marshal(msg, dl.secret)
 	if err != nil {
 		vlog.Errorf("ping marshal message [error:%v]", err.Error())
@@ -175,11 +174,11 @@ func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
 		return
 	}
 
-	// if dl.ping+1 != message.VerificationKey {
-	// 	vlog.Debugf("ping reply error %d/%d", dl.ping+1, message.VerificationKey)
-	// 	ctx.Close(ctx.Self())
-	// 	return
-	// }
+	if dl.ping+1 != message.VerificationKey {
+		vlog.Debugf("ping reply error %d/%d", dl.ping+1, message.VerificationKey)
+		ctx.Close(ctx.Self())
+		return
+	}
 
 	dl.ping = 0
 }

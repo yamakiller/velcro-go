@@ -60,7 +60,6 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return err
 	}
-	c.sendbox.Flush()
 
 	c.sendcond.Signal()
 	c.sendcond.L.Unlock()
@@ -84,7 +83,6 @@ func (c *tcpClientHandler) Close() {
 	c.sendcond.Signal()
 	c.sendcond.L.Unlock()
 
-	//c.guarddone.Wait()
 }
 
 func (c *tcpClientHandler) isStopped() bool {
@@ -108,7 +106,7 @@ func (c *tcpClientHandler) sender() {
 	)
 	for {
 		c.sendcond.L.Lock()
-		if !c.isStopped() && c.sendbox.Len() == 0 {
+		if !c.isStopped() && c.sendbox.MallocLen() == 0 {
 			c.sendcond.Wait()
 		}
 		c.sendcond.L.Unlock()
@@ -119,9 +117,9 @@ func (c *tcpClientHandler) sender() {
 			}
 
 			c.sendcond.L.Lock()
-			// if c.sendbox.MallocLen() != 0 {
-			// 	c.sendbox.Flush()
-			// }
+			if c.sendbox.MallocLen() != 0 {
+				c.sendbox.Flush()
+			}
 			if c.sendbox.Len() > 0 {
 				readbytes, err = c.sendbox.ReadBinary(c.sendbox.Len())
 				if err != nil {
