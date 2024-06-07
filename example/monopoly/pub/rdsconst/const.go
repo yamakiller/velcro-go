@@ -22,6 +22,7 @@ const (
 const (
 	battle_space_lock        = "battle_space_lock_"
 	battle_space_online_data = "battle_space_online_data_"
+	battle_space_online_expired = "battle_space_online_expired_"
 	// BattleSpaceId            = "space_id"
 	// BattleSpaceName          = "space_name"
 	// BattleSpaceMapURi        = "space_map_uri"
@@ -78,6 +79,9 @@ func GetBattleSpaceOnlineDataKey(spaceid string) string {
 	return battle_space_online_data + spaceid
 }
 
+func GetBattleSpaceOnlineExpiredKey(spaceid string) string {
+	return battle_space_online_expired + spaceid
+}
 // GetBattleSpacePlayerDataKey
 // func GetBattleSpacePlayerDataKey(uid string) string {
 // 	return BattleSpacePlayer + uid

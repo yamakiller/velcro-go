@@ -28,7 +28,7 @@ func (bs *battleService) Start() error {
 	}
 
 	rds.ClearBattleSpace(context.Background())
-
+	rds.SubscribeBattleSpaceTime(context.Background())
 	bs.battle = serve.New(
 		serve.WithProducerActor(bs.newBattleActor),
 		serve.WithName("BattleService"),

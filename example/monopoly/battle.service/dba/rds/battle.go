@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/lithammer/shortuuid/v4"
@@ -72,6 +73,9 @@ func CreateBattleSpace(ctx context.Context,
 	BattleSpaceDieTime := time.Duration(envs.Instance().Get("configs").(*configs.Config).Server.BattleSpaceDieTime) * time.Second
 	pipe.Set(ctx, rdsconst.GetPlayerBattleSpaceIDKey(master.UID), spaceid, BattleSpaceDieTime)
 	pipe.Set(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), battleSpace, BattleSpaceDieTime)
+	if BattleSpaceDieTime > 30*time.Second {
+		pipe.Set(ctx, rdsconst.GetBattleSpaceOnlineExpiredKey(spaceid), spaceid, BattleSpaceDieTime-30*time.Second)
+	}
 	pipe.RPush(ctx, rdsconst.BattleSpaceOnlinetable, spaceid)
 
 	// pipe.Do(ctx, "exec")
@@ -587,4 +591,22 @@ func ClearBattleSpace(ctx context.Context) {
 
 func RemoveBattleSpaceList(spaceid string) {
 	client.LRem(context.Background(), rdsconst.BattleSpaceOnlinetable, 1, spaceid)
+}
+
+func SubscribeBattleSpaceTime(ctx context.Context) {
+	// 开启检测
+	_, err := client.ConfigSet(context.Background(), "notify-keyspace-events", "Ex").Result()
+	if err != nil {
+		panic(err)
+	}
+	pubsub := client.Subscribe(ctx, "__keyevent@0__:expired")
+	defer pubsub.Close()
+
+	// 开启goroutine，接收过期事件
+	go func() {
+		for msg := range pubsub.Channel() {
+			// 处理过期事件
+			fmt.Println("Key expired:", msg.Payload)
+		}
+	}()
 }

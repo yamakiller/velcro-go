@@ -68,7 +68,7 @@ func Connection() error {
 	if _, err := client.Ping(context.TODO()).Result(); err != nil {
 		return err
 	}
-	
+
 	pool := goredis.NewPool(client)
 	sync = redsync.New(pool)
 
