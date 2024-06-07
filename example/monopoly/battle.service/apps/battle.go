@@ -3,6 +3,7 @@ package apps
 import (
 	"context"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
@@ -13,6 +14,7 @@ import (
 
 type battleService struct {
 	battle *serve.Servant
+	pubsub *redis.PubSub
 }
 
 func (bs *battleService) Start() error {
@@ -28,7 +30,7 @@ func (bs *battleService) Start() error {
 	}
 
 	rds.ClearBattleSpace(context.Background())
-	rds.SubscribeBattleSpaceTime(context.Background())
+	bs.pubsub = rds.SubscribeBattleSpaceTime(context.Background())
 	bs.battle = serve.New(
 		serve.WithProducerActor(bs.newBattleActor),
 		serve.WithName("BattleService"),
@@ -52,7 +54,10 @@ func (bs *battleService) Stop() error {
 		bs.battle.Stop()
 		bs.battle = nil
 	}
-
+	if bs.pubsub != nil{
+		bs.pubsub.Close()
+		bs.pubsub = nil
+	}
 	rds.Disconnect()
 
 	return nil

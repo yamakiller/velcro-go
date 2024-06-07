@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
@@ -593,14 +594,13 @@ func RemoveBattleSpaceList(spaceid string) {
 	client.LRem(context.Background(), rdsconst.BattleSpaceOnlinetable, 1, spaceid)
 }
 
-func SubscribeBattleSpaceTime(ctx context.Context) {
+func SubscribeBattleSpaceTime(ctx context.Context) *redis.PubSub {
 	// 开启检测
 	_, err := client.ConfigSet(context.Background(), "notify-keyspace-events", "Ex").Result()
 	if err != nil {
 		panic(err)
 	}
 	pubsub := client.Subscribe(ctx, "__keyevent@0__:expired")
-	defer pubsub.Close()
 
 	// 开启goroutine，接收过期事件
 	go func() {
@@ -609,4 +609,5 @@ func SubscribeBattleSpaceTime(ctx context.Context) {
 			fmt.Println("Key expired:", msg.Payload)
 		}
 	}()
+	return pubsub
 }
