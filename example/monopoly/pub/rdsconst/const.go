@@ -1,5 +1,7 @@
 package rdsconst
 
+import "strings"
+
 const (
 	player_lock = "player_lock_" // uid
 	player_uid  = "player_uid_"  // uid
@@ -20,8 +22,8 @@ const (
 )
 
 const (
-	battle_space_lock        = "battle_space_lock_"
-	battle_space_online_data = "battle_space_online_data_"
+	battle_space_lock           = "battle_space_lock_"
+	battle_space_online_data    = "battle_space_online_data_"
 	battle_space_online_expired = "battle_space_online_expired_"
 	// BattleSpaceId            = "space_id"
 	// BattleSpaceName          = "space_name"
@@ -82,6 +84,10 @@ func GetBattleSpaceOnlineDataKey(spaceid string) string {
 func GetBattleSpaceOnlineExpiredKey(spaceid string) string {
 	return battle_space_online_expired + spaceid
 }
+func GetBattleSpaceOnlineExpiredSpaceID(exp string) []string {
+	return strings.Split(exp, battle_space_online_expired)
+}
+
 // GetBattleSpacePlayerDataKey
 // func GetBattleSpacePlayerDataKey(uid string) string {
 // 	return BattleSpacePlayer + uid

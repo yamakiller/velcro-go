@@ -606,7 +606,9 @@ func SubscribeBattleSpaceTime(ctx context.Context) *redis.PubSub {
 	go func() {
 		for msg := range pubsub.Channel() {
 			// 处理过期事件
-			fmt.Println("Key expired:", msg.Payload)
+			
+			// fmt.Println("Key expired:", rdsconst.GetBattleSpaceOnlineExpiredSpaceID(msg))
+			fmt.Println("Key expired:",msg)
 		}
 	}()
 	return pubsub
