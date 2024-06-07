@@ -86,6 +86,7 @@ func (actor *BattleActor) onGetBattleSpaceList(ctx context.Context) (proto.Messa
 
 		spacse := &mpubs.BattleSpaceDataSimple{}
 		spacse.SpaceId = spaceid
+		spacse.RoomName = result.SpaceName
 		spacse.IsHavePassword = (result.SpacePassword != "")
 		spacse.MapURI = result.SpaceMapURI
 		spacse.MasterUid = result.SpaceMasterUid
