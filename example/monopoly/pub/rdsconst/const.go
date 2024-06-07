@@ -12,6 +12,7 @@ const (
 
 	PlayerOnlineTable      = "player_online_table"       // 用户在线表
 	BattleSpaceOnlinetable = "battle_sapce_online_table" // 对战战空间在线表
+	PlayerBattleSpaceIDUID = "playerbattlespaceiduid_"   //battle space id uid
 
 	// PlayerMapClientUid           = "uid"
 	// PlayerMapClientDisplayName   = "display_name"
@@ -76,6 +77,16 @@ func GetPlayerBattleSpaceIDKey(uid string) string {
 	return player_battle_space_id + uid
 }
 
+// GetPlayerBattleSpaceIDKey uid => battle space id
+
+func GetPlayerBattleSpaceIDAndUIDKey(uid string, spaceid string) string {
+	return PlayerBattleSpaceIDUID + uid + "_" + spaceid
+}
+
+func GetPlayerBattleSpaceIDAndUID(exp string) []string {
+	return strings.Split(exp, "_")
+}
+
 // GetBattleSpaceOnlineDataKey
 func GetBattleSpaceOnlineDataKey(spaceid string) string {
 	return battle_space_online_data + spaceid
@@ -84,8 +95,13 @@ func GetBattleSpaceOnlineDataKey(spaceid string) string {
 func GetBattleSpaceOnlineExpiredKey(spaceid string) string {
 	return battle_space_online_expired + spaceid
 }
+
 func GetBattleSpaceOnlineExpiredSpaceID(exp string) []string {
 	return strings.Split(exp, battle_space_online_expired)
+}
+
+func GetBattleSpaceOnlineDataSpaceID(exp string) []string {
+	return strings.Split(exp, battle_space_online_data)
 }
 
 // GetBattleSpacePlayerDataKey

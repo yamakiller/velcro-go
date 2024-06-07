@@ -201,3 +201,8 @@ message ModifyUserCampNotify{
     string uid = 2;
     string camp = 3;
 }
+
+message DisRoomWarningNotify{
+    string spaceID = 1;
+    int64 tts = 2;//剩余时间
+}

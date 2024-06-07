@@ -30,7 +30,6 @@ func (bs *battleService) Start() error {
 	}
 
 	rds.ClearBattleSpace(context.Background())
-	bs.pubsub = rds.SubscribeBattleSpaceTime(context.Background())
 	bs.battle = serve.New(
 		serve.WithProducerActor(bs.newBattleActor),
 		serve.WithName("BattleService"),
@@ -44,7 +43,8 @@ func (bs *battleService) Start() error {
 		rds.Disconnect()
 		return err
 	}
-
+	rds.WithServant(bs.battle)
+	bs.pubsub = rds.SubscribeBattleSpaceTime(context.Background())
 	return nil
 }
 
@@ -54,7 +54,7 @@ func (bs *battleService) Stop() error {
 		bs.battle.Stop()
 		bs.battle = nil
 	}
-	if bs.pubsub != nil{
+	if bs.pubsub != nil {
 		bs.pubsub.Close()
 		bs.pubsub = nil
 	}

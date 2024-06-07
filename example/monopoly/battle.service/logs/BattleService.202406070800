@@ -1,0 +1,37 @@
+2024/06/07 20:56:02.025508 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/07 20:56:02.068372 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/07 20:56:02.068372 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/07 20:56:02.068886 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/07 20:56:02.068886 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/07 21:03:09.213534 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/07 21:03:09.265933 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/07 21:03:09.265933 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/07 21:03:09.266466 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/07 21:03:09.266466 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/07 21:10:57.594384 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/07 21:10:57.649797 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/07 21:10:57.650311 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/07 21:10:57.650311 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/07 21:10:57.650311 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/07 21:12:01.463696 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/07 21:12:01.500651 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/07 21:12:01.500651 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/07 21:12:01.501162 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/07 21:12:01.501162 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/07 21:12:31.849213 battle.go:615: [Debug] 2
+2024/06/07 21:36:28.924105 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/07 21:36:28.980942 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/07 21:36:28.980942 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/07 21:36:28.981464 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/07 21:36:28.985677 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/07 21:37:44.625975 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/07 21:37:44.662209 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/07 21:37:44.662209 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/07 21:37:44.662724 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/07 21:37:44.665943 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/07 21:38:06.439737 sender.go:57: [Error] pubs.DisRoomWarningNotify fail error rpc request: timeout
+2024/06/07 21:38:07.453060 sender.go:57: [Error] pubs.DisRoomWarningNotify fail error rpc request: timeout
+2024/06/07 21:38:07.453060 battle.go:627: [Debug] 2
+2024/06/07 21:38:53.751078 sender.go:57: [Error] pubs.DissBattleSpaceNotify fail error rpc request: timeout
+2024/06/07 21:38:58.897405 battle.go:633: [Debug] 2
+2024/06/07 21:38:59.914284 sender.go:57: [Error] pubs.DissBattleSpaceNotify fail error rpc request: timeout

@@ -2045,6 +2045,61 @@ func (x *ModifyUserCampNotify) GetCamp() string {
 	return ""
 }
 
+type DisRoomWarningNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SpaceID string `protobuf:"bytes,1,opt,name=spaceID,proto3" json:"spaceID,omitempty"`
+	Tts     int64  `protobuf:"varint,2,opt,name=tts,proto3" json:"tts,omitempty"` //剩余时间
+}
+
+func (x *DisRoomWarningNotify) Reset() {
+	*x = DisRoomWarningNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_battle_proto_msgTypes[33]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisRoomWarningNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisRoomWarningNotify) ProtoMessage() {}
+
+func (x *DisRoomWarningNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_battle_proto_msgTypes[33]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisRoomWarningNotify.ProtoReflect.Descriptor instead.
+func (*DisRoomWarningNotify) Descriptor() ([]byte, []int) {
+	return file_battle_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *DisRoomWarningNotify) GetSpaceID() string {
+	if x != nil {
+		return x.SpaceID
+	}
+	return ""
+}
+
+func (x *DisRoomWarningNotify) GetTts() int64 {
+	if x != nil {
+		return x.Tts
+	}
+	return 0
+}
+
 var File_battle_proto protoreflect.FileDescriptor
 
 var file_battle_proto_rawDesc = []byte{
@@ -2259,8 +2314,12 @@ var file_battle_proto_rawDesc = []byte{
 	0x61, 0x63, 0x65, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x70, 0x61,
 	0x63, 0x65, 0x49, 0x44, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x03, 0x75, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x61, 0x6d, 0x70, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x63, 0x61, 0x6d, 0x70, 0x42, 0x08, 0x5a, 0x06, 0x2e, 0x3b,
-	0x70, 0x75, 0x62, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x63, 0x61, 0x6d, 0x70, 0x22, 0x42, 0x0a, 0x14, 0x44, 0x69,
+	0x73, 0x52, 0x6f, 0x6f, 0x6d, 0x57, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67, 0x4e, 0x6f, 0x74, 0x69,
+	0x66, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x70, 0x61, 0x63, 0x65, 0x49, 0x44, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x70, 0x61, 0x63, 0x65, 0x49, 0x44, 0x12, 0x10, 0x0a, 0x03,
+	0x74, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x74, 0x74, 0x73, 0x42, 0x08,
+	0x5a, 0x06, 0x2e, 0x3b, 0x70, 0x75, 0x62, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2275,7 +2334,7 @@ func file_battle_proto_rawDescGZIP() []byte {
 	return file_battle_proto_rawDescData
 }
 
-var file_battle_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
+var file_battle_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_battle_proto_goTypes = []interface{}{
 	(*CreateBattleSpace)(nil),            // 0: pubs.CreateBattleSpace
 	(*CreateBattleSpaceResp)(nil),        // 1: pubs.CreateBattleSpaceResp
@@ -2310,17 +2369,18 @@ var file_battle_proto_goTypes = []interface{}{
 	(*ModifyUserCampRequest)(nil),        // 30: pubs.ModifyUserCampRequest
 	(*ModifyUserCampResponse)(nil),       // 31: pubs.ModifyUserCampResponse
 	(*ModifyUserCampNotify)(nil),         // 32: pubs.ModifyUserCampNotify
-	nil,                                  // 33: pubs.BattleSpacePlayer.ExtendsEntry
-	nil,                                  // 34: pubs.RequsetStartBattleSpaceResp.TokensEntry
+	(*DisRoomWarningNotify)(nil),         // 33: pubs.DisRoomWarningNotify
+	nil,                                  // 34: pubs.BattleSpacePlayer.ExtendsEntry
+	nil,                                  // 35: pubs.RequsetStartBattleSpaceResp.TokensEntry
 }
 var file_battle_proto_depIdxs = []int32{
 	2,  // 0: pubs.BattleSpaceDataSimple.players:type_name -> pubs.BattleSpacePlayerSimple
-	33, // 1: pubs.BattleSpacePlayer.extends:type_name -> pubs.BattleSpacePlayer.ExtendsEntry
+	34, // 1: pubs.BattleSpacePlayer.extends:type_name -> pubs.BattleSpacePlayer.ExtendsEntry
 	4,  // 2: pubs.BattleSpaceData.players:type_name -> pubs.BattleSpacePlayer
 	3,  // 3: pubs.GetBattleSpaceListResp.spaces:type_name -> pubs.BattleSpaceDataSimple
 	5,  // 4: pubs.EnterBattleSpaceResp.space:type_name -> pubs.BattleSpaceData
 	4,  // 5: pubs.EnterBattleSpaceNotify.player:type_name -> pubs.BattleSpacePlayer
-	34, // 6: pubs.RequsetStartBattleSpaceResp.tokens:type_name -> pubs.RequsetStartBattleSpaceResp.TokensEntry
+	35, // 6: pubs.RequsetStartBattleSpaceResp.tokens:type_name -> pubs.RequsetStartBattleSpaceResp.TokensEntry
 	7,  // [7:7] is the sub-list for method output_type
 	7,  // [7:7] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
@@ -2730,6 +2790,18 @@ func file_battle_proto_init() {
 				return nil
 			}
 		}
+		file_battle_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisRoomWarningNotify); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2737,7 +2809,7 @@ func file_battle_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_battle_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   35,
+			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

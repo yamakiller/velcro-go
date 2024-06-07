@@ -2,7 +2,7 @@ package rds
 
 import (
 	"context"
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -73,6 +73,7 @@ func CreateBattleSpace(ctx context.Context,
 
 	BattleSpaceDieTime := time.Duration(envs.Instance().Get("configs").(*configs.Config).Server.BattleSpaceDieTime) * time.Second
 	pipe.Set(ctx, rdsconst.GetPlayerBattleSpaceIDKey(master.UID), spaceid, BattleSpaceDieTime)
+	pipe.Set(ctx, rdsconst.GetPlayerBattleSpaceIDAndUIDKey(master.UID, spaceid), spaceid, BattleSpaceDieTime)
 	pipe.Set(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), battleSpace, BattleSpaceDieTime)
 	if BattleSpaceDieTime > 30*time.Second {
 		pipe.Set(ctx, rdsconst.GetBattleSpaceOnlineExpiredKey(spaceid), spaceid, BattleSpaceDieTime-30*time.Second)
@@ -119,6 +120,8 @@ func DeleteBattleSpace(ctx context.Context, clientId *network.ClientID) error {
 	for _, v := range battleSpace.SpacePlayers {
 		if v.Uid != "" {
 			pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDKey(v.Uid))
+			pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDAndUIDKey(v.Uid, BattleSpaceId))
+
 		}
 	}
 
@@ -191,6 +194,7 @@ func EnterBattleSpace(ctx context.Context, spaceid string, password string, clie
 	defer pipe.Close()
 
 	pipe.Set(ctx, rdsconst.GetPlayerBattleSpaceIDKey(player_data.UID), spaceid, expire)
+	pipe.Set(ctx, rdsconst.GetPlayerBattleSpaceIDAndUIDKey(player_data.UID, spaceid), spaceid, expire)
 	pipe.Set(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid), battleSpace, expire)
 
 	_, err = pipe.Exec(ctx)
@@ -262,6 +266,8 @@ func ChangeModifyRoomParameters(ctx context.Context, spaceid string, map_url str
 			if i >= len(space_pos) {
 				if v.Uid != "" {
 					pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDKey(v.Uid))
+					pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDAndUIDKey(v.Uid, spaceid))
+
 				}
 				continue
 			}
@@ -480,6 +486,7 @@ func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) {
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 	pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDKey(player_data.UID))
+	pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDAndUIDKey(player_data.UID, BattleSpaceId))
 	pipe.Set(ctx, rdsconst.GetBattleSpaceOnlineDataKey(BattleSpaceId), battleSpace, expire)
 	_, err = pipe.Exec(ctx)
 	if err != nil {
@@ -576,6 +583,8 @@ func ClearBattleSpace(ctx context.Context) {
 			for _, v := range battleSpace.SpacePlayers {
 				if v.Uid != "" {
 					pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDKey(v.Uid))
+					pipe.Del(ctx, rdsconst.GetPlayerBattleSpaceIDAndUIDKey(v.Uid, spaceid))
+
 				}
 			}
 		}
@@ -606,9 +615,28 @@ func SubscribeBattleSpaceTime(ctx context.Context) *redis.PubSub {
 	go func() {
 		for msg := range pubsub.Channel() {
 			// 处理过期事件
-			
-			// fmt.Println("Key expired:", rdsconst.GetBattleSpaceOnlineExpiredSpaceID(msg))
-			fmt.Println("Key expired:",msg)
+			// 警告过期时间
+			// 删除过期房间号
+			// 通知房间解散
+			if strings.HasPrefix(msg.Payload, rdsconst.GetBattleSpaceOnlineExpiredKey("")) {
+				list := rdsconst.GetBattleSpaceOnlineExpiredSpaceID(msg.Payload)
+				if len(list) == 2 {
+					sendDisRoomWarningNotify(list[1], 30)
+				}
+			} else if strings.HasPrefix(msg.Payload, rdsconst.GetBattleSpaceOnlineDataKey("")) {
+				list := rdsconst.GetBattleSpaceOnlineDataSpaceID(msg.Payload)
+				if len(list) == 2 {
+					RemoveBattleSpaceList(list[1])
+				}
+			} else if strings.HasPrefix(msg.Payload, rdsconst.PlayerBattleSpaceIDUID) {
+				list := rdsconst.GetPlayerBattleSpaceIDAndUID(msg.Payload)
+				if len(list) == 3 {
+					cli := GetBattleSpacePlayerClientID(context.Background(), list[1])
+					if cli != nil {
+						sendDissBattleSpaceNotify(list[2], cli)
+					}
+				}
+			}
 		}
 	}()
 	return pubsub
