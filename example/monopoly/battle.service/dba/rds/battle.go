@@ -115,6 +115,7 @@ func DeleteBattleSpace(ctx context.Context, clientId *network.ClientID) error {
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 	pipe.Del(ctx, rdsconst.GetBattleSpaceOnlineDataKey(BattleSpaceId))
+	pipe.Del(ctx, rdsconst.GetBattleSpaceOnlineExpiredKey(BattleSpaceId))
 	pipe.LRem(ctx, rdsconst.BattleSpaceOnlinetable, 1, BattleSpaceId)
 	// pipe.Do(ctx, "MULTI")
 	for _, v := range battleSpace.SpacePlayers {
@@ -591,6 +592,7 @@ func ClearBattleSpace(ctx context.Context) {
 
 		pipe.LRem(ctx, rdsconst.BattleSpaceOnlinetable, 1, spaceid)
 		pipe.Del(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid))
+		pipe.Del(ctx, rdsconst.GetBattleSpaceOnlineExpiredKey(spaceid))
 
 	}
 	_, err = pipe.Exec(ctx)

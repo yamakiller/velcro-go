@@ -24,9 +24,9 @@ func GenToken(secret string, group string, uid string, auth int32, max int32, To
 		max,
 		jwt.StandardClaims{
 			// ExpiresAt: time.Now().Add(TokenExpireDuration).Unix(), // 过期时间
-			IssuedAt:  time.Now().Unix(),                          // 当前时间
+			IssuedAt:  time.Now().Unix(), // 当前时间
 			NotBefore: time.Now().Unix(),
-			Issuer:    "vercro_nat",                               // 签发人
+			Issuer:    "vercro_nat", // 签发人
 		},
 	}
 
