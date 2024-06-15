@@ -43,18 +43,20 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 		bodyByte = decrypt
 		dataLen = len(decrypt)
 	}
-
+	if len(bodyByte) == 0 {
+		return nil, fmt.Errorf("bodyByte length error %d", dataLen)
+	}
 	//1.解析名称名称
 	msgNameLen := int(bodyByte[0])
 	if msgNameLen > (dataLen - 1) {
 		return nil, fmt.Errorf("message name length error %d", msgNameLen)
 	}
 
-	if len(bodyByte) < msgNameLen +1{
+	if len(bodyByte) < msgNameLen+1 {
 		return nil, fmt.Errorf("message name length error %d", len(bodyByte))
 	}
 
-	proName := string(bodyByte[1:msgNameLen+1])
+	proName := string(bodyByte[1 : msgNameLen+1])
 	//2.解析Protobuf
 	msgName := protoreflect.FullName(proName)
 	msgType, err := protoregistry.GlobalTypes.FindMessageByName(msgName)
