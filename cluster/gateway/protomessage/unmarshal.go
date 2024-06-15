@@ -33,6 +33,9 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 		return nil, err
 	}
 
+	if len(bodyByte) == 0 {
+		return nil, fmt.Errorf("bodyByte length error %d", readDataLen)
+	}
 	dataLen := int(readDataLen)
 	if secret != nil {
 		decrypt, err := encryption.AesDecryptByGCM(bodyByte, secret)
@@ -43,9 +46,7 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 		bodyByte = decrypt
 		dataLen = len(decrypt)
 	}
-	if len(bodyByte) == 0 {
-		return nil, fmt.Errorf("bodyByte length error %d", dataLen)
-	}
+
 	//1.解析名称名称
 	msgNameLen := int(bodyByte[0])
 	if msgNameLen > (dataLen - 1) {
