@@ -427,7 +427,6 @@ func (actor *BattleActor) onDissBattleSpaceRequest(ctx context.Context) (proto.M
 func (actor *BattleActor) onRequestExitBattleSpace(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mprvs.RequestExitBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
-	vlog.Infof("onRequestExitBattleSpace spaceid %s   5%s", request.BattleSpaceID, request.UID)
 	// request := ctx.Message.(*mprvs.RequestExitBattleSpace)
 	if ok, err := rds.IsMaster(ctx, sender); err != nil {
 		// actor.submitRequestCloseClient(ctx, sender)
