@@ -42,11 +42,11 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 	for {
 		n, err := c.recvice.WriteBinary(ctx.Message()[offset:])
 		offset += n
-		if err :=  c.recvice.Flush(); err != nil {
+		if err := c.recvice.Flush(); err != nil {
 			ctx.Close(ctx.Self())
 			return
 		}
-		
+
 		_, msg, msgErr := messages.UnMarshalProtobuf(c.recvice)
 		if msgErr != nil {
 			ctx.Close(ctx.Self())
@@ -69,7 +69,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 		case *messages.RpcRequestMessage:
 			reqMsg, err := message.Message.UnmarshalNew()
 			if err != nil {
-				panic(err)
+				panic(fmt.Sprintf("Unknown Message %v %v", ctx.Self().String(), message.Message))
 			}
 
 			//TODO: 这里需要抛给并行器
@@ -80,7 +80,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			}
 			msgType, err := protoregistry.GlobalTypes.FindMessageByName(reqMsg.(*anypb.Any).MessageName())
 			if err != nil {
-				panic(err)
+				panic(fmt.Sprintf("Unknown MessageName %v %v", ctx.Self().String(), reqMsg))
 			}
 			m := msgType.New().Interface()
 			proto.Unmarshal(reqMsg.(*anypb.Any).GetValue(), m)
@@ -91,7 +91,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			case *prvs.ForwardBundle:
 				reqMsg, err = rs.Body.UnmarshalNew()
 				if err != nil {
-					panic(err)
+					panic(fmt.Sprintf("Unknown Body %v %v", ctx.Self().String(), rs.Body))
 				}
 				messageEnvelope = NewMessageEnvelopePool(message.SequenceID, rs.Sender, reqMsg)
 			default:
@@ -123,7 +123,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 
 			cancel()
 		default:
-			panic("Unknown service")
+			panic(fmt.Sprintf("Unknown service %v %v", ctx.Self().String(), message))
 		}
 	servant_client_offset_label:
 		if offset == len(ctx.Message()) {
