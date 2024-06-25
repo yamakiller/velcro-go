@@ -11,6 +11,7 @@ message CreateBattleSpace{
     string password = 3;
     string roomName = 4;
     string extend = 5;
+    string display = 6;
 }
 
 message CreateBattleSpaceResp{
@@ -74,6 +75,7 @@ message GetBattleSpaceListResp {
 message EnterBattleSpace {
     string spaceId = 1;
     string password = 2;
+    string display = 3;
 }
 
 message EnterBattleSpaceResp {

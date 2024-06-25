@@ -36,7 +36,8 @@ func CreateBattleSpace(ctx context.Context,
 	max_count int32,
 	spaceName string,
 	password string,
-	extend string) (string, error) {
+	extend string,
+	display string) (string, error) {
 
 	pipe := client.TxPipeline()
 	defer pipe.Close()
@@ -54,14 +55,14 @@ func CreateBattleSpace(ctx context.Context,
 	battleSpace.SpaceMasterUid = master.UID
 	battleSpace.SpaceMasterClientAddress = master.ClientIdAddress
 	battleSpace.SpaceMasterClinetID = master.ClientIdId
-	battleSpace.SpaceMasterDisplay = master.DisplayName
+	battleSpace.SpaceMasterDisplay = display
 	battleSpace.SpaceMasterIcon = master.Externs[rdsconst.PlayerMapClientIcon]
 	battleSpace.SpaceStarttime = time.Now().UnixMilli()
 	battleSpace.SpaceState = rdsconst.BattleSpaceStateNomal
 	battleSpace.SpacePlayers = make([]*mrdsstruct.RdsBattleSpacePlayer, max_count)
 	battleSpace.SpacePlayers[0] = &mrdsstruct.RdsBattleSpacePlayer{
 		Uid:     master.UID,
-		Display: master.DisplayName,
+		Display: display,
 		Icon:    master.Externs[rdsconst.PlayerMapClientIcon],
 		Pos:     0,
 		Extends: make(map[string]string),
@@ -136,13 +137,13 @@ func DeleteBattleSpace(ctx context.Context, clientId *network.ClientID) error {
 	return nil
 }
 
-func EnterBattleSpace(ctx context.Context, spaceid string, password string, clientId *network.ClientID) error {
+func EnterBattleSpace(ctx context.Context, spaceid string, password string, display string, clientId *network.ClientID) error {
 	player_data, err := GetPlayerData(ctx, clientId)
 	if err != nil {
 		return err
 	}
 
-	BattleSpaceId, err := GetPlayerBattleSpaceID(ctx, player_data.UID)
+	BattleSpaceId, _ := GetPlayerBattleSpaceID(ctx, player_data.UID)
 
 	if BattleSpaceId != "" && BattleSpaceId != spaceid {
 		return errs.ErrorPlayerAlreadyInBattleSpace
@@ -158,20 +159,11 @@ func EnterBattleSpace(ctx context.Context, spaceid string, password string, clie
 	if err := client.Get(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid)).Scan(battleSpace); err != nil {
 		return err
 	}
-	for _, v := range battleSpace.SpacePlayers {
-		if v.Uid == player_data.UID {
-			return nil
-		}
-	}
-	if battleSpace.SpacePassword != password {
-		return errs.ErrorSpacePassword
-	}
-	isFull := true
 	for i, v := range battleSpace.SpacePlayers {
-		if v.Uid == "" {
+		if v.Uid == player_data.UID {
 			battleSpace.SpacePlayers[i] = &mrdsstruct.RdsBattleSpacePlayer{
 				Uid:     player_data.UID,
-				Display: player_data.DisplayName,
+				Display: display,
 				Icon:    player_data.Externs[rdsconst.PlayerMapClientIcon],
 				Pos:     int32(i),
 				Extends: make(map[string]string),
@@ -179,14 +171,36 @@ func EnterBattleSpace(ctx context.Context, spaceid string, password string, clie
 			for k, v := range player_data.Externs {
 				battleSpace.SpacePlayers[i].Extends[k] = v
 			}
-			isFull = false
-			break
+			goto enter_lable
 		}
 	}
-
-	if isFull {
-		return errs.ErrorSpacePlayerIsFull
+	if battleSpace.SpacePassword != password {
+		return errs.ErrorSpacePassword
 	}
+	{
+		isFull := true
+		for i, v := range battleSpace.SpacePlayers {
+			if v.Uid == "" {
+				battleSpace.SpacePlayers[i] = &mrdsstruct.RdsBattleSpacePlayer{
+					Uid:     player_data.UID,
+					Display: display,
+					Icon:    player_data.Externs[rdsconst.PlayerMapClientIcon],
+					Pos:     int32(i),
+					Extends: make(map[string]string),
+				}
+				for k, v := range player_data.Externs {
+					battleSpace.SpacePlayers[i].Extends[k] = v
+				}
+				isFull = false
+				break
+			}
+		}
+
+		if isFull {
+			return errs.ErrorSpacePlayerIsFull
+		}
+	}
+enter_lable:
 	expire, err := client.TTL(ctx, rdsconst.GetBattleSpaceOnlineDataKey(spaceid)).Result()
 	if err != nil {
 		return nil

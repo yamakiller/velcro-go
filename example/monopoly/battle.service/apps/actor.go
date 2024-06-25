@@ -45,7 +45,7 @@ func (actor *BattleActor) onCreateBattleSpace(ctx context.Context) (proto.Messag
 		return nil, err
 	}
 	//TODO: 创建战场
-	spaceid, err = rds.CreateBattleSpace(ctx, player, sender, request.MapURI, int32(request.MaxCount), request.RoomName, request.Password, request.Extend)
+	spaceid, err = rds.CreateBattleSpace(ctx, player, sender, request.MapURI, int32(request.MaxCount), request.RoomName, request.Password, request.Extend,request.Display)
 	if err != nil {
 		// actor.submitRequestCloseClient(ctx, sender)
 		// vlog.Debugf("onCreateBattleSpace error %s", err.Error())
@@ -118,7 +118,7 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 		return nil, err
 	}
 
-	if err := rds.EnterBattleSpace(ctx, request.SpaceId, request.Password, sender); err != nil {
+	if err := rds.EnterBattleSpace(ctx, request.SpaceId, request.Password,request.Display, sender); err != nil {
 		// actor.submitRequestCloseClient(ctx, sender)
 		// vlog.Debugf("onEnterBattleSpace error %s", err.Error())
 		return nil, err
