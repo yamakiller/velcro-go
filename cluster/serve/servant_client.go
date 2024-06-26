@@ -123,7 +123,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 
 			cancel()
 		default:
-			panic(fmt.Sprintf("Unknown service %v %v", ctx.Self().String(), message))
+			panic(fmt.Sprintf("Unknown service %v  msg %v", ctx.Self().String(), msg))
 		}
 	servant_client_offset_label:
 		if offset == len(ctx.Message()) {

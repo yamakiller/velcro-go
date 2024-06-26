@@ -62,7 +62,7 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 	msgName := protoreflect.FullName(proName)
 	msgType, err := protoregistry.GlobalTypes.FindMessageByName(msgName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("msgName %v  %v",msgName,err.Error())
 	}
 
 	message := msgType.New().Interface()
