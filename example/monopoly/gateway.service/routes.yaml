@@ -40,4 +40,5 @@ routes:
       - pubs.DissBattleSpaceRequest
       - pubs.ModifyUserRoleRequest
       - pubs.ModifyUserCampRequest
+      - pubs.UserChatVoiceRequest
 

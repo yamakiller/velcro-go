@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	_ "github.com/yamakiller/velcro-go/cluster/protocols/prvs"
+	_ "github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/dba/rds"
 	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
-	_ "github.com/yamakiller/velcro-go/cluster/protocols/prvs"
-	_ "github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 )
 
 type battleService struct {
@@ -79,6 +79,7 @@ func (bs *battleService) newBattleActor(conn *serve.ServantClientConn) serve.Ser
 	conn.Register(&mpubs.DissBattleSpaceRequest{}, actor.onDissBattleSpaceRequest)
 	conn.Register(&mpubs.ModifyUserRoleRequest{}, actor.onModifyUserRoleRequest)
 	conn.Register(&mpubs.ModifyUserCampRequest{}, actor.onModifyUserCampRequest)
+	conn.Register(&mpubs.UserChatVoiceRequest{}, actor.onUserChatVoiceRequest)
 
 	conn.Register(&mprvs.RequestExitBattleSpace{}, actor.onRequestExitBattleSpace)
 	return actor

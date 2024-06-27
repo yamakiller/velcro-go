@@ -2116,6 +2116,125 @@ func (x *DisRoomWarningNotify) GetTts() int64 {
 	return 0
 }
 
+//角色发送语音请求
+type UserChatVoiceRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SpaceID string `protobuf:"bytes,1,opt,name=spaceID,proto3" json:"spaceID,omitempty"`
+	VoiceID int32  `protobuf:"varint,2,opt,name=voiceID,proto3" json:"voiceID,omitempty"`
+}
+
+func (x *UserChatVoiceRequest) Reset() {
+	*x = UserChatVoiceRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_battle_proto_msgTypes[34]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UserChatVoiceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserChatVoiceRequest) ProtoMessage() {}
+
+func (x *UserChatVoiceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_battle_proto_msgTypes[34]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserChatVoiceRequest.ProtoReflect.Descriptor instead.
+func (*UserChatVoiceRequest) Descriptor() ([]byte, []int) {
+	return file_battle_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *UserChatVoiceRequest) GetSpaceID() string {
+	if x != nil {
+		return x.SpaceID
+	}
+	return ""
+}
+
+func (x *UserChatVoiceRequest) GetVoiceID() int32 {
+	if x != nil {
+		return x.VoiceID
+	}
+	return 0
+}
+
+type UserChatVoiceNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SpaceID string `protobuf:"bytes,1,opt,name=spaceID,proto3" json:"spaceID,omitempty"`
+	VoiceID int32  `protobuf:"varint,2,opt,name=voiceID,proto3" json:"voiceID,omitempty"`
+	Uid     string `protobuf:"bytes,3,opt,name=uid,proto3" json:"uid,omitempty"`
+}
+
+func (x *UserChatVoiceNotify) Reset() {
+	*x = UserChatVoiceNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_battle_proto_msgTypes[35]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UserChatVoiceNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserChatVoiceNotify) ProtoMessage() {}
+
+func (x *UserChatVoiceNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_battle_proto_msgTypes[35]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserChatVoiceNotify.ProtoReflect.Descriptor instead.
+func (*UserChatVoiceNotify) Descriptor() ([]byte, []int) {
+	return file_battle_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *UserChatVoiceNotify) GetSpaceID() string {
+	if x != nil {
+		return x.SpaceID
+	}
+	return ""
+}
+
+func (x *UserChatVoiceNotify) GetVoiceID() int32 {
+	if x != nil {
+		return x.VoiceID
+	}
+	return 0
+}
+
+func (x *UserChatVoiceNotify) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
 var File_battle_proto protoreflect.FileDescriptor
 
 var file_battle_proto_rawDesc = []byte{
@@ -2338,8 +2457,18 @@ var file_battle_proto_rawDesc = []byte{
 	0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x70, 0x61, 0x63, 0x65, 0x49,
 	0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x70, 0x61, 0x63, 0x65, 0x49, 0x44,
 	0x12, 0x10, 0x0a, 0x03, 0x74, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x74,
-	0x74, 0x73, 0x42, 0x08, 0x5a, 0x06, 0x2e, 0x3b, 0x70, 0x75, 0x62, 0x73, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x73, 0x22, 0x4a, 0x0a, 0x14, 0x55, 0x73, 0x65, 0x72, 0x43, 0x68, 0x61, 0x74, 0x56, 0x6f,
+	0x69, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x70, 0x61,
+	0x63, 0x65, 0x49, 0x44, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x6f, 0x69, 0x63, 0x65, 0x49, 0x44, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x76, 0x6f, 0x69, 0x63, 0x65, 0x49, 0x44, 0x22, 0x5b,
+	0x0a, 0x13, 0x55, 0x73, 0x65, 0x72, 0x43, 0x68, 0x61, 0x74, 0x56, 0x6f, 0x69, 0x63, 0x65, 0x4e,
+	0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x70, 0x61, 0x63, 0x65, 0x49, 0x44,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x70, 0x61, 0x63, 0x65, 0x49, 0x44, 0x12,
+	0x18, 0x0a, 0x07, 0x76, 0x6f, 0x69, 0x63, 0x65, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x07, 0x76, 0x6f, 0x69, 0x63, 0x65, 0x49, 0x44, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x69, 0x64, 0x42, 0x08, 0x5a, 0x06, 0x2e,
+	0x3b, 0x70, 0x75, 0x62, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2354,7 +2483,7 @@ func file_battle_proto_rawDescGZIP() []byte {
 	return file_battle_proto_rawDescData
 }
 
-var file_battle_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
+var file_battle_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_battle_proto_goTypes = []interface{}{
 	(*CreateBattleSpace)(nil),            // 0: pubs.CreateBattleSpace
 	(*CreateBattleSpaceResp)(nil),        // 1: pubs.CreateBattleSpaceResp
@@ -2390,17 +2519,19 @@ var file_battle_proto_goTypes = []interface{}{
 	(*ModifyUserCampResponse)(nil),       // 31: pubs.ModifyUserCampResponse
 	(*ModifyUserCampNotify)(nil),         // 32: pubs.ModifyUserCampNotify
 	(*DisRoomWarningNotify)(nil),         // 33: pubs.DisRoomWarningNotify
-	nil,                                  // 34: pubs.BattleSpacePlayer.ExtendsEntry
-	nil,                                  // 35: pubs.RequsetStartBattleSpaceResp.TokensEntry
+	(*UserChatVoiceRequest)(nil),         // 34: pubs.UserChatVoiceRequest
+	(*UserChatVoiceNotify)(nil),          // 35: pubs.UserChatVoiceNotify
+	nil,                                  // 36: pubs.BattleSpacePlayer.ExtendsEntry
+	nil,                                  // 37: pubs.RequsetStartBattleSpaceResp.TokensEntry
 }
 var file_battle_proto_depIdxs = []int32{
 	2,  // 0: pubs.BattleSpaceDataSimple.players:type_name -> pubs.BattleSpacePlayerSimple
-	34, // 1: pubs.BattleSpacePlayer.extends:type_name -> pubs.BattleSpacePlayer.ExtendsEntry
+	36, // 1: pubs.BattleSpacePlayer.extends:type_name -> pubs.BattleSpacePlayer.ExtendsEntry
 	4,  // 2: pubs.BattleSpaceData.players:type_name -> pubs.BattleSpacePlayer
 	3,  // 3: pubs.GetBattleSpaceListResp.spaces:type_name -> pubs.BattleSpaceDataSimple
 	5,  // 4: pubs.EnterBattleSpaceResp.space:type_name -> pubs.BattleSpaceData
 	4,  // 5: pubs.EnterBattleSpaceNotify.player:type_name -> pubs.BattleSpacePlayer
-	35, // 6: pubs.RequsetStartBattleSpaceResp.tokens:type_name -> pubs.RequsetStartBattleSpaceResp.TokensEntry
+	37, // 6: pubs.RequsetStartBattleSpaceResp.tokens:type_name -> pubs.RequsetStartBattleSpaceResp.TokensEntry
 	7,  // [7:7] is the sub-list for method output_type
 	7,  // [7:7] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
@@ -2822,6 +2953,30 @@ func file_battle_proto_init() {
 				return nil
 			}
 		}
+		file_battle_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UserChatVoiceRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_battle_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UserChatVoiceNotify); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2829,7 +2984,7 @@ func file_battle_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_battle_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   36,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

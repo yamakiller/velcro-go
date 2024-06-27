@@ -45,7 +45,7 @@ func (actor *BattleActor) onCreateBattleSpace(ctx context.Context) (proto.Messag
 		return nil, err
 	}
 	//TODO: 创建战场
-	spaceid, err = rds.CreateBattleSpace(ctx, player, sender, request.MapURI, int32(request.MaxCount), request.RoomName, request.Password, request.Extend,request.Display)
+	spaceid, err = rds.CreateBattleSpace(ctx, player, sender, request.MapURI, int32(request.MaxCount), request.RoomName, request.Password, request.Extend, request.Display)
 	if err != nil {
 		// actor.submitRequestCloseClient(ctx, sender)
 		// vlog.Debugf("onCreateBattleSpace error %s", err.Error())
@@ -118,7 +118,7 @@ func (actor *BattleActor) onEnterBattleSpace(ctx context.Context) (proto.Message
 		return nil, err
 	}
 
-	if err := rds.EnterBattleSpace(ctx, request.SpaceId, request.Password,request.Display, sender); err != nil {
+	if err := rds.EnterBattleSpace(ctx, request.SpaceId, request.Password, request.Display, sender); err != nil {
 		// actor.submitRequestCloseClient(ctx, sender)
 		// vlog.Debugf("onEnterBattleSpace error %s", err.Error())
 		return nil, err
@@ -392,6 +392,27 @@ func (actor *BattleActor) onModifyUserCampRequest(ctx context.Context) (proto.Me
 		Res: 0,
 	}
 	return res, nil
+}
+
+func (actor *BattleActor) onUserChatVoiceRequest(ctx context.Context) (proto.Message, error) {
+	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.UserChatVoiceRequest)
+	sender := serve.GetServantClientInfo(ctx).Sender()
+
+	player_data, err := rds.GetPlayerData(ctx, sender)
+	if err != nil {
+		return nil, err
+	}
+	players := rds.GetBattleSpacePlayers(ctx, request.SpaceID)
+	notify := &mpubs.UserChatVoiceNotify{
+		SpaceID: request.SpaceID,
+		Uid:     player_data.UID,
+		VoiceID: request.VoiceID,
+	}
+
+	for _, v := range players {
+		actor.submitRequestGatewayPush(ctx, v, notify)
+	}
+	return nil, nil
 }
 
 func (actor *BattleActor) onDissBattleSpaceRequest(ctx context.Context) (proto.Message, error) {

@@ -208,3 +208,16 @@ message DisRoomWarningNotify{
     string spaceID = 1;
     int64 tts = 2;//剩余时间
 }
+
+//角色发送语音请求
+message UserChatVoiceRequest{
+    string spaceID = 1;
+    int32 voiceID = 2;
+}
+// 角色发送语音通知
+
+message UserChatVoiceNotify{
+    string spaceID = 1;
+    int32 voiceID = 2;
+    string uid = 3;
+}
