@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -100,15 +101,13 @@ func (c *LongConn) Dial(addr string, timeout time.Duration) error {
 }
 
 func (c *LongConn) IsConnected() bool {
-	if atomic.LoadInt32(&c.state) == LCS_Connected {
-		return true
-	}
-	return false
+	return atomic.LoadInt32(&c.state) == LCS_Connected
 }
 
 func (c *LongConn) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
 	if c.currentGoroutineId == utils.GetCurrentGoroutineID() {
-		panic("RequestMessage cannot block calls in its own thread")
+		vlog.Error(fmt.Sprintf("RequestMessage cannot block calls in its own thread %v",  message))
+		return nil ,fmt.Errorf("RequestMessage cannot block calls in its own thread %v",  message)
 	}
 
 	if !c.IsConnected() {
@@ -117,7 +116,13 @@ func (c *LongConn) RequestMessage(message proto.Message, timeout int64) (proto.M
 
 	msgAny, err := anypb.New(message)
 	if err != nil {
-		panic(err)
+		vlog.Error(fmt.Sprintf("anypb.New err %v  msg %v",  err,message))
+		return nil ,fmt.Errorf("anypb.New err %v  msg %v",  err,message)
+	}
+
+	if msgAny == nil{
+		vlog.Error(fmt.Sprintf("RequestMessage message %v is nil",message))
+		return nil ,fmt.Errorf("RequestMessage message %v is nil",message)
 	}
 
 	seq := msn.Instance().NextId()

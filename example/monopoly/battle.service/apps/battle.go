@@ -10,6 +10,8 @@ import (
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/dba/rds"
 	mprvs "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	mpubs "github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
+	_ "github.com/yamakiller/velcro-go/cluster/protocols/prvs"
+	_ "github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 )
 
 type battleService struct {

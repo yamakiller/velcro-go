@@ -110,7 +110,6 @@ func (actor *LoginActor) onClientClosed(ctx context.Context) (proto.Message, err
 	if err != nil {
 		return nil, err
 	}
-	vlog.Debugf("onClientClosed %s", uid)
 	if results != nil {
 		// TODO:退出Battle
 		BattleSpaceId, err := rds.GetPlayerBattleSpaceID(ctx, uid)
