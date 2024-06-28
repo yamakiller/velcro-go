@@ -70,7 +70,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 		case *messages.RpcRequestMessage:
 			reqMsg, err := message.Message.UnmarshalNew()
 			if err != nil {
-				vlog.Error(fmt.Sprintf("Unknown Message %v %v %v", ctx.Self().String(), message.Message,err.Error()))
+				vlog.Error(fmt.Sprintf("Unknown Message %v %v %v", ctx.Self().String(), message, err.Error()))
 				return
 			}
 
@@ -82,7 +82,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			}
 			msgType, err := protoregistry.GlobalTypes.FindMessageByName(reqMsg.(*anypb.Any).MessageName())
 			if err != nil {
-				vlog.Error(fmt.Sprintf("Unknown MessageName %v %v %v", ctx.Self().String(), reqMsg,err.Error()))
+				vlog.Error(fmt.Sprintf("Unknown MessageName %v %v %v", ctx.Self().String(), reqMsg, err.Error()))
 				return
 			}
 			m := msgType.New().Interface()
@@ -94,7 +94,7 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			case *prvs.ForwardBundle:
 				reqMsg, err = rs.Body.UnmarshalNew()
 				if err != nil {
-					vlog.Error(fmt.Sprintf("Unknown Body %v %v %v", ctx.Self().String(), rs.Body,err.Error()))
+					vlog.Error(fmt.Sprintf("Unknown Body %v %v %v", ctx.Self().String(), rs.Body, err.Error()))
 					return
 				}
 				messageEnvelope = NewMessageEnvelopePool(message.SequenceID, rs.Sender, reqMsg)

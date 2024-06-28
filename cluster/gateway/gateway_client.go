@@ -289,7 +289,9 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 		ctx.PostMessage(ctx.Self(), b)
 		return
 	}
-
+	if result == nil {
+		return
+	}
 	b, msge := protomessge.Marshal(result, dl.secret)
 	if msge != nil {
 		vlog.Errorf("requesting pubs.Error marshal %s message fail[error:%s]", reflect.TypeOf(result).Name(), msge.Error())
