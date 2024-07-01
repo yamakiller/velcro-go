@@ -205,11 +205,16 @@ func (actor *BattleActor) onReadyBattleSpace(ctx context.Context) (proto.Message
 func (actor *BattleActor) onRequestStartBattleSpace(ctx context.Context) (proto.Message, error) {
 	request := serve.GetServantClientInfo(ctx).Message().(*mpubs.RequsetStartBattleSpace)
 	sender := serve.GetServantClientInfo(ctx).Sender()
-	if err := rds.StartBattleSpace(ctx, request.SpaceId, sender); err != nil {
-		// actor.submitRequestCloseClient(ctx, sender)
-		// vlog.Debugf("onRequestStartBattleSpace error %s", err.Error())
+	err := rds.IsBattleSpaceMaster(ctx, sender, request.SpaceId)
+	if err != nil {
 		return nil, err
 	}
+
+	// if err := rds.StartBattleSpace(ctx, request.SpaceId, sender); err != nil {
+	// 	// actor.submitRequestCloseClient(ctx, sender)
+	// 	// vlog.Debugf("onRequestStartBattleSpace error %s", err.Error())
+	// 	return nil, err
+	// }
 	players := rds.GetBattleSpacePlayers(ctx, request.SpaceId)
 	res := &mpubs.RequsetStartBattleSpaceResp{
 		Tokens: make(map[string]string),
@@ -243,6 +248,8 @@ func (actor *BattleActor) onRequestStartBattleSpace(ctx context.Context) (proto.
 			actor.submitRequestGatewayPush(ctx, v, res)
 		}
 	}
+
+	rds.DeleteBattleSpace(ctx, sender)
 
 	return res, nil
 }

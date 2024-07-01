@@ -374,7 +374,7 @@ func ReadyBattleSpace(ctx context.Context, spaceid string, ready bool, clientId 
 		return nil
 	}
 
-	BattleSpaceId, err := GetPlayerBattleSpaceID(ctx, player_data.UID)
+	BattleSpaceId, _ := GetPlayerBattleSpaceID(ctx, player_data.UID)
 	if BattleSpaceId != spaceid {
 		return errs.ErrorPlayerIsNotInBattleSpace
 	}
@@ -471,7 +471,7 @@ func LeaveBattleSpace(ctx context.Context, clientId *network.ClientID) {
 	if err != nil {
 		return
 	}
-	BattleSpaceId, err := GetPlayerBattleSpaceID(ctx, player_data.UID)
+	BattleSpaceId, _ := GetPlayerBattleSpaceID(ctx, player_data.UID)
 
 	if BattleSpaceId == "" {
 		return
@@ -583,6 +583,36 @@ func IsMaster(ctx context.Context, clientId *network.ClientID) (bool, error) {
 	space_mutex.Unlock()
 
 	return battleSpace.SpaceMasterUid == player_data.UID, nil
+}
+
+func IsBattleSpaceMaster(ctx context.Context, clientId *network.ClientID, spaceid string) error {
+	player_data, err := GetPlayerData(ctx, clientId)
+	if err != nil {
+		return err
+	}
+
+	BattleSpaceId, err := GetPlayerBattleSpaceID(ctx, player_data.UID)
+	if BattleSpaceId == "" || err != nil {
+		return errs.ErrorPlayerIsNotInBattleSpace
+	}
+
+	space_mutex := sync.NewMutex(rdsconst.GetBattleSpaceLockKey(spaceid))
+	if err := space_mutex.Lock(); err != nil {
+		return err
+	}
+
+	battleSpace := &rdsstruct.RdsBattleSpaceData{}
+	if err := client.Get(ctx, rdsconst.GetBattleSpaceOnlineDataKey(BattleSpaceId)).Scan(battleSpace); err != nil {
+		space_mutex.Unlock()
+		return err
+	}
+	space_mutex.Unlock()
+
+	if battleSpace.SpaceMasterUid == player_data.UID {
+		return nil
+	}
+
+	return errs.ErrorPlayerIsNotInBattleSpace
 }
 
 func ClearBattleSpace(ctx context.Context) {
