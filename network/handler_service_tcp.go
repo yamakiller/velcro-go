@@ -60,9 +60,9 @@ func (c *tcpClientHandler) PostMessage(b []byte) error {
 		c.sendcond.L.Unlock()
 		return err
 	}
+
 	c.sendcond.Signal()
 	c.sendcond.L.Unlock()
-
 	return nil
 }
 
@@ -83,7 +83,6 @@ func (c *tcpClientHandler) Close() {
 	c.sendcond.Signal()
 	c.sendcond.L.Unlock()
 
-	//c.guarddone.Wait()
 }
 
 func (c *tcpClientHandler) isStopped() bool {
@@ -212,7 +211,7 @@ func (c *tcpClientHandler) reader() {
 			Data: make([]byte, n),
 			Addr: remoteAddr,
 		}
-		copy(rec.Data,tmp[:n])
+		copy(rec.Data, tmp[:n])
 		c.mailbox <- rec
 	}
 

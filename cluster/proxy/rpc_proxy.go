@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -82,6 +83,9 @@ func (rpx *RpcProxy) Open() {
 
 // RequestMessage 集群请求消息
 func (rpx *RpcProxy) RequestMessage(message proto.Message, timeout int64) (proto.Message, error) {
+	if message ==nil{
+		panic(fmt.Errorf("(rpx *RpcProxy) RequestMessage  message  is nil"))
+	}
 	var (
 		host string
 		result    proto.Message = nil

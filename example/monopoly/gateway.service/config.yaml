@@ -5,7 +5,7 @@ server:
   encryption-enabled: false
   online-number: 5000
   request-timeout-max: 2000
-
+  kleepalive: 4000
 redis:
   address: 0.0.0.0:6379
   password: yqXaWje245RPbsn*

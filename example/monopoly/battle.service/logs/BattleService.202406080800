@@ -1,0 +1,24 @@
+2024/06/08 12:23:40.480283 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/08 12:23:40.531860 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/08 12:23:40.531860 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/08 12:23:40.532363 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/08 12:23:40.536761 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/08 12:26:21.336765 program.go:23: [Info] [PROGRAM]BattleService Start loading environment variables
+2024/06/08 12:26:21.387457 rpc_proxy.go:75: [Info] 0.0.0.0:10001 connecting
+2024/06/08 12:26:21.387457 rpc_proxy.go:76: [Info] 0.0.0.0:10001 connected
+2024/06/08 12:26:21.387968 module_service_tcp.go:42: [Info] VELCRO: network server listen at addr=0.0.0.0:10200
+2024/06/08 12:26:21.391706 program.go:38: [Info] [PROGRAM]BattleService Start Successfully 0.0.0.0:10200
+2024/06/08 12:27:11.373105 actor.go:430: [Info] onRequestExitBattleSpace spaceid 2K2m8Q5Ci5uJjEMkb5u2Nr   5t3
+2024/06/08 12:27:11.373105 actor.go:430: [Info] onRequestExitBattleSpace spaceid 2K2m8Q5Ci5uJjEMkb5u2Nr   5t1
+2024/06/08 12:27:11.373615 actor.go:430: [Info] onRequestExitBattleSpace spaceid 2K2m8Q5Ci5uJjEMkb5u2Nr   5t2
+2024/06/08 12:27:11.395023 actor.go:486: [Error] pubs.UserExitSpaceNotify fail error ClientID: invalid
+2024/06/08 12:27:11.395539 actor.go:486: [Error] pubs.UserExitSpaceNotify fail error ClientID: invalid
+2024/06/08 12:27:11.499498 actor.go:486: [Error] pubs.DissBattleSpaceNotify fail error ClientID: invalid
+2024/06/08 12:27:11.531544 actor.go:434: [Debug] onRequestExitBattleSpace error redis: nil
+2024/06/08 12:28:42.033756 actor.go:430: [Info] onRequestExitBattleSpace spaceid JHStdHk92KupF3qKTwJuFD   5t2
+2024/06/08 12:28:42.033756 actor.go:430: [Info] onRequestExitBattleSpace spaceid JHStdHk92KupF3qKTwJuFD   5t3
+2024/06/08 12:28:42.033756 actor.go:430: [Info] onRequestExitBattleSpace spaceid JHStdHk92KupF3qKTwJuFD   5t1
+2024/06/08 12:28:42.056123 actor.go:486: [Error] pubs.UserExitSpaceNotify fail error ClientID: invalid
+2024/06/08 12:28:42.056123 actor.go:486: [Error] pubs.UserExitSpaceNotify fail error ClientID: invalid
+2024/06/08 12:28:42.296093 actor.go:486: [Error] pubs.UserExitSpaceNotify fail error ClientID: invalid
+2024/06/08 12:28:42.563278 actor.go:486: [Error] pubs.DissBattleSpaceNotify fail error RequestGatewayPush unfound client Gateway@0.0.0.0:10000C5SucgtP6mEAvzs2YqS34e/$1iFyrw001

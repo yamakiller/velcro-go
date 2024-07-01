@@ -2,7 +2,8 @@ server:
   laddr: 0.0.0.0:10200
   vaddr: 0.0.0.0:10200
   jwt_secret: 8A0E4F612AF88FBA
-  jwt_timeout: 180
+  jwt_timeout: 8400
+  battle_space_die_time: 3600
 redis:
   address: 0.0.0.0:6379
   password: yqXaWje245RPbsn*

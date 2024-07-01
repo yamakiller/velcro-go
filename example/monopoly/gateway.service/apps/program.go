@@ -5,6 +5,7 @@ import (
 
 	"github.com/kardianos/service"
 	// "github.com/yamakiller/velcro-go/cluster/logs"
+
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/gateway.service/configs"
 	"github.com/yamakiller/velcro-go/utils/files"
@@ -16,8 +17,9 @@ type Program struct {
 }
 
 func (p *Program) Start(s service.Service) error {
-
-	
+	if err := vlog.SetLogFile("", "GatewayService"); err != nil {
+		return err
+	}
 	vlog.Info("[PROGRAM]", "Gateway Start loading environment variables")
 
 	envs.With(&envs.YAMLEnv{})
@@ -29,7 +31,7 @@ func (p *Program) Start(s service.Service) error {
 		return err
 	}
 
-	// vaddr := strings.ReplaceAll(strings.ToLower("gateway@"+ envs.Instance().Get("configs").(*configs.Config).Server.VAddr),":",".") 
+	// vaddr := strings.ReplaceAll(strings.ToLower("gateway@"+envs.Instance().Get("configs").(*configs.Config).Server.VAddr), ":", ".")
 	// vlog.SetOutput(logs.NewElastic(envs.Instance().Get("configs").(*configs.Config).LogRemoteAddr, vaddr))
 
 	vlog.Info("[PROGRAM]", "Gateway Loading environment variables is completed")
@@ -39,7 +41,7 @@ func (p *Program) Start(s service.Service) error {
 		vlog.Info("[PROGRAM]", "Gateway Failed to start network service", err)
 		return err
 	}
-	vlog.Info("[PROGRAM]", "Gateway Start network service completed ",envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
+	vlog.Info("[PROGRAM]", "Gateway Start network service completed ", envs.Instance().Get("configs").(*configs.Config).Server.LAddr)
 
 	return nil
 }

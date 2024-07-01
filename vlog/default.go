@@ -6,11 +6,50 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
+	"time"
+
+	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
+	"github.com/yamakiller/velcro-go/utils/files"
 )
 
 var logger FullLogger = &defaultLogger{
-	level:  LevelInfo,
+	level:  LevelTrace,
 	stdlog: log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile|log.Lmicroseconds),
+}
+
+func SetLogFile(logPath string, logName string) error {
+
+	if logPath == "" {
+		logPath, _ = os.Executable()
+		logPath = filepath.Dir(logPath)
+		logPath = path.Join(logPath, "logs")
+	}
+
+	if logName == "" {
+		logName = "log"
+	}
+	baseLogPath := path.Join(logPath, logName)
+	if !files.IsDirExits(logPath) {
+		if err := files.MkdirAll(logPath); err != nil {
+			return err
+		}
+	}
+
+	writer, err := rotatelogs.New(
+		baseLogPath+".%Y%m%d%H%M",
+		rotatelogs.WithLinkName(baseLogPath),      // 生成软链，指向最新日志文件
+		rotatelogs.WithMaxAge(7*24*time.Hour),     // 文件最大保存时间
+		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
+	)
+
+	if err != nil {
+		return err
+	}
+	mw := io.MultiWriter(os.Stderr, writer)
+	SetOutput(mw)
+	return nil
 }
 
 // SetOutput sets the output of default logger. By default, it is stderr.

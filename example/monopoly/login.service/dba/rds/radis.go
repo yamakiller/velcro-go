@@ -94,27 +94,27 @@ func Disconnect() {
 		client = nil
 	}
 }
-func Test(){
-	ctx :=context.Background()
+func Test() {
+	ctx := context.Background()
 	pipe := client.TxPipeline()
 	defer pipe.Close()
 	// pipe.Do(ctx, "MULTI")
-	pipe.Set(ctx,"name","123456",0)
+	pipe.Set(ctx, "name", "123456", 0)
 	// pipe.Do(ctx, "exec")
 
 	cmds, err := pipe.Exec(ctx)
 	if err != nil {
 		pipe.Discard()
 		for _, cmd := range cmds {
-			switch cmd.(type){
+			switch cmd := cmd.(type) {
 			case *redis.Cmd:
-				fmt.Println(cmd.(*redis.Cmd).Val())
-			case *redis.StatusCmd:	
-				fmt.Println(cmd.(*redis.StatusCmd).Val())
+				fmt.Println(cmd.Val())
+			case *redis.StatusCmd:
+				fmt.Println(cmd.Val())
 			}
-			
+
 		}
-		return 
+		return
 	}
 	// fmt.Println(cmds)
 }
