@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package rdsstruct;
+option go_package=".;rdsstruct";
+
+message RdsBattleSpacePlayer {
+    string uid     = 1;
+    string display = 2;
+    string icon    = 3;
+    int32  pos     = 4;
+    string role    = 5;
+    string camp    = 6;
+    bool   ready   = 7;
+    map<string,string> extends  = 8;
+    bool isRobot = 9;
+}
+
+message RdsBattleSpaceData{
+    string  spaceId = 1;
+    string  spaceName = 2; 
+    string  spacePassword = 3;
+    string  spaceMapURI  = 4;
+    int64   spaceStarttime = 5;
+    string  spaceState = 6;
+    string  spaceExtend = 8;
+    string  spaceMasterUid = 9;
+    string  spaceMasterClientAddress = 10;
+    string  spaceMasterClinetID = 11;
+    string  spaceMasterIcon = 12;
+    string  spaceMasterDisplay = 13;
+
+    repeated RdsBattleSpacePlayer spacePlayers = 14;
+    
+
+
+}

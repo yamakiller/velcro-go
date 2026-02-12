@@ -1,6 +1,11 @@
 package apps
 
 import (
+	"context"
+
+	"github.com/go-redis/redis/v8"
+	_ "github.com/yamakiller/velcro-go/cluster/protocols/prvs"
+	_ "github.com/yamakiller/velcro-go/cluster/protocols/pubs"
 	"github.com/yamakiller/velcro-go/cluster/serve"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/battle.service/configs"
@@ -11,6 +16,7 @@ import (
 
 type battleService struct {
 	battle *serve.Servant
+	pubsub *redis.PubSub
 }
 
 func (bs *battleService) Start() error {
@@ -25,6 +31,7 @@ func (bs *battleService) Start() error {
 		return err
 	}
 
+	rds.ClearBattleSpace(context.Background())
 	bs.battle = serve.New(
 		serve.WithProducerActor(bs.newBattleActor),
 		serve.WithName("BattleService"),
@@ -38,7 +45,8 @@ func (bs *battleService) Start() error {
 		rds.Disconnect()
 		return err
 	}
-
+	rds.WithServant(bs.battle)
+	bs.pubsub = rds.SubscribeBattleSpaceTime(context.Background())
 	return nil
 }
 
@@ -48,7 +56,10 @@ func (bs *battleService) Stop() error {
 		bs.battle.Stop()
 		bs.battle = nil
 	}
-
+	if bs.pubsub != nil {
+		bs.pubsub.Close()
+		bs.pubsub = nil
+	}
 	rds.Disconnect()
 
 	return nil
@@ -66,10 +77,15 @@ func (bs *battleService) newBattleActor(conn *serve.ServantClientConn) serve.Ser
 	conn.Register(&mpubs.KickUserRequest{}, actor.onKickUserRequest)
 	conn.Register(&mpubs.ModifyRoomParametersRequset{}, actor.onModifyRoomParametersRequset)
 	conn.Register(&mpubs.DissBattleSpaceRequest{}, actor.onDissBattleSpaceRequest)
+	conn.Register(&mpubs.ModifyUserRoleRequest{}, actor.onModifyUserRoleRequest)
+	conn.Register(&mpubs.ModifyUserCampRequest{}, actor.onModifyUserCampRequest)
+	conn.Register(&mpubs.UserChatVoiceRequest{}, actor.onUserChatVoiceRequest)
+	conn.Register(&mpubs.CreateRobotRequest{}, actor.onCreateRobotRequest)
+	conn.Register(&mpubs.RemoveRobotRequest{}, actor.onRemoveRobotRequest)
+	conn.Register(&mpubs.ModifyRobotRoleRequest{}, actor.onModifyRobotRoleRequest)
+	conn.Register(&mpubs.ModifyRobotCampRequest{}, actor.onModifyRobotCampRequest)
+	conn.Register(&mpubs.UserChatTextRequest{}, actor.onUserChatTextRequest)
 	
-	
-
-	conn.Register(&mprvs.ReportNat{}, actor.onReportNat)
 	conn.Register(&mprvs.RequestExitBattleSpace{}, actor.onRequestExitBattleSpace)
 	return actor
 }

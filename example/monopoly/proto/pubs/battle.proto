@@ -11,6 +11,7 @@ message CreateBattleSpace{
     string password = 3;
     string roomName = 4;
     string extend = 5;
+    string display = 6;
 }
 
 message CreateBattleSpaceResp{
@@ -41,7 +42,11 @@ message BattleSpacePlayer {
     string display = 2;
     string icon    = 3;
     int32  pos     = 4;
-    string token   = 5;
+    string role    = 5;
+    string camp    = 6;
+    bool   ready   = 7;
+    map<string,string> extends  = 8;
+    bool isRobot = 9;
 }
 
 message BattleSpaceData {
@@ -71,6 +76,7 @@ message GetBattleSpaceListResp {
 message EnterBattleSpace {
     string spaceId = 1;
     string password = 2;
+    string display = 3;
 }
 
 message EnterBattleSpaceResp {
@@ -167,4 +173,106 @@ message KickUserResponse{
 message UserExitSpaceNotify{
     string spaceID =1;
     string uid =2;
+}
+
+message ModifyUserRoleRequest{
+    string spaceID = 1;
+    string role = 2;
+}
+
+message ModifyUserRoleResponse{
+    int32 res = 1;
+}
+
+message ModifyUserRoleNotify{
+    string spaceID = 1;
+    string uid = 2;
+    string role = 3;
+}
+
+message ModifyUserCampRequest{
+    string spaceID = 1;
+    string camp = 2;
+}
+
+message ModifyUserCampResponse{
+    int32 res = 1;
+}
+
+message ModifyUserCampNotify{
+    string spaceID = 1;
+    string uid = 2;
+    string camp = 3;
+}
+
+message DisRoomWarningNotify{
+    string spaceID = 1;
+    int64 tts = 2;//剩余时间
+}
+
+//角色发送语音请求
+message UserChatVoiceRequest{
+    string spaceID = 1;
+    int32 voiceID = 2;
+}
+// 角色发送语音通知
+message UserChatVoiceNotify{
+    string spaceID = 1;
+    int32 voiceID = 2;
+    string uid = 3;
+}
+
+//创建机器人
+message CreateRobotRequest{
+    string spaceId = 1;
+    string display = 2;
+    string icon    = 3;
+    int32  pos     = 4;
+    string role    = 5;
+    string camp    = 6;
+    map<string,string> extends  = 7;
+}
+
+message CreateRobotResponse{
+    int32 res = 1;
+}
+
+//移除机器人
+message RemoveRobotRequest{
+    string spaceID = 1;
+    string robotID = 2;
+}
+
+message RemoveRobotResponse{
+    int32 res = 1;
+}
+
+message ModifyRobotRoleRequest{
+    string spaceID = 1;
+    string robotID = 2;
+    string role = 3;
+}
+
+message ModifyRobotRoleResponse{
+    int32 res = 1;
+}
+
+message ModifyRobotCampRequest{
+    string spaceID = 1;
+    string robotID = 2;
+    string camp = 3;
+}
+
+message ModifyRobotCampResponse{
+    int32 res = 1;
+}
+//角色发送聊天文字请求
+message UserChatTextRequest{
+    string spaceID = 1;
+    string chatText = 2;
+}
+message UserChatTextNotify{
+    string spaceID = 1;
+    string chatText = 2;
+    string uid = 3;
 }

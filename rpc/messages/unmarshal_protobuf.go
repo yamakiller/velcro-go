@@ -3,8 +3,10 @@ package messages
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 
 	"github.com/yamakiller/velcro-go/utils/circbuf"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -119,6 +121,9 @@ func unmarshalProtobufBody(reader circbuf.Reader, direct RpcDirect, bodyLength i
 	if err != nil {
 		return nil, err
 	}
-
+	if direct == RpcRequest && msg.(*RpcRequestMessage).Message == nil {
+		vlog.Error(fmt.Sprintf("RpcRequestMessage bodyLength %v bodyBytes %v", bodyLength, bodyBytes))
+		return nil, fmt.Errorf("RpcRequestMessage bodyLength %v bodyBytes %v", bodyLength, bodyBytes)
+	}
 	return msg, nil
 }

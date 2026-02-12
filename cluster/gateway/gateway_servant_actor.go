@@ -30,8 +30,8 @@ func (actor *GatewayServantActor) onRequestGatewayPush(ctx context.Context) (pro
 	}
 
 	defer actor.gateway.ReleaseClient(c)
-	body,err:= backward.Body.UnmarshalNew()
-	if err != nil{
+	body, err := backward.Body.UnmarshalNew()
+	if err != nil {
 		panic(err)
 	}
 

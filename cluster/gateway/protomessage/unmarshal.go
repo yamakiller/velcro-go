@@ -33,6 +33,9 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 		return nil, err
 	}
 
+	if len(bodyByte) == 0 {
+		return nil, fmt.Errorf("bodyByte length error %d", readDataLen)
+	}
 	dataLen := int(readDataLen)
 	if secret != nil {
 		decrypt, err := encryption.AesDecryptByGCM(bodyByte, secret)
@@ -50,16 +53,16 @@ func UnMarshal(reader circbuf.Reader, secret []byte) (proto.Message, error) {
 		return nil, fmt.Errorf("message name length error %d", msgNameLen)
 	}
 
-	if len(bodyByte) < msgNameLen +1{
+	if len(bodyByte) < msgNameLen+1 {
 		return nil, fmt.Errorf("message name length error %d", len(bodyByte))
 	}
 
-	proName := string(bodyByte[1:msgNameLen+1])
+	proName := string(bodyByte[1 : msgNameLen+1])
 	//2.解析Protobuf
 	msgName := protoreflect.FullName(proName)
 	msgType, err := protoregistry.GlobalTypes.FindMessageByName(msgName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("msgName %v  %v",msgName,err.Error())
 	}
 
 	message := msgType.New().Interface()

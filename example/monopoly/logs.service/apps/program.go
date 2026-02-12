@@ -1,7 +1,6 @@
 package apps
 
 import (
-
 	"github.com/kardianos/service"
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/logs.service/configs"
@@ -14,7 +13,9 @@ type Program struct {
 }
 
 func (p *Program) Start(s service.Service) error {
-
+	if err := vlog.SetLogFile("", "LogsService"); err != nil {
+		return err
+	}
 	vlog.Info("[PROGRAM]", "Logs Start loading environment variables")
 
 	envs.With(&envs.YAMLEnv{})

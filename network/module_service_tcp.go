@@ -119,16 +119,17 @@ func (t *tcpNetworkServerModule) spawn(conn net.Conn) error {
 		sendcond:  sync.NewCond(&sync.Mutex{}),
 		keepalive: uint32(t.system.Config.Kleepalive),
 		invoker:   &ctx,
-		mailbox:   make(chan interface{}, 1),
-		stopper:   make(chan struct{}),
-		refdone:   &t.waitGroup,
+		// mailbox:   make(chan interface{}, 512),
+		mailbox: spawnQueue(8),
+		stopper: make(chan struct{}),
+		refdone: &t.waitGroup,
 	}
 
 	cid, ok := t.system.handlers.Push(handler, id)
 	if !ok {
 		handler.Close()
 		// 释放资源
-		close(handler.mailbox)
+		// close(handler.mailbox)
 		close(handler.stopper)
 		handler.sendbox.Close()
 		handler.sendbox = nil

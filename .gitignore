@@ -2,9 +2,9 @@
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
 # Binaries for programs and plugins
-*.exe
+# *.exe
 *.exe~
-*.dll
+# *.dll
 *.so
 *.dylib
 
@@ -25,6 +25,8 @@ go.work
 log.*
 example/monopoly/bin/
 tools/behavior/Editor/obj/
+tools/behavior/NodeView/bin/
+tools/behavior/NodeView/obj/
 tools/behavior/.vs/behavior/FileContentIndex/3d37522d-a9bd-4ead-8b33-73b22308b9ee.vsidx
 tools/behavior/.vs/behavior/FileContentIndex/6d126310-e2e1-452a-bddc-31f9ad5cb8c3.vsidx
 tools/behavior/.vs/behavior/FileContentIndex/8a630673-995e-42bc-ad94-9d73109ab09f.vsidx
@@ -56,3 +58,5 @@ tools/behavior/Behavior.Diagrams/obj/Debug/Themes/RelinkControl.baml
 tools/behavior/Behavior.Diagrams/obj/Debug/Themes/SelectionFrame.baml
 tools/behavior/Behavior.Diagrams/obj/Debug/Themes/Shared.baml
 tools/behavior/Editor/bin/Debug/net8.0-windows/Behavior.Diagrams.pdb
+example/monopoly/battle.service/battle.service
+example/monopoly/battle.service/battle.service

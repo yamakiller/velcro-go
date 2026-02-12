@@ -6,6 +6,8 @@ import (
 	"github.com/yamakiller/velcro-go/envs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/configs"
 	"github.com/yamakiller/velcro-go/example/monopoly/login.service/dba/rds"
+	_ "github.com/yamakiller/velcro-go/cluster/protocols/pubs"
+	_ "github.com/yamakiller/velcro-go/example/monopoly/protocols/prvs"
 	"github.com/yamakiller/velcro-go/example/monopoly/protocols/pubs"
 )
 

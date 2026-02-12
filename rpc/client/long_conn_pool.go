@@ -86,7 +86,7 @@ func (dc *DefaultConnPool) Open() {
 	}
 }
 
-func (dc *DefaultConnPool) RequestMessage(msg protoreflect.ProtoMessage, timeout int64) (proto.Message, error) {
+func (dc *DefaultConnPool) RequestMessage(msg proto.Message, timeout int64) (proto.Message, error) {
 	var (
 		conn *LongConn
 		res  proto.Message

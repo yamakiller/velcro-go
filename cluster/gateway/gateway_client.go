@@ -42,14 +42,14 @@ type Client interface {
 }
 
 type ClientConn struct {
-	gateway        *Gateway
-	clientID       *network.ClientID
-	ruleID         int32  //角色ID
-	secret         []byte //密钥
-	recvice        *circbuf.LinkBuffer
-	ping           uint64
+	gateway  *Gateway
+	clientID *network.ClientID
+	ruleID   int32  //角色ID
+	secret   []byte //密钥
+	recvice  *circbuf.LinkBuffer
+	ping     uint64
 	// requestTimeout int64 //最大超时时间 毫秒级
-	reference      int32 //引用计数器
+	reference int32 //引用计数器
 }
 
 func (dl *ClientConn) ClientID() *network.ClientID {
@@ -74,7 +74,6 @@ func (dl *ClientConn) Ping(ctx network.Context) {
 	if dl.ruleID <= router.KEYED_RULE_ID {
 		return
 	}
-
 
 	dl.ping = fastrand.Uint64n(math.MaxUint64)
 
@@ -133,7 +132,7 @@ func (dl *ClientConn) Recvice(ctx network.Context) {
 			}
 			continue
 		}
-		
+
 		switch message := msg.(type) {
 		case *pubs.PingMsg:
 			dl.onPingReply(ctx, message)
@@ -182,7 +181,6 @@ func (dl *ClientConn) onPingReply(ctx network.Context, message *pubs.PingMsg) {
 	}
 
 	dl.ping = 0
-	vlog.Debug("ping reply success")
 }
 
 func (dl *ClientConn) onPubkeyReply(ctx network.Context, message *pubs.PubkeyMsg) {
@@ -262,7 +260,6 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 		return
 	}
 
-
 	bodyAny, err := anypb.New(message)
 	if err != nil {
 		vlog.Warnf("%s message encoding failed error %s",
@@ -292,7 +289,9 @@ func (dl *ClientConn) onRequestMessage(ctx network.Context, message proto.Messag
 		ctx.PostMessage(ctx.Self(), b)
 		return
 	}
-
+	if result == nil {
+		return
+	}
 	b, msge := protomessge.Marshal(result, dl.secret)
 	if msge != nil {
 		vlog.Errorf("requesting pubs.Error marshal %s message fail[error:%s]", reflect.TypeOf(result).Name(), msge.Error())

@@ -12,6 +12,7 @@ import (
 	"github.com/yamakiller/velcro-go/rpc/messages"
 	"github.com/yamakiller/velcro-go/utils/circbuf"
 	"github.com/yamakiller/velcro-go/utils/lang/fastrand"
+	"github.com/yamakiller/velcro-go/vlog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -42,11 +43,11 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 	for {
 		n, err := c.recvice.WriteBinary(ctx.Message()[offset:])
 		offset += n
-		if err :=  c.recvice.Flush(); err != nil {
+		if err := c.recvice.Flush(); err != nil {
 			ctx.Close(ctx.Self())
 			return
 		}
-		
+
 		_, msg, msgErr := messages.UnMarshalProtobuf(c.recvice)
 		if msgErr != nil {
 			ctx.Close(ctx.Self())
@@ -69,7 +70,8 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 		case *messages.RpcRequestMessage:
 			reqMsg, err := message.Message.UnmarshalNew()
 			if err != nil {
-				panic(err)
+				vlog.Error(fmt.Sprintf("Unknown Message %v %v %v", ctx.Self().String(), message, err.Error()))
+				return
 			}
 
 			//TODO: 这里需要抛给并行器
@@ -80,7 +82,8 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			}
 			msgType, err := protoregistry.GlobalTypes.FindMessageByName(reqMsg.(*anypb.Any).MessageName())
 			if err != nil {
-				panic(err)
+				vlog.Error(fmt.Sprintf("Unknown MessageName %v %v %v", ctx.Self().String(), reqMsg, err.Error()))
+				return
 			}
 			m := msgType.New().Interface()
 			proto.Unmarshal(reqMsg.(*anypb.Any).GetValue(), m)
@@ -91,7 +94,8 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 			case *prvs.ForwardBundle:
 				reqMsg, err = rs.Body.UnmarshalNew()
 				if err != nil {
-					panic(err)
+					vlog.Error(fmt.Sprintf("Unknown Body %v %v %v", ctx.Self().String(), rs.Body, err.Error()))
+					return
 				}
 				messageEnvelope = NewMessageEnvelopePool(message.SequenceID, rs.Sender, reqMsg)
 			default:
@@ -100,7 +104,8 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 
 			evt, ok := c.events[reflect.TypeOf(reqMsg)]
 			if !ok || evt.(func(context.Context) (proto.Message, error)) == nil {
-				panic(fmt.Errorf("servant request unfound events %s", reflect.TypeOf(reqMsg)))
+				vlog.Error(fmt.Sprintf("servant request unfound events %v %v", ctx.Self().String(), reflect.TypeOf(reqMsg)))
+				return
 			}
 
 			background, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(timeout))
@@ -123,7 +128,8 @@ func (c *ServantClientConn) Recvice(ctx network.Context) {
 
 			cancel()
 		default:
-			panic("Unknown service")
+			vlog.Error(fmt.Sprintf("Unknown service %v  msg %v", ctx.Self().String(), msg))
+			return
 		}
 	servant_client_offset_label:
 		if offset == len(ctx.Message()) {

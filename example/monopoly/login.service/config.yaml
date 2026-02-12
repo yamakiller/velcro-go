@@ -3,7 +3,7 @@ server:
   vaddr: 0.0.0.0:10100
 redis:
   address: 0.0.0.0:6379
-  password: yqXaWje245RPbsn*
+  password: 
   timeout:
     dial: 5000
     read: 2000

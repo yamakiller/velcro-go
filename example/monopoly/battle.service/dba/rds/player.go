@@ -2,44 +2,65 @@ package rds
 
 import (
 	"context"
-	"errors"
-
-	"github.com/go-redis/redis/v8"
 
 	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsconst"
+	"github.com/yamakiller/velcro-go/example/monopoly/pub/rdsstruct"
 	"github.com/yamakiller/velcro-go/network"
 )
 
-// GetPlayerUID 获取客户端绑定的UID
-func GetPlayerUID(ctx context.Context, clientId *network.ClientID) (string, error) {
+// GetPlayerData 获取客户端绑定的PlayerData
+func GetPlayerData(ctx context.Context, clientId *network.ClientID) (*rdsstruct.RdsPlayerData, error) {
 	uid, err := client.Get(ctx, rdsconst.GetPlayerClientIDKey(clientId.ToString())).Result()
 	if err != nil {
-		if err == redis.Nil {
-			return "", nil
-		}
-
-		return "", err
+		return nil, err
 	}
 
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	if err := mutex.Lock(); err != nil {
+		return nil, err
+	}
+
+	defer mutex.Unlock()
+
+	oldClient := &rdsstruct.RdsPlayerData{}
+	if err := client.Get(ctx, rdsconst.GetPlayerOnlineDataKey(uid)).Scan(oldClient); err != nil {
+		return nil, err
+	}
+
+	return oldClient, nil
+}
+
+// GetPlayerData 获取客户端绑定的PlayerData
+func GetPlayerDataByUID(ctx context.Context, uid string) (*rdsstruct.RdsPlayerData, error) {
+	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
+	if err := mutex.Lock(); err != nil {
+		return nil, err
+	}
+
+	defer mutex.Unlock()
+
+	oldClient := &rdsstruct.RdsPlayerData{}
+	if err := client.Get(ctx, rdsconst.GetPlayerOnlineDataKey(uid)).Scan(oldClient); err != nil {
+		return nil, err
+	}
+
+	return oldClient, nil
+}
+
+func GetBattleSpacePlayerClientID(ctx context.Context, uid string) *network.ClientID {
+	player_data, err := GetPlayerDataByUID(ctx, uid)
+	if err != nil {
+		return nil
+	}
+	return &network.ClientID{Address: player_data.ClientIdAddress, Id: player_data.ClientIdId}
+}
+
+func GetPlayerBattleSpaceID(ctx context.Context, uid string) (string, error) {
 	mutex := sync.NewMutex(rdsconst.GetPlayerLockKey(uid))
 	if err := mutex.Lock(); err != nil {
 		return "", err
 	}
 
-	results, err := client.HGetAll(ctx, rdsconst.GetPlayerOnlineDataKey(uid)).Result()
-
-	if err == redis.Nil {
-		mutex.Unlock()
-		return "", nil
-	}
-
-	// 拥有者权限检查
-	if !clientId.Equal(&network.ClientID{Address: results[rdsconst.PalyerMapClientIdAddress],
-		Id: results[rdsconst.PlayerMapClientIdId]}) {
-		mutex.Unlock()
-		return "", errors.New("permissions lost")
-	}
-	mutex.Unlock()
-	
-	return uid, nil
+	defer mutex.Unlock()
+	return client.Get(ctx, rdsconst.GetPlayerBattleSpaceIDKey(uid)).Result()
 }

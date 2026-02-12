@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package rdsstruct;
+option go_package=".;rdsstruct";
+
+message RdsPlayerData{
+    string UID = 1;
+    string DisplayName = 2;
+    string ClientIdAddress = 3;
+    string ClientIdId = 4;
+    map<string,string> Externs = 5;
+}
